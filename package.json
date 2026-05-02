@@ -11,6 +11,8 @@
     "validate-modals": "powershell -ExecutionPolicy Bypass -File scripts/validate-modals.ps1"
   },
   "dependencies": {
+    "@emoji-mart/data": "^1.2.1",
+    "@emoji-mart/react": "^1.1.1",
     "@google/generative-ai": "^0.24.1",
     "@supabase/supabase-js": "^2.39.0",
     "cheerio": "^1.1.2",

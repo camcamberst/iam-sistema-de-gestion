@@ -115,7 +115,7 @@ export const emojiData: EmojiCategory[] = [
   },
   {
     id: 'animals',
-    title: 'Animales y Naturaleza',
+    title: 'Animales y naturaleza',
     icon: '🐻',
     emojis: rawAnimals.map(char => ({
       char,
@@ -124,7 +124,7 @@ export const emojiData: EmojiCategory[] = [
   },
   {
     id: 'food',
-    title: 'Comida y Bebida',
+    title: 'Comida y bebida',
     icon: '🍔',
     emojis: rawFood.map(char => ({
       char,

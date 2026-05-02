@@ -23,6 +23,7 @@ interface ChatBarProps {
   userRole?: string;
   session?: any;
   isMainChatOpen?: boolean; // Nueva prop para la ventana principal
+  isMainChatClosing?: boolean;
   onCloseMainChat?: () => void; // Nueva prop para cerrar la ventana principal
   // Props para la funcionalidad del chat principal
   view?: 'users' | 'conversations' | 'chat';
@@ -37,11 +38,12 @@ interface ChatBarProps {
   messages?: any[];
   newMessage?: string;
   setNewMessage?: (message: string) => void;
-  sendMessage?: () => void;
+  sendMessage?: (metadata?: any) => void;
   handleKeyPress?: (e: React.KeyboardEvent) => void;
   showDeleteConfirm?: string | null;
   setShowDeleteConfirm?: (id: string | null) => void;
   deleteConversation?: (id: string) => void;
+  clearConversation?: (id: string) => void;
   tempChatUser?: any;
   getDisplayName?: (user: any) => string;
   conversationsTabBlinking?: boolean;
@@ -57,6 +59,7 @@ const ChatBar: React.FC<ChatBarProps> = ({
   userRole,
   session,
   isMainChatOpen = false,
+  isMainChatClosing = false,
   onCloseMainChat,
   view,
   setView,
@@ -75,6 +78,7 @@ const ChatBar: React.FC<ChatBarProps> = ({
   showDeleteConfirm,
   setShowDeleteConfirm,
   deleteConversation,
+  clearConversation,
   tempChatUser,
   getDisplayName,
   replyTo,
@@ -101,34 +105,43 @@ const ChatBar: React.FC<ChatBarProps> = ({
       {/* Ventana principal del AIM Assistant */}
       {isMainChatOpen && document.body && createPortal(
         (
-          <MainChatWindow
-            onClose={onCloseMainChat!}
-            userId={userId}
-            userRole={userRole}
-            session={session}
-            windowIndex={-1} // Ventana principal siempre en la posición más a la derecha
-            view={view}
-            setView={setView}
-            availableUsers={availableUsers}
-            expandedSections={expandedSections}
-            setExpandedSections={setExpandedSections}
-            openChatWithUser={openChatWithUser}
-            conversations={conversations}
-            selectedConversation={selectedConversation}
-            setSelectedConversation={setSelectedConversation}
-            messages={messages}
-            newMessage={newMessage}
-            setNewMessage={setNewMessage}
-            sendMessage={sendMessage}
-            handleKeyPress={handleKeyPress}
-            showDeleteConfirm={showDeleteConfirm}
-            setShowDeleteConfirm={setShowDeleteConfirm}
-            deleteConversation={deleteConversation}
-            tempChatUser={tempChatUser}
-            getDisplayName={getDisplayName}
-            replyTo={replyTo}
-            setReplyTo={setReplyTo}
-          />
+          <>
+            <div 
+              className={`fixed inset-0 bg-black/20 backdrop-blur-md z-[35] ${isMainChatClosing ? 'animate-chat-backdrop-out' : 'animate-chat-backdrop'} md:hidden`}
+              onClick={onCloseMainChat}
+              aria-hidden="true"
+            />
+            <MainChatWindow
+              isClosing={isMainChatClosing}
+              onClose={onCloseMainChat!}
+              userId={userId}
+              userRole={userRole}
+              session={session}
+              windowIndex={-1} // Ventana principal siempre en la posición más a la derecha
+              view={view}
+              setView={setView}
+              availableUsers={availableUsers}
+              expandedSections={expandedSections}
+              setExpandedSections={setExpandedSections}
+              openChatWithUser={openChatWithUser}
+              conversations={conversations}
+              selectedConversation={selectedConversation}
+              setSelectedConversation={setSelectedConversation}
+              messages={messages}
+              newMessage={newMessage}
+              setNewMessage={setNewMessage}
+              sendMessage={sendMessage}
+              handleKeyPress={handleKeyPress}
+              showDeleteConfirm={showDeleteConfirm}
+              setShowDeleteConfirm={setShowDeleteConfirm}
+              deleteConversation={deleteConversation}
+              clearConversation={clearConversation}
+              tempChatUser={tempChatUser}
+              getDisplayName={getDisplayName}
+              replyTo={replyTo}
+              setReplyTo={setReplyTo}
+            />
+          </>
         ),
         document.body
       )}

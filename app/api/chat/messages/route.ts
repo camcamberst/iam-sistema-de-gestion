@@ -191,7 +191,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { conversation_id, content, message_type = 'text', reply_to_message_id, is_forwarded = false, metadata = null } = body;
+    const { conversation_id, content, message_type = 'text', reply_to_message_id, is_forwarded = false, metadata = null, is_ephemeral = false, media_url = null } = body;
 
     if (!conversation_id || !content?.trim()) {
       return NextResponse.json({ 
@@ -266,10 +266,14 @@ export async function POST(request: NextRequest) {
       .insert({
         conversation_id: conversation_id,
         sender_id: user.id,
-        content: content.trim(),
+        content: message_type === 'voice' && media_url ? media_url : content.trim(),
         message_type: message_type,
         reply_to_message_id: reply_to_message_id || null,
-        metadata: metadata || (is_forwarded ? { is_forwarded: true } : null)
+        metadata: {
+          ...(metadata || {}),
+          ...(is_forwarded ? { is_forwarded: true } : {}),
+          ...(is_ephemeral ? { is_ephemeral: true } : {})
+        }
       })
       .select(`
         id,

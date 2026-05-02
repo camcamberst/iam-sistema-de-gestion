@@ -48,17 +48,17 @@ export default function PillTabs({ tabs, activeTab, onTabChange, className = '',
 
   return (
     <div
-      className={`${fullWidth ? 'w-full flex' : compact ? 'w-fit inline-flex' : 'max-sm:w-full max-sm:flex sm:w-fit sm:inline-flex'} flex-row items-center justify-center gap-2 p-1.5 bg-black/[0.04] dark:bg-white/[0.04] backdrop-blur-xl rounded-full border border-black/[0.05] dark:border-white/[0.05] ${className}`}
+      className={`${fullWidth ? 'w-full flex' : compact ? 'w-fit inline-flex' : 'max-sm:w-full max-sm:flex sm:w-fit sm:inline-flex'} flex-row items-center justify-center gap-2 p-1 bg-black/[0.04] dark:bg-white/[0.04] backdrop-blur-xl rounded-full border border-black/[0.05] dark:border-white/[0.05] ${className}`}
     >
       {tabs.map((tab) => (
         <button
           key={tab.id}
           onClick={() => onTabChange(tab.id)}
-          className={`relative overflow-hidden ${fullWidth ? 'flex-1' : compact ? 'flex-none' : 'max-sm:flex-1'} px-4 py-2 sm:py-2 text-xs sm:text-[13px] ${activeTab === tab.id ? 'font-bold' : 'font-medium'} rounded-full transition-all duration-300 ease-out active:scale-[0.97] touch-manipulation whitespace-nowrap flex items-center justify-center ${
+          className={`relative overflow-hidden ${fullWidth ? 'flex-1' : compact ? 'flex-none' : 'max-sm:flex-1'} px-4 py-1.5 sm:py-1.5 text-xs sm:text-[13px] ${activeTab === tab.id ? 'font-bold' : 'font-medium'} rounded-full transition-all duration-300 ease-out active:scale-[0.97] touch-manipulation whitespace-nowrap flex items-center justify-center ${
             activeTab === tab.id
               ? getActiveClasses()
               : variant === 'guardar'
-                ? 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white ring-1 ring-transparent'
+                ? 'bg-black/5 dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10 ring-1 ring-transparent'
                 : 'text-gray-600 dark:text-gray-400 hover:text-white hover:font-bold hover:bg-gradient-to-r hover:from-cyan-500 hover:to-fuchsia-500 hover:shadow-[0_0_15px_rgba(168,85,247,0.4)] dark:hover:shadow-[0_0_15px_rgba(168,85,247,0.5)] ring-1 ring-transparent'
           }`}
         >

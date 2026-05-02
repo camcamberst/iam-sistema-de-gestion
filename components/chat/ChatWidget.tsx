@@ -23,6 +23,7 @@ interface User {
   role: string;
   is_online: boolean;
   last_seen: string;
+  avatar_url?: string;
 }
 
 interface Conversation {
@@ -40,6 +41,7 @@ interface Conversation {
 
 export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [availableUsers, setAvailableUsers] = useState<User[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
@@ -67,7 +69,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   // 🔧 NUEVO: Inicializar audio en la primera interacción del usuario
   useEffect(() => {
     const handleInteraction = () => {
-      /* log removed */
+      console.log('🔊 [ChatWidget] Inicializando sistema de audio por interacción del usuario');
       initAudio();
       // Remover listeners una vez inicializado
       window.removeEventListener('click', handleInteraction);
@@ -86,6 +88,13 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     };
   }, []);
 
+  // Listener movido abajo para usar toggleChat
+
+  useEffect(() => {
+    const totalUnread = conversations.reduce((sum, conv) => sum + (conv.unread_count || 0), 0);
+    window.dispatchEvent(new CustomEvent('aim-chat-unread-count', { detail: { count: totalUnread } }));
+  }, [conversations]);
+
   // 🔧 FIX: Inicializar refs con valores por defecto (sin localStorage durante renderizado inicial)
   const lastUnreadCountRef = useRef<number>(0);
   const lastSoundTimeRef = useRef<number>(0);
@@ -103,7 +112,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       // Guardar título original de la pestaña (solo si no está ya guardado)
       if (!originalTitleRef.current) {
         originalTitleRef.current = document.title || 'AIM Sistema';
-        /* log removed */
+        console.log('📝 [ChatWidget] Título original guardado:', originalTitleRef.current);
       }
       
       // Cargar lastUnreadCount desde localStorage
@@ -119,7 +128,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           const parsed = JSON.parse(savedProcessedMessages);
           processedMessageIdsRef.current = new Set(parsed);
         } catch (error) {
-          /* log removed */
+          console.warn('⚠️ [ChatWidget] Error parseando processedMessages desde localStorage:', error);
           processedMessageIdsRef.current = new Set();
         }
       }
@@ -159,7 +168,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
 
     // Si ya se está marcando esta conversación, evitar duplicados
     if (markingAsReadRef.current.has(conversationId)) {
-      // /* log removed */
+      // console.log('⏭️ [ChatWidget] Ya se está marcando esta conversación como leída');
       return;
     }
 
@@ -180,7 +189,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
 
     const executeMark = async () => {
       markingAsReadRef.current.add(conversationId);
-      // /* log removed */
+      // console.log('👁️ [ChatWidget] Marcando conversación como leída:', conversationId);
 
       try {
         const response = await fetch('/api/chat/messages/read', {
@@ -197,7 +206,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
 
         const data = await response.json();
         if (data.success) {
-          // /* log removed */
+          // console.log(`✅ [ChatWidget] ${data.updated || 0} mensajes marcados como leídos`);
           
           // Actualizar estado local inmediatamente
           zeroUnreadForConversation(conversationId);
@@ -215,10 +224,10 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         } else {
           // Si el servidor devuelve error pero no es 500, probablemente sea un error lógico
           // No reintentar agresivamente
-          /* log removed */
+          console.warn('⚠️ [ChatWidget] Advertencia al marcar leído:', data.error);
         }
       } catch (error) {
-        /* log removed */
+        console.error('❌ [ChatWidget] Error en fetch de marcar como leído:', error);
       } finally {
         markingAsReadRef.current.delete(conversationId);
       }
@@ -265,7 +274,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
 
   // Debug: Log cuando cambien las ventanas abiertas
   useEffect(() => {
-    /* log removed */
+    console.log('🪟 [ChatWidget] Ventanas abiertas actualizadas:', openChatWindows.length, openChatWindows);
   }, [openChatWindows]);
 
   // Función helper para obtener el nombre de visualización
@@ -293,7 +302,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError || !currentSession) {
-        /* log removed */
+        console.warn('⚠️ [ChatWidget] No hay sesión disponible:', sessionError?.message);
         return null;
       }
 
@@ -305,11 +314,11 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         
         // Si el token expira en menos de 60 segundos, refrescarlo
         if (expiresIn < 60) {
-          /* log removed */
+          console.log('🔄 [ChatWidget] Token expirando pronto, refrescando sesión...');
           const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession();
           
           if (refreshError || !refreshedSession) {
-            /* log removed */
+            console.error('❌ [ChatWidget] Error refrescando sesión:', refreshError);
             return null;
           }
           
@@ -326,7 +335,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       
       return currentSession.access_token;
     } catch (error) {
-      /* log removed */
+      console.error('❌ [ChatWidget] Error obteniendo token válido:', error);
       return null;
     }
   };
@@ -356,7 +365,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       try {
         await updateUserHeartbeat(userId);
       } catch (error) {
-        /* log removed */
+        console.error('❌ [ChatWidget] Error enviando heartbeat:', error);
       }
     };
 
@@ -371,7 +380,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       try {
         await setUserOffline(userId);
       } catch (error) {
-        /* log removed */
+        console.error('❌ [ChatWidget] Error marcando usuario offline:', error);
       }
     };
 
@@ -398,7 +407,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         }
         unreadCountForTitleRef.current = 0;
         document.title = originalTitleRef.current;
-        /* log removed */
+        console.log('📢 [ChatWidget] Título de pestaña restaurado');
       }
     };
 
@@ -416,7 +425,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       
       // Marcar como offline al desmontar el componente
       setUserOffline(userId).catch(error => {
-        /* log removed */
+        console.error('❌ [ChatWidget] Error marcando usuario offline en cleanup:', error);
       });
     };
   }, [userId]);
@@ -424,25 +433,25 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   // Detectar pérdida de conexión a internet
   useEffect(() => {
     const handleOnline = async () => {
-      /* log removed */
+      console.log('🌐 [ChatWidget] Conexión restaurada');
       if (userId) {
         try {
           await updateUserStatus(true);
-          /* log removed */
+          console.log('🟢 [ChatWidget] Usuario marcado como online tras restaurar conexión');
         } catch (error) {
-          /* log removed */
+          console.error('❌ [ChatWidget] Error marcando usuario online:', error);
         }
       }
     };
 
     const handleOffline = async () => {
-      /* log removed */
+      console.log('🌐 [ChatWidget] Conexión perdida');
       if (userId) {
         try {
           await updateUserStatus(false);
-          /* log removed */
+          console.log('🔴 [ChatWidget] Usuario marcado como offline por pérdida de conexión');
         } catch (error) {
-          /* log removed */
+          console.error('❌ [ChatWidget] Error marcando usuario offline:', error);
         }
       }
     };
@@ -462,7 +471,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   // Cargar conversaciones
   const loadConversations = async () => {
     if (!session || !session.access_token) {
-      /* log removed */
+      console.warn('⚠️ [ChatWidget] No hay sesión disponible para cargar conversaciones');
       return;
     }
     
@@ -475,7 +484,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       
       // Si recibimos 401, la sesión expiró - no procesar
       if (response.status === 401) {
-        /* log removed */
+        console.warn('⚠️ [ChatWidget] Token inválido (401) al cargar conversaciones');
         return;
       }
       
@@ -508,7 +517,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         if (!isOpen) {
           // Si es la primera carga, NO mostrar notificaciones, solo actualizar el estado base
           if (isFirstLoadRef.current) {
-            /* log removed */
+            console.log('🔇 [ChatWidget] Primera carga: silenciando notificaciones iniciales');
             // Marcar todos los mensajes actuales como "procesados" para no notificarlos después
             normalized.forEach((conv: any) => {
               if (conv.last_message) {
@@ -525,7 +534,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                 
                 // 🔧 CRÍTICO: Verificar si este mensaje ya fue procesado antes (evita toasts al recargar)
                 if (processedMessageIdsRef.current.has(messageId)) {
-                  // /* log removed */
+                  // console.log('⏭️ [ChatWidget] Mensaje ya procesado, no mostrar toast:', messageId);
                   return;
                 }
                 
@@ -568,7 +577,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         }
       }
     } catch (error) {
-      /* log removed */
+      console.error('Error cargando conversaciones:', error);
     }
   };
 
@@ -588,7 +597,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         setAvailableUsers(data.users);
       }
     } catch (error) {
-      /* log removed */
+      console.error('Error cargando usuarios:', error);
     }
   };
 
@@ -599,7 +608,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     // 🔧 LIMPIAR MENSAJES INMEDIATAMENTE si cambió la conversación
     // Esto asegura que no se muestren mensajes de la conversación anterior
     if (selectedConversation !== conversationId) {
-      /* log removed */
+      console.log('🔄 [ChatWidget] Limpiando mensajes previos al cambiar de conversación');
       setMessages([]);
       setNewMessage('');
     }
@@ -615,7 +624,10 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       if (data.success) {
         // Actualizar mensajes directamente (ya se limpiaron si era necesario)
         const newMessages = data.messages || [];
-        /* log removed */
+        console.log('📨 [ChatWidget] Mensajes cargados:', { 
+          conversationId,
+          count: newMessages.length 
+        });
         
         setMessages(newMessages);
         
@@ -646,11 +658,11 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         // Actualizar estado local inmediatamente para evitar mostrar "no leído" durante la recarga
         zeroUnreadForConversation(conversationId);
       } else {
-        /* log removed */
+        console.error('❌ [ChatWidget] Error en respuesta de mensajes:', data);
         
         // Si la conversación no existe (fue eliminada), preparar para nueva conversación
         if (data.error && (data.error.includes('no encontrada') || data.error.includes('no existe'))) {
-          /* log removed */
+          console.log('🔄 [ChatWidget] Conversación eliminada durante carga de mensajes, preparando nueva conversación...');
           await handleConversationDeleted(conversationId);
           return; // No hacer diagnóstico si la conversación no existe
         }
@@ -659,7 +671,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         await diagnosePollingIssue(conversationId);
       }
     } catch (error) {
-      /* log removed */
+      console.error('❌ [ChatWidget] Error cargando mensajes:', error);
       // Intentar diagnóstico si hay error
       await diagnosePollingIssue(conversationId);
     }
@@ -669,7 +681,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   const handleConversationDeleted = async (deletedConversationId: string) => {
     if (!session) return;
     
-    /* log removed */
+    console.log('🔄 [ChatWidget] Manejando conversación eliminada:', deletedConversationId);
     
     try {
       // Recargar conversaciones para obtener lista actualizada
@@ -677,7 +689,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       
       // Si la conversación eliminada era una conversación real (no temporal)
       if (!deletedConversationId.startsWith('temp_')) {
-        /* log removed */
+        console.log('💡 [ChatWidget] Conversación eliminada, preparando nueva conversación automáticamente');
         
         // Buscar el último mensaje para identificar al otro participante
         // Esto nos ayudará a preparar automáticamente una nueva conversación
@@ -689,7 +701,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           const otherUser = availableUsers.find(u => u.id === otherUserId);
           
           if (otherUser) {
-            /* log removed */
+            console.log('🎯 [ChatWidget] Usuario identificado para nueva conversación:', otherUser.name || otherUser.email);
             
             // Preparar automáticamente una nueva conversación con el mismo usuario
             setTempChatUser(otherUser);
@@ -712,7 +724,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         }
         
         // Si no pudimos identificar al usuario, mostrar mensaje genérico
-        /* log removed */
+        console.log('⚠️ [ChatWidget] No se pudo identificar al usuario, mostrando mensaje genérico');
         setMessages([]);
         setTempChatUser(null);
         
@@ -731,7 +743,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         
       } else {
         // Si era una conversación temporal, simplemente limpiar
-        /* log removed */
+        console.log('🧹 [ChatWidget] Limpiando conversación temporal eliminada');
         setMessages([]);
         setTempChatUser(null);
         // NO cerrar el chat - mantener abierto y mostrar lista de usuarios
@@ -739,7 +751,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       }
       
     } catch (error) {
-      /* log removed */
+      console.error('❌ [ChatWidget] Error manejando conversación eliminada:', error);
       // En caso de error, limpiar todo pero mantener el chat abierto
       setMessages([]);
       setTempChatUser(null);
@@ -751,12 +763,12 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   // Función de diagnóstico para problemas de polling
   const diagnosePollingIssue = async (conversationId: string) => {
     try {
-      /* log removed */
+      console.log('🔍 [ChatWidget] Ejecutando diagnóstico de polling...');
       
       // Obtener token válido (refrescando si es necesario)
       const token = await getValidToken();
       if (!token) {
-        /* log removed */
+        console.error('❌ [ChatWidget] No se pudo obtener token válido para diagnóstico');
         return;
       }
       
@@ -768,20 +780,25 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       
       const data = await response.json();
       if (data.success) {
-        /* log removed */
+        console.log('✅ [ChatWidget] Diagnóstico exitoso:', data.debug);
       } else {
-        /* log removed */
+        console.error('❌ [ChatWidget] Diagnóstico falló:', data);
       }
     } catch (error) {
-      /* log removed */
+      console.error('❌ [ChatWidget] Error en diagnóstico:', error);
     }
   };
 
   // Enviar mensaje
-  const sendMessage = async () => {
-    if (!newMessage.trim() || !selectedConversation || !session) return;
+  const sendMessage = async (metadata?: any) => {
+    const hasContent = newMessage.trim() || (metadata && metadata.content);
+    if (!hasContent || !selectedConversation || !session) return;
     
-    /* log removed */
+    console.log('📤 [ChatWidget] Enviando mensaje:', { 
+      content: newMessage.trim(), 
+      conversationId: selectedConversation,
+      userId 
+    });
     
     setIsLoading(true);
     try {
@@ -789,16 +806,16 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       
       // Si es una conversación temporal, crear la conversación real primero
       if (selectedConversation.startsWith('temp_')) {
-        /* log removed */
+        console.log('🆕 [ChatWidget] Creando conversación temporal...');
         const userId = selectedConversation.replace('temp_', '');
         const newConversationId = await createConversation(userId);
         if (newConversationId) {
           conversationId = newConversationId;
           setSelectedConversation(newConversationId);
           setTempChatUser(null); // Limpiar usuario temporal
-          /* log removed */
+          console.log('✅ [ChatWidget] Conversación creada:', newConversationId);
         } else {
-          /* log removed */
+          console.error('❌ [ChatWidget] Error creando conversación');
           return;
         }
       }
@@ -812,37 +829,38 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         body: JSON.stringify({
           conversation_id: conversationId,
           content: newMessage.trim(),
-          reply_to_message_id: replyTo ? replyTo.id : undefined
+          reply_to_message_id: replyTo ? replyTo.id : undefined,
+          ...(metadata || {})
         })
       });
       
       const data = await response.json();
-      /* log removed */
+      console.log('📨 [ChatWidget] Respuesta del servidor:', data);
       
       if (data.success) {
-        /* log removed */
+        console.log('✅ [ChatWidget] Mensaje enviado exitosamente');
         setNewMessage('');
         setReplyTo(null); // Limpiar reply después de enviar
         
         // Como fallback, si la suscripción no funciona, recargar mensajes
         setTimeout(async () => {
-          /* log removed */
+          console.log('🔄 [ChatWidget] Recargando mensajes como fallback...');
           await loadMessages(conversationId);
         }, 1000);
         
         // Actualizar conversaciones para mostrar último mensaje
         await loadConversations();
       } else {
-        /* log removed */
+        console.error('❌ [ChatWidget] Error en respuesta del servidor:', data);
         
         // Si la conversación no existe (fue eliminada), preparar para nueva conversación
         if (data.error && (data.error.includes('no encontrada') || data.error.includes('no existe'))) {
-          /* log removed */
+          console.log('🔄 [ChatWidget] Conversación eliminada durante envío, preparando nueva conversación...');
           await handleConversationDeleted(conversationId);
         }
       }
     } catch (error) {
-      /* log removed */
+      console.error('❌ [ChatWidget] Error enviando mensaje:', error);
     } finally {
       setIsLoading(false);
     }
@@ -850,16 +868,16 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
 
   // Abrir chat con usuario en ventana individual
   const openChatWithUser = async (userId: string) => {
-    /* log removed */
-    /* log removed */
-    /* log removed */
+    console.log('🖱️ [ChatWidget] Click detectado en usuario:', userId);
+    console.log('🖱️ [ChatWidget] Sesión disponible:', !!session);
+    console.log('🖱️ [ChatWidget] Usuarios disponibles:', availableUsers.length);
     
     if (!session) {
-      /* log removed */
+      console.log('❌ [ChatWidget] No hay sesión disponible');
       return;
     }
     
-    /* log removed */
+    console.log('💬 [ChatWidget] Abriendo chat con usuario:', userId);
     
     // Buscar si ya existe una conversación con este usuario
     const existingConversation = conversations.find(conv => 
@@ -867,22 +885,22 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     );
     
     const user = availableUsers.find(u => u.id === userId);
-    /* log removed */
+    console.log('👤 [ChatWidget] Usuario encontrado:', user);
     
     if (!user) {
-      /* log removed */
+      console.log('❌ [ChatWidget] Usuario no encontrado en availableUsers');
       return;
     }
     
     // Si la ventana principal (AIM Assistant) está abierta, integrar la conversación allí
     if (isOpen) {
       if (existingConversation) {
-        /* log removed */
+        console.log('🪟 [ChatWidget] Integrando conversación existente dentro del AIM Assistant:', existingConversation.id);
         setSelectedConversation(existingConversation.id);
         setMainView('chat');
         await loadMessages(existingConversation.id);
       } else {
-        /* log removed */
+        console.log('🆕 [ChatWidget] Creando conversación integrada en AIM Assistant con:', user.name || user.email);
         try {
           const response = await fetch('/api/chat/conversations', {
             method: 'POST',
@@ -899,10 +917,10 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
             await loadMessages(data.conversation.id);
             await loadConversations();
           } else {
-            /* log removed */
+            console.error('❌ [ChatWidget] Error creando conversación:', data.error);
           }
         } catch (error) {
-          /* log removed */
+          console.error('❌ [ChatWidget] Error creando conversación:', error);
         }
       }
       return; // No abrir ventana individual
@@ -911,25 +929,25 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     // Verificar si ya hay una ventana abierta para este usuario (modo flotante)
     const existingWindow = openChatWindows.find(window => window.otherUser.id === userId);
     if (existingWindow) {
-      /* log removed */
+      console.log('🪟 [ChatWidget] Ventana ya abierta para este usuario');
       return;
     }
     
     if (existingConversation) {
       // Si ya existe conversación, abrir ventana individual
-      /* log removed */
+      console.log('📂 [ChatWidget] Abriendo conversación existente en ventana individual:', existingConversation.id);
       const newWindow = {
         id: `window_${existingConversation.id}`,
         conversationId: existingConversation.id,
         otherUser: user
       };
       setOpenChatWindows(prev => {
-        /* log removed */
+        console.log('🪟 [ChatWidget] Agregando ventana:', newWindow);
         return [...prev, newWindow];
       });
     } else {
       // Si no existe, crear nueva conversación y abrir ventana
-      /* log removed */
+      console.log('🆕 [ChatWidget] Creando nueva conversación en ventana individual con:', user.name || user.email);
       
       try {
         const response = await fetch('/api/chat/conversations', {
@@ -944,7 +962,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         });
         
         const data = await response.json();
-        /* log removed */
+        console.log('📡 [ChatWidget] Respuesta API crear conversación:', data);
         
         if (data.success) {
           const newWindow = {
@@ -953,17 +971,17 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
             otherUser: user
           };
           setOpenChatWindows(prev => {
-            /* log removed */
+            console.log('🪟 [ChatWidget] Agregando nueva ventana:', newWindow);
             return [...prev, newWindow];
           });
           
           // Recargar conversaciones para incluir la nueva
           await loadConversations();
         } else {
-          /* log removed */
+          console.error('❌ [ChatWidget] Error creando conversación:', data.error);
         }
       } catch (error) {
-        /* log removed */
+        console.error('❌ [ChatWidget] Error creando conversación:', error);
       }
     }
   };
@@ -994,22 +1012,22 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         return data.conversation.id; // Retornar el ID de la conversación
       }
     } catch (error) {
-      /* log removed */
+      console.error('Error creando conversación:', error);
     }
     return null;
   };
 
   // Eliminar conversación
   const deleteConversation = async (conversationId: string) => {
-    /* log removed */
+    console.log('🗑️ [ChatWidget] Solicitud de eliminación para conversación:', conversationId);
     
     if (!session) {
-      /* log removed */
+      console.error('❌ [ChatWidget] Error: No hay sesión activa para eliminar conversación');
       return;
     }
     
     try {
-      /* log removed */
+      console.log('⏳ [ChatWidget] Enviando petición DELETE a API...');
       const response = await fetch(`/api/chat/conversations?conversation_id=${conversationId}`, {
         method: 'DELETE',
         headers: {
@@ -1019,7 +1037,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       
       const data = await response.json();
       if (data.success) {
-        /* log removed */
+        console.log('✅ [ChatWidget] Conversación eliminada exitosamente');
         
         // Recargar conversaciones para actualizar la lista
         await loadConversations();
@@ -1029,15 +1047,54 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           setSelectedConversation(null);
           setMessages([]);
           setTempChatUser(null); // Limpiar usuario temporal también
-          /* log removed */
+          console.log('🧹 [ChatWidget] Estado de chat limpiado después de eliminación');
         }
         
         setShowDeleteConfirm(null);
       } else {
-        /* log removed */
+        console.error('❌ [ChatWidget] Error eliminando conversación (API):', data.error);
       }
     } catch (error) {
-      /* log removed */
+      console.error('❌ [ChatWidget] Error eliminando conversación (Network/Code):', error);
+    }
+  };
+
+  // Limpiar historial de conversación
+  const clearConversation = async (conversationId: string) => {
+    console.log('🧹 [ChatWidget] Limpiando historial de conversación:', conversationId);
+    
+    if (!session) return;
+    
+    // Limpiar localmente de inmediato
+    if (selectedConversation === conversationId) {
+      setMessages([]);
+    }
+    
+    try {
+      const response = await fetch('/api/chat/conversations/action', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          action: 'clear_history',
+          conversation_id: conversationId
+        })
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        console.log('✅ [ChatWidget] Historial limpiado exitosamente');
+        await loadConversations();
+      } else {
+        console.error('❌ [ChatWidget] Error limpiando conversación:', data.error);
+        if (selectedConversation === conversationId) {
+          loadMessages(conversationId);
+        }
+      }
+    } catch (error) {
+      console.error('❌ [ChatWidget] Error limpiando conversación:', error);
     }
   };
 
@@ -1057,7 +1114,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         })
       });
     } catch (error) {
-      /* log removed */
+      console.error('Error actualizando estado:', error);
     }
   };
 
@@ -1082,13 +1139,13 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     // 🔧 NUEVO: No mostrar toast si la conversación no tiene mensajes no leídos
     // Esto evita mostrar toasts de mensajes que ya fueron leídos al recargar la página
     if (conversation.unread_count === 0 || !conversation.unread_count) {
-      /* log removed */
+      console.log('⏭️ [ChatWidget] No mostrar toast: conversación ya está marcada como leída');
       return;
     }
     
     // 🔧 NUEVO: Verificar si el mensaje ya fue procesado (doble verificación)
     if (processedMessageIdsRef.current.has(message.id)) {
-      /* log removed */
+      console.log('⏭️ [ChatWidget] No mostrar toast: mensaje ya procesado:', message.id);
       return;
     }
     
@@ -1142,14 +1199,14 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     // Optimizador: Detectar cuando el usuario regresa a la pestaña
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && session) {
-        /* log removed */
+        console.log('👁️ [ChatWidget] Pestaña reactivada: Recuperando datos instantáneamente...');
         loadAvailableUsers();
         loadConversations();
         if (selectedConversation) {
           loadMessages(selectedConversation);
         }
       } else {
-        /* log removed */
+        console.log('🙈 [ChatWidget] Pestaña inactiva: Chat en modo ahorro de energía.');
       }
     };
     
@@ -1193,7 +1250,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         // Si la conversación que estaba abierta tiene mensajes no leídos, marcarla como leída
         const conv = conversations.find(c => c.id === lastOpenConversation);
         if (conv && (conv.unread_count ?? 0) > 0) {
-          /* log removed */
+          console.log('👁️ [ChatWidget] Marcando conversación como leída al recargar:', lastOpenConversation);
           markConversationAsRead(lastOpenConversation, true);
           // 🔧 NUEVO: Marcar como leída localmente para preservar el estado
           locallyMarkedAsReadRef.current.add(lastOpenConversation);
@@ -1225,11 +1282,11 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   useEffect(() => {
     if (!session || !selectedConversation) return;
 
-    /* log removed */
+    console.log('🔄 [ChatWidget] Iniciando polling de mensajes como respaldo...');
     
     const messagesPollingInterval = setInterval(async () => {
       if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return; // Pausado Inteligente
-      /* log removed */
+      console.log('🔄 [ChatWidget] Polling: verificando mensajes nuevos...');
       await loadMessages(selectedConversation);
       // El marcado como leído se maneja automáticamente en loadMessages
       // No necesitamos marcado adicional aquí para evitar duplicados
@@ -1237,7 +1294,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
 
     // Cleanup
     return () => {
-      /* log removed */
+      console.log('🧹 [ChatWidget] Deteniendo polling de mensajes...');
       clearInterval(messagesPollingInterval);
     };
   }, [session, selectedConversation]);
@@ -1277,7 +1334,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         // Obtener token válido (refrescando si es necesario)
         const token = await getValidToken();
         if (!token) {
-          /* log removed */
+          console.warn('⚠️ [Polling] No se pudo obtener token válido, deteniendo polling');
           clearInterval(conversationsPollingInterval);
           return;
         }
@@ -1288,7 +1345,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         
         // Si recibimos 401, la sesión expiró - detener polling
         if (response.status === 401) {
-          /* log removed */
+          console.warn('⚠️ [Polling] Token inválido (401), deteniendo polling');
           clearInterval(conversationsPollingInterval);
           return;
         }
@@ -1312,11 +1369,11 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
               
               // Si el mensaje es de otro y no lo hemos visto
               if (lastMsg && lastMsg.sender_id !== userId) {
-                /* log removed */
+                console.log('🔄 [Polling] Mensaje nuevo detectado en polling:', lastMsg);
                 
                 // Disparar lógica de notificación si no se ha procesado
                 if (!processedMessageIdsRef.current.has(lastMsg.id)) {
-                  /* log removed */
+                  console.log('🔔 [Polling] Disparando notificación de respaldo...');
                   
                   // Marcar como procesado para evitar duplicados con realtime
                   processedMessageIdsRef.current.add(lastMsg.id);
@@ -1350,7 +1407,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         });
         
       } catch (error) {
-        /* log removed */
+        console.error('Error en polling:', error);
       }
     }, 20000); // 20s (antes 4s) — reducido para ahorrar API calls
 
@@ -1365,7 +1422,10 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     if (prevConversationRef.current !== null && 
         prevConversationRef.current !== selectedConversation && 
         selectedConversation !== null) {
-      /* log removed */
+      console.log('🔄 [ChatWidget] Cambio de conversación detectado:', {
+        from: prevConversationRef.current,
+        to: selectedConversation
+      });
       setMessages([]); // Limpiar mensajes inmediatamente
       setNewMessage(''); // Limpiar input de mensaje
       setTempChatUser(null); // Limpiar usuario temporal si existe
@@ -1384,8 +1444,28 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     if (!isOpen || mainView !== 'chat' || !selectedConversation) return;
     if (selectedConversation.startsWith('temp_')) return; // No marcar conversaciones temporales
     
-    // Cuando el usuario está viendo una conversación (incluyendo Botty), marcarla como leída INMEDIATAMENTE
-    // Sin debounce para asegurar que se marque antes de cualquier recarga
+    // Verificar si realmente necesitamos marcarla como leída
+    // Solo procedemos si la conversación actual tiene mensajes no leídos
+    // Esto previene el infinite loop (Maximum update depth exceeded) causado por setConversations
+    const currentConv = conversations.find(c => c.id === selectedConversation);
+    
+    // Si ya está en 0, no hacemos nada para evitar el bucle infinito
+    if (currentConv && (currentConv.unread_count ?? 0) === 0) {
+      // De todas formas guardamos el último mensaje procesado
+      if (currentConv.last_message?.id && !processedMessageIdsRef.current.has(currentConv.last_message.id)) {
+        processedMessageIdsRef.current.add(currentConv.last_message.id);
+        if (typeof window !== 'undefined') {
+          const processedArray = Array.from(processedMessageIdsRef.current);
+          const trimmedArray = processedArray.slice(-100);
+          localStorage.setItem('chat_processed_messages', JSON.stringify(trimmedArray));
+          processedMessageIdsRef.current = new Set(trimmedArray);
+        }
+      }
+      return;
+    }
+    
+    // Cuando el usuario está viendo una conversación (incluyendo Botty) con mensajes no leídos,
+    // marcarla como leída INMEDIATAMENTE
     markConversationAsRead(selectedConversation, true); // true = inmediato, sin debounce
     
     // 🔧 NUEVO: Marcar como leída localmente para preservar el estado
@@ -1398,8 +1478,6 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     zeroUnreadForConversation(selectedConversation);
     
     // 🔧 NUEVO: Marcar todos los mensajes de esta conversación como procesados
-    // Esto evita que aparezcan toasts al recargar si la conversación estaba abierta
-    const currentConv = conversations.find(c => c.id === selectedConversation);
     if (currentConv?.last_message?.id) {
       processedMessageIdsRef.current.add(currentConv.last_message.id);
       if (typeof window !== 'undefined') {
@@ -1409,27 +1487,37 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         processedMessageIdsRef.current = new Set(trimmedArray);
       }
     }
-  }, [isOpen, mainView, selectedConversation, conversations]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, mainView, selectedConversation]); // Eliminamos 'conversations' de las dependencias explícitamente para evitar el loop
 
   // Suscripción a tiempo real para mensajes nuevos
   useEffect(() => {
     if (!session || !userId) return;
 
-    /* log removed */
+    console.log('🔔 [ChatWidget] Configurando suscripción en tiempo real...');
 
     const channel = supabase
       .channel('chat-messages-realtime')
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*',
           schema: 'public',
           table: 'chat_messages'
         },
         async (payload: any) => {
+          if (payload.eventType === 'DELETE') {
+            console.log('🗑️ [ChatWidget] Mensaje(s) eliminado(s):', payload);
+            if (selectedConversation) {
+              await loadMessages(selectedConversation);
+            }
+            return;
+          }
           const newMessage = payload.new as any;
-          /* log removed */
-          /* log removed */
+          if (!newMessage) return;
+          
+          console.log('📨 [ChatWidget] Nuevo mensaje recibido:', newMessage);
+          console.log('📊 [ChatWidget] Estado actual - isOpen:', isOpen, 'selectedConversation:', selectedConversation, 'userId:', userId);
           
           // Verificar si el mensaje es para el usuario actual
           // Hacer una consulta directa para verificar si el usuario es participante de la conversación
@@ -1441,27 +1529,27 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
               .single();
             
             if (error || !conversation) {
-              /* log removed */
+              console.log('❌ [ChatWidget] Error verificando conversación:', error);
               return;
             }
             
             const isParticipant = conversation.participant_1_id === userId || conversation.participant_2_id === userId;
-            /* log removed */
+            console.log('👤 [ChatWidget] Es participante?', isParticipant, 'sender_id:', newMessage.sender_id, 'userId:', userId);
             
             if (isParticipant) {
-              /* log removed */
+              console.log('✅ [ChatWidget] Usuario es participante de la conversación');
               
               // 🔔 CRÍTICO: Verificar si el mensaje es de otro usuario
               if (newMessage.sender_id !== userId) {
-                /* log removed */
+                console.log('🔔 [ChatWidget] ¡MENSAJE DE OTRO USUARIO DETECTADO!');
                 
                 // 🔔 NUEVO: Notificar en la pestaña si el usuario está en otra pestaña
                 // IMPORTANTE: Verificar ANTES de abrir el chat para no interferir
                 const isTabHidden = document.hidden;
-                /* log removed */
+                console.log('📊 [ChatWidget] Estado de pestaña - document.hidden:', isTabHidden, 'originalTitle:', originalTitleRef.current);
                 
                 if (isTabHidden) {
-                  /* log removed */
+                  console.log('📢 [ChatWidget] Usuario en otra pestaña, notificando...');
                   
                   // Asegurar que tenemos el título original
                   if (!originalTitleRef.current) {
@@ -1501,9 +1589,9 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                         tag: `chat-${newMessage.conversation_id}`,
                         requireInteraction: false
                       });
-                      /* log removed */
+                      console.log('✅ [ChatWidget] Notificación del navegador mostrada');
                     } catch (err) {
-                      /* log removed */
+                      console.warn('⚠️ [ChatWidget] Error mostrando notificación del navegador:', err);
                     }
                   } else if ('Notification' in window && Notification.permission === 'default') {
                     // Solicitar permiso la primera vez
@@ -1515,9 +1603,9 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                             icon: '/favicon.ico',
                             tag: `chat-${newMessage.conversation_id}`
                           });
-                          /* log removed */
+                          console.log('✅ [ChatWidget] Notificación del navegador mostrada (después de permiso)');
                         } catch (err) {
-                          /* log removed */
+                          console.warn('⚠️ [ChatWidget] Error mostrando notificación del navegador:', err);
                         }
                       }
                     });
@@ -1527,34 +1615,34 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                   if ('vibrate' in navigator) {
                     try {
                       navigator.vibrate([200, 100, 200]);
-                      /* log removed */
+                      console.log('✅ [ChatWidget] Vibración activada');
                     } catch (err) {
-                      /* log removed */
+                      console.warn('⚠️ [ChatWidget] Error en vibración:', err);
                     }
                   }
                 } else {
-                  /* log removed */
+                  console.log('👁️ [ChatWidget] Usuario está viendo la pestaña, no se notifica');
                 }
                 
                 // 🔔 CRÍTICO: Abrir chat automáticamente DESPUÉS de verificar notificaciones
                 // Esto debe hacerse después para no interferir con la detección de visibilidad
                 
                 // Intentar reproducir sonido INMEDIATAMENTE
-                /* log removed */
+                console.log('🔊 [ChatWidget] Intentando reproducir sonido...');
                 try {
                   playNotificationSound(0.8); // Volumen alto
-                  /* log removed */
+                  console.log('🔊 [ChatWidget] Comando de sonido enviado');
                 } catch (err) {
-                  /* log removed */
+                  console.error('❌ [ChatWidget] Error al reproducir sonido:', err);
                 }
                 
                 // Usar función de estado para obtener el valor más reciente y abrir el chat
                 setIsOpen(currentIsOpen => {
-                  /* log removed */
+                  console.log('📂 [ChatWidget] Estado isOpen actual:', currentIsOpen);
                   
                   // Si el chat está cerrado, abrirlo automáticamente
                   if (!currentIsOpen) {
-                    /* log removed */
+                    console.log('📂 [ChatWidget] ⚡ ABRIENDO CHAT AUTOMÁTICAMENTE - Chat estaba cerrado');
                     // Actualizar otros estados después de abrir el chat
                     setTimeout(() => {
                       setMainView('chat');
@@ -1563,20 +1651,20 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                     }, 100);
                     return true; // Abrir el chat
                   } else {
-                    /* log removed */
+                    console.log('📂 [ChatWidget] El chat ya estaba abierto');
                   }
                   
                   // Si el chat ya está abierto, cambiar a la conversación del mensaje nuevo
                   setSelectedConversation(currentSelected => {
                     if (currentSelected !== newMessage.conversation_id) {
-                      /* log removed */
+                      console.log('🔄 [ChatWidget] Cambiando a conversación del mensaje nuevo');
                       setMainView('chat');
                       setTimeout(() => {
                         loadConversations();
                       }, 100);
                       return newMessage.conversation_id;
                     } else {
-                      /* log removed */
+                      console.log('🔄 [ChatWidget] Ya estaba en la conversación correcta');
                     }
                     return currentSelected;
                   });
@@ -1587,7 +1675,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                 // Reproducir sonido (con throttling)
                 const now = Date.now();
                 if (now - lastSoundTimeRef.current > 2000) {
-                  /* log removed */
+                  console.log('🔔 [ChatWidget] Reproduciendo sonido para mensaje nuevo');
                   playNotificationSound(0.6);
                   lastSoundTimeRef.current = now;
                 }
@@ -1595,15 +1683,15 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
               
               // Si es la conversación activa, agregar el mensaje directamente
               if (selectedConversation === newMessage.conversation_id) {
-                /* log removed */
+                console.log('💬 [ChatWidget] Agregando mensaje a conversación activa');
                 setMessages(prev => {
                   // Verificar que el mensaje no esté ya en la lista
                   const messageExists = prev.some(msg => msg.id === newMessage.id);
                   if (messageExists) {
-                    /* log removed */
+                    console.log('⚠️ [ChatWidget] Mensaje ya existe en la lista, no agregando');
                     return prev;
                   }
-                  /* log removed */
+                  console.log('➕ [ChatWidget] Agregando nuevo mensaje a la lista');
                   return [...prev, newMessage];
                 });
                 // Si estamos viendo esta conversación (incluyendo Botty), marcar como leído inmediatamente
@@ -1617,7 +1705,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                 zeroUnreadForConversation(newMessage.conversation_id);
               } else {
                 // Si NO estamos viendo esta conversación, actualizar lista
-                /* log removed */
+                console.log('🔄 [ChatWidget] Nuevo mensaje en conversación no activa, actualizando lista...');
                 loadConversations();
               }
               
@@ -1626,7 +1714,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
               if (newMessage.sender_id === AIM_BOTTY_ID && 
                   newMessage.id !== autoOpenedBottyRef.current &&
                   newMessage.sender_id !== userId) {
-                /* log removed */
+                console.log('🤖 [ChatWidget] Mensaje nuevo de AIM Botty detectado, abriendo ventana automáticamente...');
                 autoOpenedBottyRef.current = newMessage.id;
                 
                 // Verificar si ya hay una ventana abierta para AIM Botty
@@ -1636,20 +1724,20 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                 
                 // Solo abrir automáticamente si el chat principal está abierto y no existe ventana
                 if (!bottyWindowExists && isOpen) {
-                  /* log removed */
+                  console.log('🪟 [ChatWidget] Abriendo ventana de AIM Botty automáticamente...');
                   // Abrir ventana de AIM Botty automáticamente (solo una vez por mensaje)
                   setTimeout(() => {
                     openChatWithUser(AIM_BOTTY_ID);
                   }, 500); // Pequeño delay para mejor UX, no invasivo
                 } else if (bottyWindowExists) {
-                  /* log removed */
+                  console.log('🪟 [ChatWidget] Ventana de AIM Botty ya está abierta');
                 }
               }
             } else {
-              /* log removed */
+              console.log('❌ [ChatWidget] Usuario no es participante de la conversación');
             }
           } catch (error) {
-            /* log removed */
+            console.error('❌ [ChatWidget] Error en verificación de conversación:', error);
           }
         }
       )
@@ -1662,23 +1750,23 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         },
         (payload: any) => {
           const updatedConversation = payload.new as any;
-          /* log removed */
+          console.log('🔄 [ChatWidget] Conversación actualizada:', updatedConversation);
           
           // Verificar si la conversación actualizada pertenece al usuario
           const isRelevantConversation = conversations.some(conv => conv.id === updatedConversation.id);
           
           if (isRelevantConversation) {
-            /* log removed */
+            console.log('✅ [ChatWidget] Conversación relevante actualizada, recargando lista...');
             loadConversations();
           }
         }
       )
       .subscribe((status: any) => {
-        /* log removed */
+        console.log('📡 [ChatWidget] Estado de suscripción:', status);
       });
 
     return () => {
-      /* log removed */
+      console.log('🧹 [ChatWidget] Limpiando suscripción en tiempo real');
       supabase.removeChannel(channel);
       
       // Limpiar todos los timeouts de marcado como leído
@@ -1692,7 +1780,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   useEffect(() => {
     if (!session) return;
 
-    /* log removed */
+    console.log('👥 [ChatWidget] Configurando suscripción para estados de usuarios...');
 
     const userStatusChannel = supabase
       .channel('chat-user-status-realtime')
@@ -1704,25 +1792,28 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           table: 'chat_user_status'
         },
         async (payload: any) => {
-          /* log removed */
+          console.log('👥 [ChatWidget] Estado de usuario actualizado:', payload);
           
-          // Recargar lista de usuarios para reflejar cambios inmediatamente
-          // Esto detecta cuando un usuario se marca como offline
-          await loadAvailableUsers();
-          
-          // Log adicional para debugging
-          if (payload.new) {
+          if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
             const newStatus = payload.new as any;
-            /* log removed */
+            console.log(`📊 [ChatWidget] Usuario ${newStatus.user_id} ahora está ${newStatus.is_online ? 'EN LÍNEA' : 'OFFLINE'}`);
+            
+            // 🔧 FIX: Actualización local SIN llamada a la API
+            // Evita un N-Squared API storm: cuando el estado de alguien cambia, no recargamos todos los usuarios.
+            setAvailableUsers(prev => prev.map(user => 
+              user.id === newStatus.user_id 
+                ? { ...user, is_online: newStatus.is_online, last_seen: newStatus.last_seen || newStatus.updated_at }
+                : user
+            ));
           }
         }
       )
       .subscribe((status: any) => {
-        /* log removed */
+        console.log('👥 [ChatWidget] Estado de suscripción de usuarios:', status);
       });
 
     return () => {
-      /* log removed */
+      console.log('🧹 [ChatWidget] Limpiando suscripción de estados de usuarios');
       supabase.removeChannel(userStatusChannel);
     };
   }, [session]);
@@ -1733,39 +1824,34 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     // pero no recrea la suscripción
   }, [conversations, selectedConversation]);
 
-  // 🔧 NUEVO: Escuchar evento global open-aim-chat para abrir el chat desde la barra inferior
-  useEffect(() => {
-    const handleOpenChat = () => {
-      setIsOpen(true);
-      initAudio();
-      if (session) loadConversations();
-      setToasts([]);
-    };
-    window.addEventListener('open-aim-chat', handleOpenChat);
-    return () => window.removeEventListener('open-aim-chat', handleOpenChat);
-  }, [session]);
+  const handleCloseChat = () => {
+    if (isClosing) return;
+    setIsClosing(true);
+    setTimeout(() => {
+      setIsOpen(false);
+      setIsClosing(false);
+      setTempChatUser(null);
+    }, 280);
+  };
 
   const toggleChat = () => {
-    const newIsOpen = !isOpen;
-    setIsOpen(newIsOpen);
+    if (isOpen) {
+      handleCloseChat();
+      return;
+    }
+    
+    setIsOpen(true);
     
     // 🔔 CORREGIDO: Inicializar audio cuando el usuario interactúa con el chat por primera vez
     // Esto es necesario porque algunos navegadores requieren interacción del usuario para reproducir audio
-    if (newIsOpen) {
-      initAudio();
-    }
+    initAudio();
     
-    if (newIsOpen && session) {
+    if (session) {
       loadConversations();
     }
     
     // Cerrar todos los toasts cuando se abre el chat
-    if (newIsOpen) {
-      setToasts([]);
-    } else {
-      // Limpiar usuario temporal al cerrar
-      setTempChatUser(null);
-    }
+    setToasts([]);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -1775,28 +1861,56 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     }
   };
 
+  // 🔧 Integración con System UI (Mobile Nav Bar)
+  // Usamos ref para evitar stale closures sin dependencias
+  const toggleChatRef = useRef<() => void>(() => {});
+  useEffect(() => {
+    toggleChatRef.current = toggleChat;
+  });
+
+  useEffect(() => {
+    const handleToggleSystemChat = () => toggleChatRef.current();
+    window.addEventListener('open-aim-chat', handleToggleSystemChat);
+    
+    // Escuchar el evento de recarga de mensajes (para subidas de multimedia directas)
+    const handleReloadMessages = (e: any) => {
+      const convId = e.detail?.conversationId;
+      if (convId && selectedConversation === convId) {
+        console.log('🔄 [ChatWidget] Recargando mensajes por evento global...');
+        loadMessages(convId);
+      }
+    };
+    window.addEventListener('chat-reload-messages', handleReloadMessages);
+    
+    return () => {
+      window.removeEventListener('open-aim-chat', handleToggleSystemChat);
+      window.removeEventListener('chat-reload-messages', handleReloadMessages);
+    };
+  }, [selectedConversation]);
+
   return (
     <>
-      {/* Botón flotante: independiente del árbol (Portal a document.body) y anclado al viewport */}
+      {/* Botón flotante: independiente del árbol (Portal a document.body) y anclado al viewport.
+          NOTA: Se oculta en móvil (`hidden md:block`) ya que se traslada su acceso al Bottom Nav nativo */}
       {isMounted && typeof document !== 'undefined' && document.body && createPortal(
         (
-      <div className="relative">
+      <div className="relative hidden md:block">
         <button
           onClick={toggleChat}
           style={{
             right: 24,
             bottom: 'calc(env(safe-area-inset-bottom, 0px) + 24px)'
           }}
-          className={`hidden md:flex fixed w-10 h-10 hover:w-16 hover:h-10 text-white dark:text-gray-900 rounded-xl shadow-lg border border-white/20 dark:border-gray-700/30 transition-all duration-300 items-center justify-center z-[9995] group overflow-visible ${
+          className={`fixed h-10 ${isOpen ? 'w-16' : 'w-10 hover:w-16'} rounded-xl transition-all duration-300 flex items-center justify-center z-[9995] group overflow-visible shadow-[0_8px_32px_rgba(0,0,0,0.15)] border ${
             totalUnreadCount > 0
-              ? 'bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 animate-gradient-x shadow-blue-500/30 ring-2 ring-blue-400/30'
-              : 'bg-gradient-to-br from-gray-900 to-black dark:from-gray-100 dark:to-gray-300'
+              ? 'bg-gradient-to-r from-blue-500 via-indigo-500 to-violet-500 animate-gradient-x shadow-indigo-500/40 border-white/30 text-white shadow-[0_0_20px_rgba(99,102,241,0.5)]'
+              : 'bg-black text-white dark:bg-white dark:text-gray-900 border-transparent hover:bg-gray-800 dark:hover:bg-gray-100'
           }`}
           aria-label={`Abrir chat de soporte${totalUnreadCount > 0 ? ` (${totalUnreadCount} mensajes no leídos)` : ''}`}
         >
           <div className="flex items-center justify-center relative w-full h-full">
-            <span className="text-white dark:text-gray-900 font-bold text-sm group-hover:hidden drop-shadow-sm">A</span>
-            <span className="text-white dark:text-gray-900 font-bold text-xs hidden group-hover:block whitespace-nowrap drop-shadow-sm">AIM</span>
+            <span className={`font-bold text-sm drop-shadow-sm transition-opacity ${isOpen ? 'hidden' : 'block group-hover:hidden'}`}>A</span>
+            <span className={`font-bold text-xs drop-shadow-sm transition-opacity whitespace-nowrap ${isOpen ? 'block' : 'hidden group-hover:block'}`}>AIM</span>
             {/* Badge de contador - esquina superior derecha */}
             {totalUnreadCount > 0 && (
               <div className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 z-10 pointer-events-none opacity-90">
@@ -1818,8 +1932,9 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         userId={userId}
         userRole={userRole}
         session={session}
-        isMainChatOpen={isOpen}
-        onCloseMainChat={() => setIsOpen(false)}
+        isMainChatOpen={isOpen || isClosing}
+        isMainChatClosing={isClosing}
+        onCloseMainChat={handleCloseChat}
         view={mainView}
         setView={setMainView}
         availableUsers={availableUsers}
@@ -1837,6 +1952,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         showDeleteConfirm={showDeleteConfirm}
         setShowDeleteConfirm={setShowDeleteConfirm}
         deleteConversation={deleteConversation}
+        clearConversation={clearConversation}
         tempChatUser={tempChatUser}
         getDisplayName={getDisplayName}
         replyTo={replyTo}

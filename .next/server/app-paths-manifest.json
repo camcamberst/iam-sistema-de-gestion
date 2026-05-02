@@ -1,7 +1,11 @@
 {
-  "/(auth)/login/page": "app/(auth)/login/page.js",
-  "/admin/model/anticipos/solicitar/page": "app/admin/model/anticipos/solicitar/page.js",
-  "/admin/model/dashboard/page": "app/admin/model/dashboard/page.js",
+  "/api/chat/users/route": "app/api/chat/users/route.js",
+  "/api/chat/conversations/route": "app/api/chat/conversations/route.js",
+  "/api/chat/messages/route": "app/api/chat/messages/route.js",
+  "/api/chat/messages/read/route": "app/api/chat/messages/read/route.js",
+  "/api/calculator/model-values-v2/route": "app/api/calculator/model-values-v2/route.js",
+  "/api/calculator/config-v2/route": "app/api/calculator/config-v2/route.js",
+  "/api/calculator/period-closure/platform-freeze-status/route": "app/api/calculator/period-closure/platform-freeze-status/route.js",
   "/admin/model/calculator/page": "app/admin/model/calculator/page.js",
-  "/admin/model/portafolio/page": "app/admin/model/portafolio/page.js"
+  "/admin/model/dashboard/page": "app/admin/model/dashboard/page.js"
 }

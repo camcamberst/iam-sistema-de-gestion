@@ -790,8 +790,9 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   };
 
   // Enviar mensaje
-  const sendMessage = async () => {
-    if (!newMessage.trim() || !selectedConversation || !session) return;
+  const sendMessage = async (metadata?: any) => {
+    const hasContent = newMessage.trim() || (metadata && metadata.content);
+    if (!hasContent || !selectedConversation || !session) return;
     
     console.log('📤 [ChatWidget] Enviando mensaje:', { 
       content: newMessage.trim(), 
@@ -828,7 +829,8 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         body: JSON.stringify({
           conversation_id: conversationId,
           content: newMessage.trim(),
-          reply_to_message_id: replyTo ? replyTo.id : undefined
+          reply_to_message_id: replyTo ? replyTo.id : undefined,
+          ...(metadata || {})
         })
       });
       
@@ -1054,6 +1056,45 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       }
     } catch (error) {
       console.error('❌ [ChatWidget] Error eliminando conversación (Network/Code):', error);
+    }
+  };
+
+  // Limpiar historial de conversación
+  const clearConversation = async (conversationId: string) => {
+    console.log('🧹 [ChatWidget] Limpiando historial de conversación:', conversationId);
+    
+    if (!session) return;
+    
+    // Limpiar localmente de inmediato
+    if (selectedConversation === conversationId) {
+      setMessages([]);
+    }
+    
+    try {
+      const response = await fetch('/api/chat/conversations/action', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          action: 'clear_history',
+          conversation_id: conversationId
+        })
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        console.log('✅ [ChatWidget] Historial limpiado exitosamente');
+        await loadConversations();
+      } else {
+        console.error('❌ [ChatWidget] Error limpiando conversación:', data.error);
+        if (selectedConversation === conversationId) {
+          loadMessages(conversationId);
+        }
+      }
+    } catch (error) {
+      console.error('❌ [ChatWidget] Error limpiando conversación:', error);
     }
   };
 
@@ -1403,8 +1444,28 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     if (!isOpen || mainView !== 'chat' || !selectedConversation) return;
     if (selectedConversation.startsWith('temp_')) return; // No marcar conversaciones temporales
     
-    // Cuando el usuario está viendo una conversación (incluyendo Botty), marcarla como leída INMEDIATAMENTE
-    // Sin debounce para asegurar que se marque antes de cualquier recarga
+    // Verificar si realmente necesitamos marcarla como leída
+    // Solo procedemos si la conversación actual tiene mensajes no leídos
+    // Esto previene el infinite loop (Maximum update depth exceeded) causado por setConversations
+    const currentConv = conversations.find(c => c.id === selectedConversation);
+    
+    // Si ya está en 0, no hacemos nada para evitar el bucle infinito
+    if (currentConv && (currentConv.unread_count ?? 0) === 0) {
+      // De todas formas guardamos el último mensaje procesado
+      if (currentConv.last_message?.id && !processedMessageIdsRef.current.has(currentConv.last_message.id)) {
+        processedMessageIdsRef.current.add(currentConv.last_message.id);
+        if (typeof window !== 'undefined') {
+          const processedArray = Array.from(processedMessageIdsRef.current);
+          const trimmedArray = processedArray.slice(-100);
+          localStorage.setItem('chat_processed_messages', JSON.stringify(trimmedArray));
+          processedMessageIdsRef.current = new Set(trimmedArray);
+        }
+      }
+      return;
+    }
+    
+    // Cuando el usuario está viendo una conversación (incluyendo Botty) con mensajes no leídos,
+    // marcarla como leída INMEDIATAMENTE
     markConversationAsRead(selectedConversation, true); // true = inmediato, sin debounce
     
     // 🔧 NUEVO: Marcar como leída localmente para preservar el estado
@@ -1417,8 +1478,6 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     zeroUnreadForConversation(selectedConversation);
     
     // 🔧 NUEVO: Marcar todos los mensajes de esta conversación como procesados
-    // Esto evita que aparezcan toasts al recargar si la conversación estaba abierta
-    const currentConv = conversations.find(c => c.id === selectedConversation);
     if (currentConv?.last_message?.id) {
       processedMessageIdsRef.current.add(currentConv.last_message.id);
       if (typeof window !== 'undefined') {
@@ -1428,7 +1487,8 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         processedMessageIdsRef.current = new Set(trimmedArray);
       }
     }
-  }, [isOpen, mainView, selectedConversation, conversations]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, mainView, selectedConversation]); // Eliminamos 'conversations' de las dependencias explícitamente para evitar el loop
 
   // Suscripción a tiempo real para mensajes nuevos
   useEffect(() => {
@@ -1441,12 +1501,21 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*',
           schema: 'public',
           table: 'chat_messages'
         },
-        async (payload) => {
+        async (payload: any) => {
+          if (payload.eventType === 'DELETE') {
+            console.log('🗑️ [ChatWidget] Mensaje(s) eliminado(s):', payload);
+            if (selectedConversation) {
+              await loadMessages(selectedConversation);
+            }
+            return;
+          }
           const newMessage = payload.new as any;
+          if (!newMessage) return;
+          
           console.log('📨 [ChatWidget] Nuevo mensaje recibido:', newMessage);
           console.log('📊 [ChatWidget] Estado actual - isOpen:', isOpen, 'selectedConversation:', selectedConversation, 'userId:', userId);
           
@@ -1679,7 +1748,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           schema: 'public',
           table: 'chat_conversations'
         },
-        (payload) => {
+        (payload: any) => {
           const updatedConversation = payload.new as any;
           console.log('🔄 [ChatWidget] Conversación actualizada:', updatedConversation);
           
@@ -1692,7 +1761,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           }
         }
       )
-      .subscribe((status) => {
+      .subscribe((status: any) => {
         console.log('📡 [ChatWidget] Estado de suscripción:', status);
       });
 
@@ -1722,7 +1791,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           schema: 'public',
           table: 'chat_user_status'
         },
-        async (payload) => {
+        async (payload: any) => {
           console.log('👥 [ChatWidget] Estado de usuario actualizado:', payload);
           
           if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
@@ -1739,7 +1808,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           }
         }
       )
-      .subscribe((status) => {
+      .subscribe((status: any) => {
         console.log('👥 [ChatWidget] Estado de suscripción de usuarios:', status);
       });
 
@@ -1802,8 +1871,22 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   useEffect(() => {
     const handleToggleSystemChat = () => toggleChatRef.current();
     window.addEventListener('open-aim-chat', handleToggleSystemChat);
-    return () => window.removeEventListener('open-aim-chat', handleToggleSystemChat);
-  }, []);
+    
+    // Escuchar el evento de recarga de mensajes (para subidas de multimedia directas)
+    const handleReloadMessages = (e: any) => {
+      const convId = e.detail?.conversationId;
+      if (convId && selectedConversation === convId) {
+        console.log('🔄 [ChatWidget] Recargando mensajes por evento global...');
+        loadMessages(convId);
+      }
+    };
+    window.addEventListener('chat-reload-messages', handleReloadMessages);
+    
+    return () => {
+      window.removeEventListener('open-aim-chat', handleToggleSystemChat);
+      window.removeEventListener('chat-reload-messages', handleReloadMessages);
+    };
+  }, [selectedConversation]);
 
   return (
     <>
@@ -1869,6 +1952,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         showDeleteConfirm={showDeleteConfirm}
         setShowDeleteConfirm={setShowDeleteConfirm}
         deleteConversation={deleteConversation}
+        clearConversation={clearConversation}
         tempChatUser={tempChatUser}
         getDisplayName={getDisplayName}
         replyTo={replyTo}

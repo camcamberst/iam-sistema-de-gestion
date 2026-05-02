@@ -38,7 +38,7 @@ interface ChatBarProps {
   messages?: any[];
   newMessage?: string;
   setNewMessage?: (message: string) => void;
-  sendMessage?: () => void;
+  sendMessage?: (metadata?: any) => void;
   handleKeyPress?: (e: React.KeyboardEvent) => void;
   showDeleteConfirm?: string | null;
   setShowDeleteConfirm?: (id: string | null) => void;
@@ -77,6 +77,7 @@ const ChatBar: React.FC<ChatBarProps> = ({
   showDeleteConfirm,
   setShowDeleteConfirm,
   deleteConversation,
+  clearConversation,
   tempChatUser,
   getDisplayName,
   replyTo,
@@ -133,6 +134,7 @@ const ChatBar: React.FC<ChatBarProps> = ({
               showDeleteConfirm={showDeleteConfirm}
               setShowDeleteConfirm={setShowDeleteConfirm}
               deleteConversation={deleteConversation}
+              clearConversation={clearConversation}
               tempChatUser={tempChatUser}
               getDisplayName={getDisplayName}
               replyTo={replyTo}

@@ -2,6 +2,7 @@ import { useState, useRef, useCallback } from 'react';
 
 interface AudioRecorderState {
   isRecording: boolean;
+  isPaused: boolean;
   recordingTime: number; // en segundos
   audioBlob: Blob | null;
   audioUrl: string | null;
@@ -10,6 +11,7 @@ interface AudioRecorderState {
 export const useAudioRecorder = () => {
   const [state, setState] = useState<AudioRecorderState>({
     isRecording: false,
+    isPaused: false,
     recordingTime: 0,
     audioBlob: null,
     audioUrl: null,
@@ -50,6 +52,7 @@ export const useAudioRecorder = () => {
       
       setState({
         isRecording: true,
+        isPaused: false,
         recordingTime: 0,
         audioBlob: null,
         audioUrl: null,
@@ -57,7 +60,10 @@ export const useAudioRecorder = () => {
 
       // Iniciar temporizador
       timerIntervalRef.current = setInterval(() => {
-        setState((prev) => ({ ...prev, recordingTime: prev.recordingTime + 1 }));
+        setState((prev) => {
+          if (prev.isPaused) return prev;
+          return { ...prev, recordingTime: prev.recordingTime + 1 };
+        });
       }, 1000);
 
     } catch (error) {
@@ -65,6 +71,20 @@ export const useAudioRecorder = () => {
       throw error; // Permite al componente manejar el error de permisos
     }
   }, []);
+
+  const pauseRecording = useCallback(() => {
+    if (mediaRecorderRef.current && state.isRecording && !state.isPaused) {
+      mediaRecorderRef.current.pause();
+      setState(prev => ({ ...prev, isPaused: true }));
+    }
+  }, [state.isRecording, state.isPaused]);
+
+  const resumeRecording = useCallback(() => {
+    if (mediaRecorderRef.current && state.isRecording && state.isPaused) {
+      mediaRecorderRef.current.resume();
+      setState(prev => ({ ...prev, isPaused: false }));
+    }
+  }, [state.isRecording, state.isPaused]);
 
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current && state.isRecording) {
@@ -88,6 +108,7 @@ export const useAudioRecorder = () => {
     // Resetear inmediatamente sin generar Blob válido (o ignorándolo)
     setState({
       isRecording: false,
+      isPaused: false,
       recordingTime: 0,
       audioBlob: null,
       audioUrl: null,
@@ -101,6 +122,7 @@ export const useAudioRecorder = () => {
     }
     setState({
       isRecording: false,
+      isPaused: false,
       recordingTime: 0,
       audioBlob: null,
       audioUrl: null,
@@ -109,10 +131,13 @@ export const useAudioRecorder = () => {
 
   return {
     isRecording: state.isRecording,
+    isPaused: state.isPaused,
     recordingTime: state.recordingTime,
     audioBlob: state.audioBlob,
     audioUrl: state.audioUrl,
     startRecording,
+    pauseRecording,
+    resumeRecording,
     stopRecording,
     cancelRecording,
     clearAudio,

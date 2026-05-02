@@ -397,6 +397,53 @@
   animation: fade-breathe 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
+/* ═══════════════════════════════════════════════════════
+   🎙️ AURORA AUDIO DECK — Neon Glow Controls
+   Hover ilumina la silueta del ícono SVG con color neón.
+   ═══════════════════════════════════════════════════════ */
+.aurora-neon-rose:hover {
+  color: #f43f5e;
+  filter: drop-shadow(0 0 3px #f43f5e) drop-shadow(0 0 8px #f43f5e) drop-shadow(0 0 16px rgba(244, 63, 94, 0.5));
+}
+.aurora-neon-amber:hover {
+  color: #fbbf24;
+  filter: drop-shadow(0 0 3px #fbbf24) drop-shadow(0 0 8px #fbbf24) drop-shadow(0 0 16px rgba(251, 191, 36, 0.5));
+}
+.aurora-neon-emerald:hover {
+  color: #34d399;
+  filter: drop-shadow(0 0 3px #34d399) drop-shadow(0 0 8px #34d399) drop-shadow(0 0 16px rgba(52, 211, 153, 0.5));
+}
+.aurora-neon-indigo:hover {
+  color: #818cf8;
+  filter: drop-shadow(0 0 3px #818cf8) drop-shadow(0 0 8px #818cf8) drop-shadow(0 0 16px rgba(129, 140, 248, 0.5));
+}
+.aurora-neon-cyan:hover {
+  color: #22d3ee;
+  filter: drop-shadow(0 0 3px #22d3ee) drop-shadow(0 0 8px #22d3ee) drop-shadow(0 0 16px rgba(34, 211, 238, 0.5));
+}
+/* Disabled state: sin glow */
+.aurora-neon-rose:disabled:hover,
+.aurora-neon-amber:disabled:hover,
+.aurora-neon-emerald:disabled:hover,
+.aurora-neon-indigo:disabled:hover,
+.aurora-neon-cyan:disabled:hover {
+  color: inherit;
+  filter: none;
+}
+
+/* ═══════════════════════════════════════════════════════
+   ✨ VANISH MODE — Efecto Blip (Mensajes Efímeros)
+   ═══════════════════════════════════════════════════════ */
+@keyframes blip-out {
+  0% { transform: scale(1); opacity: 1; filter: brightness(1) drop-shadow(0 0 10px rgba(34,211,238,0.5)); }
+  40% { transform: scale(1.05); opacity: 0.9; filter: brightness(1.5) drop-shadow(0 0 20px rgba(34,211,238,0.8)); }
+  100% { transform: scale(0); opacity: 0; filter: brightness(2) drop-shadow(0 0 0px rgba(34,211,238,0)); }
+}
+
+.animate-blip-out {
+  animation: blip-out 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
 
 
 
