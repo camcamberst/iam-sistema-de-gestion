@@ -167,9 +167,9 @@ export default function ModelDashboard() {
       const ratesRes = await fetch('/api/rates-v2?activeOnly=true', { cache: 'no-store' });
       const ratesJson = await ratesRes.json();
       const rates = {
-        usd_cop: ratesJson?.data?.find((r: any) => r.kind === 'USD→COP')?.value || 3900,
-        eur_usd: ratesJson?.data?.find((r: any) => r.kind === 'EUR→USD')?.value || 1.01,
-        gbp_usd: ratesJson?.data?.find((r: any) => r.kind === 'GBP→USD')?.value || 1.2,
+        usd_cop: ratesJson?.data?.find((r: any) => String(r.kind).replace(/[^A-Za-z]/g, '').toUpperCase() === 'USDCOP')?.value || 3900,
+        eur_usd: ratesJson?.data?.find((r: any) => String(r.kind).replace(/[^A-Za-z]/g, '').toUpperCase() === 'EURUSD')?.value || 1.01,
+        gbp_usd: ratesJson?.data?.find((r: any) => String(r.kind).replace(/[^A-Za-z]/g, '').toUpperCase() === 'GBPUSD')?.value || 1.2,
       };
 
       // 2) Configuración de plataformas habilitadas

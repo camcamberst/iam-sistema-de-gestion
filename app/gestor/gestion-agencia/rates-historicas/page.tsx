@@ -428,7 +428,7 @@ export default function GestorHistoricalRatesPage() {
                   <button
                     onClick={() => saveRates('1-15')}
                     disabled={saving}
-                    className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg transition-colors text-sm font-medium"
+                    className="flex-1 disabled:bg-gray-400 btn-apple-primary"
                   >
                     {saving ? 'Guardando...' : 'Guardar Rates'}
                   </button>
@@ -500,7 +500,7 @@ export default function GestorHistoricalRatesPage() {
                   <button
                     onClick={() => saveRates('16-31')}
                     disabled={saving}
-                    className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg transition-colors text-sm font-medium"
+                    className="flex-1 disabled:bg-gray-400 btn-apple-primary"
                   >
                     {saving ? 'Guardando...' : 'Guardar Rates'}
                   </button>

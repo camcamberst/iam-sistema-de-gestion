@@ -13,6 +13,8 @@ import AnnouncementBoardWidget from "../../../components/AnnouncementBoardWidget
 import ProductivityWidget from "../../../components/ProductivityWidget";
 import DynamicTimeIsland from "../../../components/ui/DynamicTimeIsland";
 import ModelAuroraBackground from "../../../components/ui/ModelAuroraBackground";
+import PageHeader from "@/components/ui/PageHeader";
+import AdminWidgetsMobileCarousel from "@/components/ui/AdminWidgetsMobileCarousel";
 
 type Role = 'super_admin' | 'admin' | 'modelo' | string;
 
@@ -24,6 +26,9 @@ export default function AdminDashboard() {
   const [userGroupIds, setUserGroupIds] = useState<string[]>([]);
   // Resumen de productividad (modelo)
   const [summary, setSummary] = useState<{ usdBruto: number; usdModelo: number; copModelo: number; goalUsd: number; pct: number } | null>(null);
+
+  // Tasas para el ticker (admin)
+  const [adminRates, setAdminRates] = useState<Array<{ kind: string; value: number }>>([]);
 
   
 
@@ -115,6 +120,47 @@ export default function AdminDashboard() {
     load();
   }, []);
 
+  // Cargar tasas para el ticker (Admin / Super Admin)
+  useEffect(() => {
+    const loadAdminRates = async () => {
+      if (!user || user.role === 'modelo') return;
+      try {
+        const ratesRes = await fetch('/api/rates-v2?activeOnly=true');
+        const ratesJson = await ratesRes.json();
+        
+        // Filtrar duplicados por 'kind' con normalización agresiva para evitar problemas de codificación (ej. 'USD??COP' vs 'USD→COP')
+        const uniqueRates: any[] = [];
+        const seenKinds = new Set();
+        
+        if (ratesJson?.data) {
+          for (const rate of ratesJson.data) {
+            if (!rate || !rate.kind) continue;
+            
+            // Extraer solo las letras (ej: USDCOP) para identificar inequívocamente el par de divisas
+            const normalizedKind = String(rate.kind).replace(/[^A-Za-z]/g, '').toUpperCase();
+            
+            if (!seenKinds.has(normalizedKind)) {
+              seenKinds.add(normalizedKind);
+              
+              // Restaurar un nombre bonito para la vista si está corrupto
+              let displayKind = rate.kind;
+              if (normalizedKind === 'USDCOP') displayKind = 'USD→COP';
+              else if (normalizedKind === 'EURUSD') displayKind = 'EUR→USD';
+              else if (normalizedKind === 'GBPUSD') displayKind = 'GBP→USD';
+              
+              uniqueRates.push({ ...rate, kind: displayKind });
+            }
+          }
+        }
+        
+        setAdminRates(uniqueRates);
+      } catch (e) {
+        console.warn('⚠️ No se pudieron cargar las tasas de admin:', e);
+      }
+    };
+    loadAdminRates();
+  }, [user]);
+
   // Cargar resumen de productividad para modelo
   useEffect(() => {
     const loadProductivity = async () => {
@@ -182,47 +228,33 @@ export default function AdminDashboard() {
     loadProductivity();
   }, [user]);
 
-  // Determinar clases de fondo dinámicamente según el rol
+  // El fondo general es provisto por admin/layout.tsx
   const isModelo = user?.role === 'modelo';
-  const bgClass = isModelo 
-    ? "min-h-screen relative w-full overflow-hidden bg-[#fbf9fa] dark:bg-[#060205]" 
-    : "min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900";
 
   return (
-    <div className={bgClass}>
+    <>
       {isModelo && <ModelAuroraBackground />}
       <div className={`max-w-screen-2xl mx-auto px-0 sm:px-4 md:px-6 lg:px-8 py-8 pt-16 ${isModelo ? 'relative z-10' : ''}`}>
         {/* Header */}
-        <div className="mb-8 sm:mb-12">
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-xl blur-xl"></div>
-            <div className="relative bg-white/80 dark:bg-white/[0.10] backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-white/20 dark:border-white/[0.12] shadow-lg dark:shadow-[0_1px_0_0_rgba(255,255,255,0.06)_inset,0_8px_32px_rgba(0,0,0,0.5)] dark:ring-0.5 dark:ring-blue-400/20">
-              <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-3">
-                <div className="flex items-center space-x-3 min-w-0 flex-1">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
-                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                    </svg>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h1 className="text-base sm:text-lg md:text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent leading-tight whitespace-nowrap overflow-hidden text-ellipsis">
-                      Dashboard
-                    </h1>
-                    {user && (
-                      <p className="mt-1 text-xs sm:text-sm text-gray-600 dark:text-gray-300 hidden sm:block">
-                        Bienvenido, {user.name} · Rol: {String(user.role).replace('_',' ')}
-                        {user.role !== 'super_admin' && user.groups.length > 0 && ` · Grupos: ${user.groups.join(', ')}`}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <PageHeader
+          title="Dashboard"
+          subtitle={user ? `Bienvenido, ${user.name} · Rol: ${String(user.role).replace('_',' ')}${user.role !== 'super_admin' && user.groups.length > 0 ? ` · Grupos: ${user.groups.join(', ')}` : ''}` : undefined}
+          glow="admin"
+          icon={
+            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+          }
+        />
 
         {/* Barra de Isla Dinámica - Tiempos del Mundo y Cierre */}
-        <DynamicTimeIsland />
+        <DynamicTimeIsland 
+          extraMessages={adminRates.map(r => ({
+            text: `Tasa activa: ${r.kind} = ${r.value}`,
+            urgent: false,
+            closed: false
+          }))}
+        />
 
         {/* Mensaje informativo para Admin sin grupos */}
         {user?.role === 'admin' && user.groups.length === 0 && (
@@ -247,28 +279,44 @@ export default function AdminDashboard() {
 
         {/* Tarjetas de conteo eliminadas por irrelevantes en el dashboard */}
 
-        {/* Tasas de calculadora + Resumen de facturación + Widget de productividad */}
+        {/* Carrusel (Facturación, Productividad) + What's News (Abajo en Móvil) */}
         {(user?.role === 'super_admin' || user?.role === 'admin' || user?.role === 'superadmin_aff') && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
-            <ActiveRatesPanel
-              compact={true}
-              userRole={user.role as 'admin' | 'super_admin' | 'superadmin_aff'}
+            <AdminWidgetsMobileCarousel
+              mobileChildren={[
+                <BillingSummaryCompact
+                  key="1"
+                  userRole={user.role as 'admin' | 'super_admin' | 'superadmin_aff'}
+                  userId={user.id}
+                  userGroups={user.groups}
+                />,
+                <ProductivityWidget
+                  key="2"
+                  userId={user.id}
+                  userRole={user.role as 'admin' | 'super_admin' | 'superadmin_aff'}
+                  forceSlide={0}
+                />,
+                <ProductivityWidget
+                  key="3"
+                  userId={user.id}
+                  userRole={user.role as 'admin' | 'super_admin' | 'superadmin_aff'}
+                  forceSlide={1}
+                />
+              ]}
+              desktopChildren={
+                <>
+                  <BillingSummaryCompact
+                    userRole={user.role as 'admin' | 'super_admin' | 'superadmin_aff'}
+                    userId={user.id}
+                    userGroups={user.groups}
+                  />
+                  <ProductivityWidget
+                    userId={user.id}
+                    userRole={user.role as 'admin' | 'super_admin' | 'superadmin_aff'}
+                  />
+                </>
+              }
             />
-            <BillingSummaryCompact
-              userRole={user.role as 'admin' | 'super_admin' | 'superadmin_aff'}
-              userId={user.id}
-              userGroups={user.groups}
-            />
-            <ProductivityWidget
-              userId={user.id}
-              userRole={user.role as 'admin' | 'super_admin' | 'superadmin_aff'}
-            />
-          </div>
-        )}
-
-        {/* Corcho Informativo - Widget de Visualización */}
-        {user && (user.role === 'super_admin' || user.role === 'admin' || user.role === 'superadmin_aff') && (
-          <div className="mb-8">
             <AnnouncementBoardWidget 
               userId={user.id}
               userGroups={userGroupIds}
@@ -294,33 +342,52 @@ export default function AdminDashboard() {
         {user?.role === 'modelo' && (
           <div className="space-y-6">
             {/* Panel de perfil */}
-            <div className="relative bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-700/20 p-6">
-              <div className="flex items-center space-x-2 mb-4">
-                <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
-                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
+            <div className="flex flex-col gap-1.5 sm:gap-2 h-full">
+              {/* TÍTULO MINIMALISTA POR FUERA DE LA CAJA */}
+              <div className="flex items-center justify-between px-1">
+                <div className="flex items-center space-x-1 sm:space-x-1.5 min-w-0">
+                  <div className="flex items-center justify-center text-blue-500 drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
+                    <svg className="w-4 h-4 sm:w-[1.125rem] sm:h-[1.125rem]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </div>
+                  <div className="relative flex items-center">
+                    <h2 className="text-[14px] sm:text-[15px] font-bold text-gray-900 dark:text-white tracking-tight drop-shadow-sm dark:drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">
+                      Mi perfil
+                    </h2>
+                    <span className="ml-2 text-[10px] sm:text-[11px] text-gray-500 dark:text-gray-400 font-medium tracking-wide hidden sm:block">
+                      Revisa tu información
+                    </span>
+                  </div>
                 </div>
-                <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Mi perfil</h2>
               </div>
-              <p className="text-xs text-gray-600 dark:text-gray-300 mb-4">Revisa tu información</p>
-              <div className="space-y-2">
-                <div className="text-sm text-gray-900 dark:text-gray-100">Email: {user.email}</div>
-                <div className="text-sm text-gray-900 dark:text-gray-100">Grupo: {user.groups[0] || '—'}</div>
+              <div className="glass-card p-4 sm:p-6 flex-1">
+                <div className="space-y-2">
+                  <div className="text-sm text-gray-900 dark:text-gray-100">Email: {user.email}</div>
+                  <div className="text-sm text-gray-900 dark:text-gray-100">Grupo: {user.groups[0] || '—'}</div>
+                </div>
               </div>
             </div>
 
             {/* Resumen de productividad y progreso de meta */}
-            <div className="relative bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-700/20 p-6">
-              <div className="flex items-center space-x-2 mb-4">
-                <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
-                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
+            <div className="flex flex-col gap-1.5 sm:gap-2 h-full">
+              {/* TÍTULO MINIMALISTA POR FUERA DE LA CAJA */}
+              <div className="flex items-center justify-between px-1">
+                <div className="flex items-center space-x-1 sm:space-x-1.5 min-w-0">
+                  <div className="flex items-center justify-center text-blue-500 drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
+                    <svg className="w-4 h-4 sm:w-[1.125rem] sm:h-[1.125rem]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                  </div>
+                  <div className="relative flex items-center">
+                    <h2 className="text-[14px] sm:text-[15px] font-bold text-gray-900 dark:text-white tracking-tight drop-shadow-sm dark:drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">
+                      Resumen de Productividad
+                    </h2>
+                  </div>
                 </div>
-                <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Resumen de Productividad</h2>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+              <div className="glass-card p-4 sm:p-6 flex-1">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
                 <div className="p-3 rounded-lg bg-blue-50 text-center">
                   <div className="text-xs text-gray-600 dark:text-gray-300">USD Bruto (hoy)</div>
                   <div className="text-lg font-bold text-blue-600">${summary ? summary.usdBruto.toFixed(2) : '—'}</div>
@@ -352,8 +419,9 @@ export default function AdminDashboard() {
               </div>
             </div>
           </div>
+          </div>
         )}
       </div>
-    </div>
+    </>
   );
 }

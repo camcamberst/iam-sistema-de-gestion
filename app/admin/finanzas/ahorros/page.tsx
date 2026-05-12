@@ -328,7 +328,7 @@ export default function GestionAhorrosPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
+      <div className="flex min-h-[60vh] items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600 dark:text-gray-400">Cargando...</p>
@@ -338,13 +338,13 @@ export default function GestionAhorrosPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <>
       <div className="max-w-screen-2xl mx-auto px-0 sm:px-4 md:px-6 lg:px-8 py-8 pt-16">
         {/* Header */}
         <div className="mb-12">
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-purple-500/10 rounded-xl blur-xl"></div>
-            <div className="relative bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
+            <div className="glass-header p-4 sm:p-6 relative">
               <div className="flex items-center justify-between flex-wrap gap-4">
                 <div className="flex items-center space-x-3">
                   <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
@@ -480,7 +480,7 @@ export default function GestionAhorrosPage() {
             filteredSavings.map((saving) => (
               <div
                 key={saving.id}
-                className="bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-600/20 shadow-md dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15"
+                className="glass-header p-4 sm:p-6 relative"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -590,7 +590,7 @@ export default function GestionAhorrosPage() {
         {/* Modal de Aprobación */}
         {showApproveModal && selectedSavings && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full p-6">
+            <div className="glass-modal max-w-md w-full p-6">
               <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
                 Aprobar Solicitud de Ahorro
               </h3>
@@ -662,6 +662,6 @@ export default function GestionAhorrosPage() {
           </div>
         )}
       </div>
-    </div>
+    </>
   );
 }

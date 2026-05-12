@@ -511,7 +511,7 @@ export default function MiHistorialPage() {
           </button>
           <button
             onClick={() => router.push('/admin/model/anticipos/solicitar')}
-            className="w-full sm:w-auto px-4 sm:px-5 py-2.5 sm:py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 active:scale-95 transition-all duration-200 text-sm sm:text-base font-medium shadow-md hover:shadow-lg touch-manipulation"
+            className="w-full btn-apple-primary"
           >
             Nueva Solicitud
           </button>

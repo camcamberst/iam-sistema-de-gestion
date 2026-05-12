@@ -857,19 +857,17 @@ export default function PortafolioModelos() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-        <div className="max-w-screen-2xl mx-auto px-0 sm:px-4 md:px-6 lg:px-8 py-8 pt-16">
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <span className="ml-3 text-gray-600 dark:text-gray-300">Cargando portafolio...</span>
-          </div>
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <span className="ml-3 text-gray-600 dark:text-gray-300">Cargando portafolio...</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <>
       <div className="max-w-screen-2xl mx-auto px-0 sm:px-4 md:px-6 lg:px-8 py-8 pt-16">
         
         {/* Mensaje de alerta para admins sin sedes asignadas */}
@@ -894,7 +892,7 @@ export default function PortafolioModelos() {
         )}
         {/* Header */}
         <div className="mb-8 sm:mb-12">
-          <div className="bg-white/80 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
+          <div className="glass-header p-4 sm:p-6 relative">
             <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-3">
               <div className="flex items-center space-x-3 min-w-0 flex-1">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
@@ -927,7 +925,7 @@ export default function PortafolioModelos() {
 
         {/* Filters */}
         <div className="mb-4 sm:mb-8 z-40 relative">
-          <div className="bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-3 sm:p-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+          <div className="glass-header p-4 sm:p-6 relative">
             <div className="flex items-center justify-between mb-3 sm:mb-4">
               <h3 className="text-sm sm:text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center">
                 <Filter className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2" />
@@ -977,7 +975,7 @@ export default function PortafolioModelos() {
         </div>
 
         {/* Results */}
-        <div className="bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-3 sm:p-6 transition-all dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+        <div className="glass-header p-4 sm:p-6 relative">
           <div className="flex items-center justify-between mb-3 sm:mb-6">
             <h3 className="text-sm sm:text-lg font-semibold text-gray-900 dark:text-gray-100">
               Modelos ({modelsList.length})
@@ -994,7 +992,7 @@ export default function PortafolioModelos() {
               {modelsList.map((model) => (
                 <div
                   key={model.model_id}
-                  className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl border border-white/30 dark:border-gray-600/30 shadow-lg p-3 sm:p-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15"
+                  className="glass-header p-4 sm:p-6 relative"
                 >
                   {/* Header del Modelo */}
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-3 sm:mb-6">
@@ -1465,7 +1463,7 @@ export default function PortafolioModelos() {
                 <button
                   onClick={executeAction}
                   disabled={processingAction}
-                  className="flex-1 px-3 py-1.5 text-xs font-medium bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 shadow-md disabled:opacity-50"
+                  className="flex-1 disabled:opacity-50 btn-apple-primary"
                 >
                   {processingAction ? 'Procesando...' : 'Confirmar'}
                 </button>
@@ -1489,6 +1487,6 @@ export default function PortafolioModelos() {
           />
         )}
       </div>
-    </div>
+    </>
   );
 }

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
+import AppleDropdown from '@/components/ui/AppleDropdown';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -161,51 +162,32 @@ export default function CreatePlatformPage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Verificando permisos...</p>
-        </div>
+      <div className="flex flex-col items-center justify-center min-h-[40vh] py-16 text-center">
+        <div className="animate-spin w-8 h-8 border-2 border-indigo-500/80 border-t-transparent rounded-full mx-auto mb-4"></div>
+        <p className="text-sm font-medium text-gray-500 dark:text-gray-400 tracking-wide">Verificando permisos...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      <div className="max-w-screen-2xl mx-auto px-0 sm:px-4 md:px-6 lg:px-8 py-8 pt-16">
-        {/* Header */}
-        <div className="mb-8 sm:mb-12">
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-xl blur-xl"></div>
-            <div className="relative bg-white/80 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
-              <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-3">
-                <div className="flex items-center space-x-3 min-w-0 flex-1">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
-                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h1 className="text-base sm:text-lg md:text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent leading-tight whitespace-nowrap overflow-hidden text-ellipsis">
-                      Crear Nueva Plataforma
-                    </h1>
-                    <p className="mt-1 text-xs sm:text-sm text-gray-600 dark:text-gray-300 hidden sm:block">
-                      Define los criterios y fórmulas de conversión para la nueva plataforma
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+    <div className="max-w-screen-2xl mx-auto px-4 py-8 pt-16">
+      {/* Título alineado al formulario */}
+      <div className="max-w-4xl mx-auto mb-6 flex items-center gap-3 px-1 sm:px-2">
+        <svg className="w-5 h-5 text-indigo-500/80 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+        </svg>
+        <h1 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white tracking-tight">
+          Crear Nueva Plataforma
+        </h1>
+      </div>
 
-        {/* Formulario Horizontal */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-4 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
+      {/* Formulario Horizontal */}
+      <form onSubmit={handleSubmit} className="space-y-4 max-w-4xl mx-auto">
+        <div className="bg-white/60 dark:bg-[#0a0f1a]/60 backdrop-blur-md border border-gray-200/50 dark:border-white/5 rounded-2xl shadow-sm p-4 sm:p-6">
             {/* Primera Fila: Información Básica */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
               <div>
-                <label className="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">
+                <label className="block text-xs font-medium mb-1.5 text-gray-700 dark:text-gray-300">
                   Nombre de la Plataforma *
                 </label>
                 <input
@@ -213,7 +195,7 @@ export default function CreatePlatformPage() {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="ej: Nueva Plataforma"
-                  className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="apple-input"
                   required
                 />
                 {formData.name && (
@@ -224,7 +206,7 @@ export default function CreatePlatformPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">
+                <label className="block text-xs font-medium mb-1.5 text-gray-700 dark:text-gray-300">
                   Descripción
                 </label>
                 <input
@@ -232,52 +214,52 @@ export default function CreatePlatformPage() {
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Descripción opcional"
-                  className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="apple-input"
                 />
               </div>
             </div>
 
             {/* Segunda Fila: Tipo y Moneda */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
-                <label className="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">
+                <label className="block text-xs font-medium mb-1.5 text-gray-700 dark:text-gray-300">
                   Tipo de Plataforma *
                 </label>
-                <select
+                <AppleDropdown
+                  options={[
+                    { value: 'tokens', label: 'Tokens (ej: Chaturbate)' },
+                    { value: 'credits', label: 'Créditos con Descuento (ej: CMD)' },
+                    { value: 'currency', label: 'Divisa (EUR/GBP)' },
+                    { value: 'direct', label: 'Pago Directo 100%' }
+                  ]}
                   value={formData.type}
-                  onChange={(e) => setFormData({ ...formData, type: e.target.value as PlatformType })}
-                  className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                >
-                  <option value="tokens">Tokens (ej: Chaturbate)</option>
-                  <option value="credits">Créditos con Descuento (ej: CMD)</option>
-                  <option value="currency">Divisa (EUR/GBP)</option>
-                  <option value="direct">Pago Directo 100%</option>
-                </select>
+                  onChange={(value) => setFormData({ ...formData, type: value as PlatformType })}
+                  placeholder="Selecciona el tipo"
+                />
               </div>
 
               <div>
-                <label className="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">
+                <label className="block text-xs font-medium mb-1.5 text-gray-700 dark:text-gray-300">
                   Moneda Base *
                 </label>
-                <select
+                <AppleDropdown
+                  options={[
+                    { value: 'USD', label: 'USD (Dólar)' },
+                    { value: 'EUR', label: 'EUR (Euro)' },
+                    { value: 'GBP', label: 'GBP (Libra Esterlina)' }
+                  ]}
                   value={formData.currency}
-                  onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                  className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                >
-                  <option value="USD">USD (Dólar)</option>
-                  <option value="EUR">EUR (Euro)</option>
-                  <option value="GBP">GBP (Libra Esterlina)</option>
-                </select>
+                  onChange={(value) => setFormData({ ...formData, currency: value })}
+                  placeholder="Selecciona la moneda"
+                />
               </div>
             </div>
 
             {/* Tercera Fila: Campos según Tipo */}
             {formData.type === 'tokens' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div>
-                  <label className="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">
+                  <label className="block text-xs font-medium mb-1.5 text-gray-700 dark:text-gray-300">
                     Tasa de Conversión de Tokens *
                   </label>
                   <input
@@ -288,7 +270,7 @@ export default function CreatePlatformPage() {
                     value={formData.token_rate}
                     onChange={(e) => setFormData({ ...formData, token_rate: e.target.value })}
                     placeholder="ej: 0.05"
-                    className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="apple-input"
                     required
                   />
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
@@ -296,25 +278,26 @@ export default function CreatePlatformPage() {
                   </p>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">
+                  <label className="block text-xs font-medium mb-1.5 text-gray-700 dark:text-gray-300">
                     Frecuencia de Pago
                   </label>
-                  <select
+                  <AppleDropdown
+                    options={[
+                      { value: 'quincenal', label: 'Quincenal' },
+                      { value: 'mensual', label: 'Mensual' }
+                    ]}
                     value={formData.payment_frequency}
-                    onChange={(e) => setFormData({ ...formData, payment_frequency: e.target.value })}
-                    className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="quincenal">Quincenal</option>
-                    <option value="mensual">Mensual</option>
-                  </select>
+                    onChange={(value) => setFormData({ ...formData, payment_frequency: value })}
+                    placeholder="Selecciona frecuencia"
+                  />
                 </div>
               </div>
             )}
 
             {formData.type === 'credits' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div>
-                  <label className="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">
+                  <label className="block text-xs font-medium mb-1.5 text-gray-700 dark:text-gray-300">
                     Factor de Descuento *
                   </label>
                   <input
@@ -325,7 +308,7 @@ export default function CreatePlatformPage() {
                     value={formData.discount_factor}
                     onChange={(e) => setFormData({ ...formData, discount_factor: e.target.value })}
                     placeholder="ej: 0.75"
-                    className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="apple-input"
                     required
                   />
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
@@ -333,25 +316,26 @@ export default function CreatePlatformPage() {
                   </p>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">
+                  <label className="block text-xs font-medium mb-1.5 text-gray-700 dark:text-gray-300">
                     Frecuencia de Pago
                   </label>
-                  <select
+                  <AppleDropdown
+                    options={[
+                      { value: 'quincenal', label: 'Quincenal' },
+                      { value: 'mensual', label: 'Mensual' }
+                    ]}
                     value={formData.payment_frequency}
-                    onChange={(e) => setFormData({ ...formData, payment_frequency: e.target.value })}
-                    className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="quincenal">Quincenal</option>
-                    <option value="mensual">Mensual</option>
-                  </select>
+                    onChange={(value) => setFormData({ ...formData, payment_frequency: value })}
+                    placeholder="Selecciona frecuencia"
+                  />
                 </div>
               </div>
             )}
 
             {formData.type === 'currency' && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                 <div>
-                  <label className="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">
+                  <label className="block text-xs font-medium mb-1.5 text-gray-700 dark:text-gray-300">
                     Factor de Descuento (Opcional)
                   </label>
                   <input
@@ -362,11 +346,11 @@ export default function CreatePlatformPage() {
                     value={formData.discount_factor}
                     onChange={(e) => setFormData({ ...formData, discount_factor: e.target.value })}
                     placeholder="ej: 0.78"
-                    className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="apple-input"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">
+                  <label className="block text-xs font-medium mb-1.5 text-gray-700 dark:text-gray-300">
                     Tasa de Impuesto (Opcional)
                   </label>
                   <input
@@ -377,42 +361,44 @@ export default function CreatePlatformPage() {
                     value={formData.tax_rate}
                     onChange={(e) => setFormData({ ...formData, tax_rate: e.target.value })}
                     placeholder="ej: 0.16"
-                    className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="apple-input"
                   />
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                     0.16 = 16% impuesto
                   </p>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">
+                  <label className="block text-xs font-medium mb-1.5 text-gray-700 dark:text-gray-300">
                     Frecuencia de Pago
                   </label>
-                  <select
+                  <AppleDropdown
+                    options={[
+                      { value: 'quincenal', label: 'Quincenal' },
+                      { value: 'mensual', label: 'Mensual' }
+                    ]}
                     value={formData.payment_frequency}
-                    onChange={(e) => setFormData({ ...formData, payment_frequency: e.target.value })}
-                    className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="quincenal">Quincenal</option>
-                    <option value="mensual">Mensual</option>
-                  </select>
+                    onChange={(value) => setFormData({ ...formData, payment_frequency: value })}
+                    placeholder="Selecciona frecuencia"
+                  />
                 </div>
               </div>
             )}
 
             {formData.type === 'direct' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div>
-                  <label className="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">
+                  <label className="block text-xs font-medium mb-1.5 text-gray-700 dark:text-gray-300">
                     Frecuencia de Pago
                   </label>
-                  <select
+                  <AppleDropdown
+                    options={[
+                      { value: 'quincenal', label: 'Quincenal' },
+                      { value: 'mensual', label: 'Mensual' }
+                    ]}
                     value={formData.payment_frequency}
-                    onChange={(e) => setFormData({ ...formData, payment_frequency: e.target.value })}
-                    className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="quincenal">Quincenal</option>
-                    <option value="mensual">Mensual</option>
-                  </select>
+                    onChange={(value) => setFormData({ ...formData, payment_frequency: value })}
+                    placeholder="Selecciona frecuencia"
+                  />
                 </div>
                 <div className="flex items-end">
                   <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -439,27 +425,28 @@ export default function CreatePlatformPage() {
               </div>
             )}
 
-            {/* Botones */}
-            <div className="flex gap-3 justify-end pt-2 border-t border-gray-200 dark:border-gray-600">
-              <button
-                type="button"
-                onClick={() => router.back()}
-                className="px-4 py-2 text-sm bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-              >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                disabled={loading}
-                className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-md"
-              >
-                {loading ? 'Creando...' : 'Crear Plataforma'}
-              </button>
+            {/* Botones dentro de Píldora Transparente */}
+            <div className="flex justify-end pt-6 mt-6 border-t border-gray-200/50 dark:border-gray-700/50">
+              <div className="flex items-center gap-1 p-1.5 bg-black/[0.03] dark:bg-white/[0.03] border border-black/[0.05] dark:border-white/[0.05] rounded-[2rem] backdrop-blur-xl shadow-sm">
+                <button
+                  type="button"
+                  onClick={() => router.back()}
+                  className="px-5 py-2 text-[13px] font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 rounded-full transition-all duration-200"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="px-6 py-2 text-[13px] font-bold text-white bg-gradient-to-r from-sky-500 to-fuchsia-500 rounded-full shadow-[0_0_15px_rgba(14,165,233,0.4)] dark:shadow-[0_0_15px_rgba(14,165,233,0.3)] hover:shadow-[0_0_25px_rgba(14,165,233,0.6)] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? 'Creando...' : 'Crear Plataforma'}
+                </button>
+              </div>
             </div>
           </div>
         </form>
       </div>
-    </div>
   );
 }
 

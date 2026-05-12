@@ -70,6 +70,7 @@ export async function GET(request: NextRequest) {
         role,
         is_active,
         created_at,
+        avatar_url,
         affiliate_studio_id,
         user_groups(
           groups!inner(
@@ -155,9 +156,10 @@ export async function GET(request: NextRequest) {
         role: user.role,
         is_active: user.is_active,
         created_at: user.created_at,
+        avatar_url: user.avatar_url,
         affiliate_studio_id: user.affiliate_studio_id || null,
         groups: userGroups,
-        user_groups: userGroups, // AGREGAR ESTA LÍNEA para compatibilidad con frontend
+        user_groups: userGroups,
         // Campos de asignación (solo para modelos con asignaciones)
         jornada: activeAssignment?.jornada || undefined,
         room_id: activeAssignment?.room_id || undefined

@@ -35,7 +35,7 @@ export default function SyncPortfolioPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 pt-24">
+    <div className="p-4 md:p-6">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8">
@@ -62,7 +62,7 @@ export default function SyncPortfolioPage() {
               <button
                 onClick={handleSync}
                 disabled={loading}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
+                className="w-full disabled:bg-blue-400 btn-apple-primary"
               >
                 {loading ? (
                   <>

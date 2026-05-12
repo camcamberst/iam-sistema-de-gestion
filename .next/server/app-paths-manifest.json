@@ -1,11 +1,9 @@
 {
   "/api/chat/users/route": "app/api/chat/users/route.js",
   "/api/chat/conversations/route": "app/api/chat/conversations/route.js",
-  "/api/chat/messages/route": "app/api/chat/messages/route.js",
-  "/api/chat/messages/read/route": "app/api/chat/messages/read/route.js",
-  "/api/calculator/model-values-v2/route": "app/api/calculator/model-values-v2/route.js",
-  "/api/calculator/config-v2/route": "app/api/calculator/config-v2/route.js",
-  "/api/calculator/period-closure/platform-freeze-status/route": "app/api/calculator/period-closure/platform-freeze-status/route.js",
-  "/admin/model/calculator/page": "app/admin/model/calculator/page.js",
-  "/admin/model/dashboard/page": "app/admin/model/dashboard/page.js"
+  "/admin/calculator/platforms/page": "app/admin/calculator/platforms/page.js",
+  "/admin/calculator/create-platform/page": "app/admin/calculator/create-platform/page.js",
+  "/admin/calculator/config/page": "app/admin/calculator/config/page.js",
+  "/admin/users/create/page": "app/admin/users/create/page.js",
+  "/admin/rates/page": "app/admin/rates/page.js"
 }

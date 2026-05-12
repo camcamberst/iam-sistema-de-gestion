@@ -208,10 +208,10 @@ export function buildMenuItems(userRole: UserRole): MenuItem[] {
     const calculatorIndex = baseItems.findIndex(item => item.id === 'calculator');
     if (calculatorIndex !== -1) {
       const calcSubItems: SubMenuItem[] = [
-        { label: 'Definir RATES', href: '/admin/rates', icon: icons.calculator, description: 'Configura las tasas de conversión' }
+        { label: 'Rates (Presente)', href: '/admin/rates', icon: icons.calculator, description: 'Actualiza las tasas' }
       ];
       if (userRole === 'super_admin') {
-        calcSubItems.push({ label: 'Gestionar Plataformas', href: '/admin/calculator/platforms', icon: icons.box, description: 'Administrar, crear, editar y eliminar plataformas' });
+        calcSubItems.push({ label: 'Gestionar Plataformas', href: '/admin/calculator/platforms', icon: icons.box, description: 'Ingresa, edita, elimina.' });
       }
       calcSubItems.push(
         { label: 'Configurar Calculadora', href: '/admin/calculator/config', icon: icons.settings, description: 'Configura parámetros del sistema' },

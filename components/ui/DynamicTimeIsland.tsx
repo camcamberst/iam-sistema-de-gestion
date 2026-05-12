@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { getEuropeanCentralMidnightInColombia, getColombiaDate } from '@/utils/period-closure-dates';
 
 interface DynamicTimeIslandProps {
@@ -11,9 +11,11 @@ interface DynamicTimeIslandProps {
   facturadoPeriodoUsd?: number;
   /** Total facturado USD Modelo (para mostrar al usuario). Si no se pasa, se usa facturadoPeriodoUsd. */
   facturadoDisplayUsd?: number;
+  /** Extra messages to inject into the rotating ticker. */
+  extraMessages?: Array<{ text: string; urgent?: boolean; closed?: boolean }>;
 }
 
-export default function DynamicTimeIsland({ className = '', objetivoUsd, facturadoPeriodoUsd, facturadoDisplayUsd }: DynamicTimeIslandProps) {
+export default function DynamicTimeIsland({ className = '', objetivoUsd, facturadoPeriodoUsd, facturadoDisplayUsd, extraMessages }: DynamicTimeIslandProps) {
   const [times, setTimes] = useState({
     europe: '',
     japan: '',
@@ -23,6 +25,23 @@ export default function DynamicTimeIsland({ className = '', objetivoUsd, factura
   
   const [tickerIndex, setTickerIndex] = useState(0);
   const [messages, setMessages] = useState<Array<{ text: string; urgent: boolean; closed: boolean }>>([]);
+  
+  // States and refs for gestures
+  const [isPaused, setIsPaused] = useState(false);
+  const isPausedRef = useRef(isPaused);
+  const isDraggingRef = useRef(false);
+  const touchStartXRef = useRef(0);
+  const lastOffsetXRef = useRef(0);
+  const offsetXRef = useRef(0);
+  const lastTapTimeRef = useRef(0);
+  
+  const trackRef = useRef<HTMLDivElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const animationRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    isPausedRef.current = isPaused;
+  }, [isPaused]);
 
   useEffect(() => {
     const updateTimes = () => {
@@ -144,6 +163,11 @@ export default function DynamicTimeIsland({ className = '', objetivoUsd, factura
           });
         }
       }
+      
+      // Add any extra messages injected via props
+      if (extraMessages && extraMessages.length > 0) {
+        newMessages.push(...extraMessages.map(m => ({ text: m.text, urgent: !!m.urgent, closed: !!m.closed })));
+      }
 
       setMessages(newMessages);
     };
@@ -151,16 +175,105 @@ export default function DynamicTimeIsland({ className = '', objetivoUsd, factura
     updateTimes();
     const timer = setInterval(updateTimes, 1000);
     return () => clearInterval(timer);
-  }, [objetivoUsd, facturadoPeriodoUsd, facturadoDisplayUsd]);
+  }, [objetivoUsd, facturadoPeriodoUsd, facturadoDisplayUsd, extraMessages]);
 
-  // Rotar el ticker cada 7 segundos para que el texto informativo se lea con calma
+  // Rotar el ticker cada 7 segundos
   useEffect(() => {
     if (messages.length <= 1) return;
     const tickerTimer = setInterval(() => {
-      setTickerIndex((prev) => (prev + 1) % messages.length);
+      // Solo avanzar automáticamente si no está pausado
+      if (!isPausedRef.current) {
+        setTickerIndex((prev) => (prev + 1) % messages.length);
+      }
     }, 7000);
     return () => clearInterval(tickerTimer);
   }, [messages.length]);
+
+  const rotateMessage = (e?: React.MouseEvent | React.TouchEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (messages.length > 1) {
+      setTickerIndex((prev) => (prev + 1) % messages.length);
+    }
+  };
+
+  // Motor de animación manual (reemplaza a CSS @keyframes en móvil)
+  useEffect(() => {
+    let animationId: number;
+    const speed = 0.5; // px por frame
+
+    const tick = () => {
+      if (window.innerWidth < 640 && !isPausedRef.current && !isDraggingRef.current) {
+        if (trackRef.current && wrapperRef.current) {
+          const trackW = trackRef.current.offsetWidth;
+          if (trackW > 0) {
+            let nextX = offsetXRef.current - speed;
+            if (nextX <= -trackW) nextX += trackW;
+            else if (nextX > 0) nextX -= trackW;
+            
+            offsetXRef.current = nextX;
+            wrapperRef.current.style.transform = `translateX(${nextX}px)`;
+          }
+        }
+      }
+      animationId = requestAnimationFrame(tick);
+    };
+    animationId = requestAnimationFrame(tick);
+    animationRef.current = animationId;
+    return () => cancelAnimationFrame(animationId);
+  }, []);
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    if (window.innerWidth >= 640) return; // Solo gestos en móvil
+    
+    isDraggingRef.current = true;
+    touchStartXRef.current = e.clientX;
+    lastOffsetXRef.current = offsetXRef.current;
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!isDraggingRef.current || window.innerWidth >= 640) return;
+    
+    const diff = e.clientX - touchStartXRef.current;
+    let nextX = lastOffsetXRef.current + diff;
+    
+    if (trackRef.current && wrapperRef.current) {
+      const trackW = trackRef.current.offsetWidth;
+      if (trackW > 0) {
+        // Envolver en ambas direcciones
+        nextX = nextX % trackW;
+        if (nextX > 0) nextX -= trackW;
+        
+        offsetXRef.current = nextX;
+        wrapperRef.current.style.transform = `translateX(${nextX}px)`;
+      }
+    }
+  };
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    if (window.innerWidth >= 640) return;
+    if (!isDraggingRef.current) return;
+    isDraggingRef.current = false;
+    
+    const diffX = e.clientX - touchStartXRef.current;
+    if (Math.abs(diffX) < 10) {
+      const now = Date.now();
+      if (now - lastTapTimeRef.current < 300) {
+        setIsPaused(prev => !prev);
+        lastTapTimeRef.current = 0;
+      } else {
+        lastTapTimeRef.current = now;
+        // Solo rotar el mensaje si el tap fue dentro del área del mensaje
+        const target = e.target as HTMLElement;
+        if (target.closest('.message-container')) {
+          rotateMessage();
+        }
+      }
+    }
+  };
 
   const currentMessage = messages[tickerIndex];
 
@@ -179,7 +292,10 @@ export default function DynamicTimeIsland({ className = '', objetivoUsd, factura
       </div>
 
       {/* Ticker: mismo espacio, mensajes rotativos */}
-      <div className="flex-1 flex items-center overflow-hidden sm:overflow-visible h-full relative min-w-0 flex-shrink-0 ml-4 sm:ml-0">
+      <div 
+        className="flex-1 flex items-center overflow-hidden sm:overflow-visible h-full relative min-w-0 flex-shrink-0 ml-4 sm:ml-0 cursor-pointer message-container"
+        onClick={(e) => { if (window.innerWidth >= 640) rotateMessage(e); }}
+      >
         {currentMessage && (
           <div 
             key={tickerIndex}
@@ -210,10 +326,17 @@ export default function DynamicTimeIsland({ className = '', objetivoUsd, factura
   return (
     <div className={`w-full max-w-full mx-auto mb-6 px-2 sm:px-0 ${className}`}>
       <div className="relative mx-0 w-full">
-        <div className="relative overflow-hidden bg-black/[0.08] dark:bg-white/[0.08] backdrop-blur-3xl rounded-full border border-white/40 dark:border-white/[0.08] shadow-sm shadow-black/5 dark:shadow-[0_1px_0_0_rgba(255,255,255,0.02)_inset,0_2px_12px_rgba(0,0,0,0.3)] py-1.5 h-11 mobile-marquee-viewport px-0 sm:px-6">
-          <div className="mobile-marquee-wrapper flex items-center h-full w-full sm:w-auto">
+        <div 
+          className="glass-card !rounded-full py-1.5 h-11 mobile-marquee-viewport px-0 sm:px-6 relative overflow-hidden"
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
+          onPointerLeave={handlePointerUp}
+        >
+          <div className="mobile-marquee-wrapper flex items-center h-full w-full sm:w-auto" ref={wrapperRef}>
             {/* Primera copia (siempre visible) */}
-            <div className="mobile-marquee-track flex items-center sm:justify-between w-max sm:w-full h-full sm:gap-3 px-6 sm:px-0 flex-shrink-0">
+            <div ref={trackRef} className="mobile-marquee-track flex items-center sm:justify-between w-max sm:w-full h-full sm:gap-3 px-6 sm:px-0 flex-shrink-0">
               {trackContent}
             </div>
             {/* Segunda copia para bucle contínuo sin pausas (solo móvil) */}
@@ -248,8 +371,8 @@ export default function DynamicTimeIsland({ className = '', objetivoUsd, factura
           .mobile-marquee-wrapper {
             display: flex;
             width: max-content;
-            animation: marquee-seamless 20s linear infinite;
             will-change: transform;
+            touch-action: pan-y;
           }
           .mobile-marquee-track {
             flex-shrink: 0;

@@ -59,7 +59,7 @@ export default function BroadcastPage() {
           ))}
         </div>
       </div>
-      <button onClick={send} disabled={loading || !content.trim()} className="px-4 py-2 rounded-lg bg-blue-600 text-white disabled:bg-gray-600">
+      <button onClick={send} disabled={loading || !content.trim()} className="disabled:bg-gray-600 btn-apple-primary">
         {loading ? 'Enviando...' : 'Enviar difusión'}
       </button>
       {result && <div className="text-sm text-gray-300">{result}</div>}

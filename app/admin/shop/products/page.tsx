@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import ShopAdminNav from "@/components/ShopAdminNav";
 import AppleDropdown from "@/components/ui/AppleDropdown";
+import PageHeader from "@/components/ui/PageHeader";
 
 interface Category { id: string; name: string; }
 interface Group { id: string; name: string; }
@@ -253,30 +254,28 @@ export default function ShopProductsPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-pink-50 to-rose-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4 md:p-6">
+    <div className="p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
         <ShopAdminNav />
 
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-              <span className="text-2xl">🛍️</span> Productos
-            </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              {products.filter(p => p.is_active).length} productos activos · {products.length} total
-            </p>
-          </div>
-          <button
-            onClick={openCreate}
-            className="flex items-center gap-2 bg-pink-600 hover:bg-pink-700 text-white px-4 py-2.5 rounded-xl font-medium transition-all shadow-sm"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            Nuevo Producto
-          </button>
-        </div>
+        <PageHeader
+          title="Productos"
+          subtitle={`${products.filter(p => p.is_active).length} productos activos · ${products.length} total`}
+          glow="admin"
+          icon={<span className="text-2xl drop-shadow-md">🛍️</span>}
+          actions={
+            <button
+              onClick={openCreate}
+              className="flex items-center gap-2 bg-pink-600 hover:bg-pink-700 text-white px-4 py-2.5 rounded-xl font-medium transition-all shadow-sm"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Nuevo Producto
+            </button>
+          }
+        />
 
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-3 mb-6">
@@ -386,8 +385,8 @@ export default function ShopProductsPage() {
 
       {/* Modal detalle: unidades por sede (sin editar) */}
       {detailProduct && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setDetailProduct(null)}>
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
+        <div className="modal-backdrop" onClick={() => setDetailProduct(null)}>
+          <div className="glass-modal w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-700">
               <h2 className="text-lg font-bold text-gray-900 dark:text-white truncate pr-2">{detailProduct.name}</h2>
               <button onClick={() => setDetailProduct(null)} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 shrink-0">
@@ -440,8 +439,8 @@ export default function ShopProductsPage() {
 
       {/* Modal crear/editar */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="modal-backdrop">
+          <div className="glass-modal w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-6 py-4 flex items-center justify-between z-10">
               <h2 className="text-lg font-bold text-gray-900 dark:text-white">
                 {editProduct ? "Editar Producto" : "Nuevo Producto"}

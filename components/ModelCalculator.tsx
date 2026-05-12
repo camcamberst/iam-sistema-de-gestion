@@ -631,7 +631,7 @@ export default function ModelCalculator({
               <button
                 onClick={saveValues}
                 disabled={saving || !isDirty}
-                className="w-full sm:w-auto px-8 py-3 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-blue-900/10"
+                className="w-full disabled:opacity-50 disabled:cursor-not-allowed btn-apple-primary"
               >
                 {saving ? 'Guardando...' : isDirty ? 'Guardar Cambios' : 'Sin cambios'}
               </button>
@@ -649,7 +649,7 @@ export default function ModelCalculator({
         <button
           onClick={saveValues}
           disabled={saving}
-          className="w-full max-w-sm px-6 py-3.5 bg-blue-600 hover:bg-blue-500 active:scale-[0.96] transition-all duration-200 rounded-full text-white font-bold text-base shadow-2xl shadow-blue-600/40 pointer-events-auto flex items-center justify-center gap-2"
+          className="w-full btn-apple-primary"
         >
           {saving ? (
             <>

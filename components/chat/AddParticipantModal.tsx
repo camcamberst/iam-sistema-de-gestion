@@ -24,7 +24,7 @@ const AddParticipantModal: React.FC<AddParticipantModalProps> = ({
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+    <div className="modal-backdrop">
       <div className="bg-white dark:bg-[#1A1A1A] w-full max-w-sm rounded-2xl shadow-xl overflow-hidden border border-black/5 dark:border-white/10">
         <div className="p-4 border-b border-gray-100 dark:border-white/10 flex justify-between items-center bg-gray-50/50 dark:bg-white/5">
           <h3 className="font-semibold text-gray-900 dark:text-white">Añadir Participante</h3>

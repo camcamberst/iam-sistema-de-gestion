@@ -315,7 +315,7 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
             <div className="text-gray-600 dark:text-gray-600 dark:text-gray-500 dark:text-gray-600 dark:text-gray-500 text-sm mt-1">{error}</div>
             <button 
               onClick={() => loadBillingData()}
-              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="mt-4 btn-apple-primary"
             >
               Reintentar
             </button>
@@ -329,70 +329,73 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
   const isHistorical = propSelectedDate && propSelectedPeriod && propSelectedPeriod !== 'current';
 
   return (
-    <div className={`mb-4 sm:mb-6 ${isHistorical ? 'px-3 sm:px-0' : ''}`}>
-      {/* Card Header - Versión compacta */}
-      <div className={`bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-3 sm:p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20 ${isHistorical ? 'mb-3 sm:mb-6' : 'mb-4 sm:mb-8'}`}>
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
-          <div className="flex items-center space-x-2 sm:space-x-3">
-            <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
-              <svg className="w-3 h-3 sm:w-4 sm:h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-            </div>
-            <div className="min-w-0 flex-1">
-              <h1 className="text-sm sm:text-lg font-semibold text-gray-900 dark:text-white">Resumen de Facturación</h1>
-              <p className="text-[10px] sm:text-xs text-gray-600 dark:text-white hidden sm:block">
-                {userRole === 'super_admin' 
-                  ? 'Vista consolidada de todas las sedes' 
-                  : userRole === 'superadmin_aff'
-                  ? 'Vista de las sedes de tu estudio'
-                  : 'Vista de tus sedes asignadas'}
-              </p>
-            </div>
+    <div className={`mb-4 sm:mb-6 flex flex-col gap-1.5 sm:gap-2 h-full ${isHistorical ? 'px-3 sm:px-0' : ''}`}>
+      {/* TÍTULO MINIMALISTA POR FUERA DE LA CAJA */}
+      <div className="flex items-center justify-between px-1">
+        <div className="flex items-center space-x-1 sm:space-x-1.5 min-w-0">
+          <div className="flex items-center justify-center text-blue-500 drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
+            <svg className="w-4 h-4 sm:w-[1.125rem] sm:h-[1.125rem]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
           </div>
-          <div className="flex items-center justify-between sm:justify-end space-x-2">
-            {/* Botón de refresh manual con estado de polling */}
-            <div className="flex items-center space-x-1.5 sm:space-x-2">
-              {/* Indicador de polling */}
-              <div className="flex items-center space-x-1">
-                <div className={`w-1.5 h-1.5 rounded-full ${
-                  isPolling ? 'bg-green-500' : 'bg-gray-400'
-                } ${isSilentUpdating ? 'animate-pulse' : ''}`}></div>
-                <span className="text-[10px] sm:text-xs text-gray-500 dark:text-white hidden sm:inline">
-                  {isSilentUpdating ? 'Actualizando...' : 
-                   isPolling ? 'Actualización automática' : 'Manual'}
-                </span>
-              </div>
-              
-              <button
-                onClick={manualRefresh}
-                disabled={loading}
-                className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white rounded-lg transition-colors duration-200 active:scale-95 touch-manipulation"
-                title={loading ? 'Actualizando...' : 'Actualizar'}
-              >
-                <svg 
-                  className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${loading ? 'animate-spin' : ''}`} 
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-              </button>
-              <button
-                onClick={() => setCollapsed(c => !c)}
-                className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 bg-gray-100 hover:bg-gray-200 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-500 dark:text-gray-300 rounded-lg transition-colors duration-200 active:scale-95 touch-manipulation"
-                title={collapsed ? 'Expandir' : 'Contraer'}
-              >
-                <svg className={`w-4 h-4 transition-transform duration-200 ${collapsed ? '' : 'rotate-180'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-            </div>
+          <div className="relative flex items-center">
+            <h2 className="text-[14px] sm:text-[15px] font-bold text-gray-900 dark:text-white tracking-tight drop-shadow-sm dark:drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">
+              Resumen de Facturación
+            </h2>
+            <span className="ml-2 text-[10px] sm:text-[11px] text-gray-500 dark:text-gray-400 font-medium tracking-wide hidden sm:block">
+              {userRole === 'super_admin' 
+                ? 'Vista consolidada de todas las sedes' 
+                : userRole === 'superadmin_aff'
+                ? 'Vista de las sedes de tu estudio'
+                : 'Vista de tus sedes asignadas'}
+            </span>
           </div>
         </div>
+        <div className="flex items-center justify-between sm:justify-end space-x-2">
+          {/* Botón de refresh manual con estado de polling */}
+          <div className="flex items-center space-x-1.5 sm:space-x-2">
+            {/* Indicador de polling */}
+            <div className="flex items-center space-x-1">
+              <div className={`w-1.5 h-1.5 rounded-full ${
+                isPolling ? 'bg-green-500' : 'bg-gray-400'
+              } ${isSilentUpdating ? 'animate-pulse' : ''}`}></div>
+              <span className="text-[10px] sm:text-xs text-gray-500 dark:text-white hidden sm:inline">
+                {isSilentUpdating ? 'Actualizando...' : 
+                 isPolling ? 'Actualización automática' : 'Manual'}
+              </span>
+            </div>
+            
+            <button
+              onClick={manualRefresh}
+              disabled={loading}
+              className="disabled:bg-gray-400 px-2.5 py-1 sm:px-3 sm:py-1.5 min-h-[28px] sm:min-h-[32px] flex items-center justify-center text-[10px] sm:text-xs font-medium text-blue-600 bg-blue-50/80 dark:bg-blue-900/30 backdrop-blur-sm border border-blue-200/50 dark:border-blue-700/50 rounded-lg hover:bg-blue-100/80 dark:hover:bg-blue-800/40 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
+              title={loading ? 'Actualizando...' : 'Actualizar'}
+            >
+              <svg 
+                className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${loading ? 'animate-spin' : ''}`} 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </button>
+            <button
+              onClick={() => setCollapsed(c => !c)}
+              className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 border border-gray-200/50 dark:border-gray-700/50 text-gray-500 dark:text-gray-300 rounded-lg transition-colors duration-200 active:scale-95 touch-manipulation shadow-sm"
+              title={collapsed ? 'Expandir' : 'Contraer'}
+            >
+              <svg className={`w-4 h-4 transition-transform duration-200 ${collapsed ? '' : 'rotate-180'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
 
-        {!collapsed && <div className={`px-2 sm:px-4 pb-3 sm:pb-4 ${isHistorical ? 'px-2 sm:px-4' : ''}`}>
+      {/* Card Body */}
+      <div className={`bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20 flex-1`}>
+        {!collapsed && <div className={`p-3 sm:p-6 pb-3 sm:pb-4 ${isHistorical ? 'px-2 sm:px-4' : ''}`}>
           {/* Resumen general - Versión compacta */}
           {summary && (
             <div className={`grid grid-cols-3 gap-2 sm:gap-4 ${isHistorical ? 'mb-3 sm:mb-5 mt-3 sm:mt-5' : 'mb-4 sm:mb-6 mt-4 sm:mt-6'}`}>

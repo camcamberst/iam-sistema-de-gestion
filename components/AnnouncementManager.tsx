@@ -68,6 +68,18 @@ export default function AnnouncementManager({ userId, userRole, userGroups }: An
 
   useEffect(() => {
     loadData();
+
+    // Auto-open editor if hash is #new-announcement
+    if (typeof window !== 'undefined' && window.location.hash === '#new-announcement') {
+      setCollapsed(false);
+      setShowEditor(true);
+      // Remove the hash cleanly without triggering scroll jumps
+      const scrollV = document.body.scrollTop;
+      const scrollH = document.body.scrollLeft;
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+      document.body.scrollTop = scrollV;
+      document.body.scrollLeft = scrollH;
+    }
   }, [userId, userRole, userGroups]);
 
   const loadData = async () => {

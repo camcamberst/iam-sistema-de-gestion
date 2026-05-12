@@ -220,7 +220,7 @@ export default function ModelCalculatorNew() {
           <p className="text-gray-500 mb-4">{error}</p>
           <button
             onClick={loadModelConfiguration}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="btn-apple-primary"
           >
             Reintentar
           </button>
@@ -242,7 +242,7 @@ export default function ModelCalculatorNew() {
             <button
               onClick={calculateTotals}
               disabled={calculating || platforms.filter(p => p.enabled).length === 0}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              className="disabled:opacity-50 btn-apple-primary"
             >
               {calculating ? 'Calculando...' : 'Calcular'}
             </button>

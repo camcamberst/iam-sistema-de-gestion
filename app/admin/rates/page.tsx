@@ -7,6 +7,9 @@ import { canEditUser, canDeleteUser, getAvailableGroups } from "../../../lib/hie
 import ActiveRatesPanel from "../../../components/ActiveRatesPanel";
 import ReferenceRatesPanel from "../../../components/ReferenceRatesPanel";
 import AppleDropdown from "@/components/ui/AppleDropdown";
+import PageHeader from "@/components/ui/PageHeader";
+import GlassCard from "@/components/ui/GlassCard";
+import AdminWidgetsMobileCarousel from "@/components/ui/AdminWidgetsMobileCarousel";
 
 type RateKind = "USD→COP" | "EUR→USD" | "GBP→USD";
 
@@ -265,82 +268,61 @@ export default function RatesPage() {
 	// ===========================================
 	if (authLoading) {
 		return (
-			<div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-				<div className="max-w-screen-2xl mx-auto px-0 sm:px-4 md:px-6 lg:px-8 py-8 pt-16">
-					<div className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20 text-center">
-						<div className="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-3"></div>
-						<p className="text-sm text-gray-600 dark:text-gray-300">Verificando permisos...</p>
-					</div>
-				</div>
+			<div className="max-w-screen-2xl mx-auto px-4 py-16 flex flex-col items-center justify-center min-h-[40vh]">
+				<div className="animate-spin w-8 h-8 border-2 border-indigo-500/80 border-t-transparent rounded-full mx-auto mb-4"></div>
+				<p className="text-sm font-medium text-gray-500 dark:text-gray-400 tracking-wide">Verificando permisos...</p>
 			</div>
 		);
 	}
 
 	if (!userInfo) {
 		return (
-			<div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-				<div className="max-w-screen-2xl mx-auto px-0 sm:px-4 md:px-6 lg:px-8 py-8 pt-16">
-					<div className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20 text-center">
-						<div className="w-12 h-12 bg-red-50 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
-							<svg className="w-6 h-6 text-red-500 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-							</svg>
-						</div>
-						<h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Acceso Denegado</h2>
-						<p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
-							No tienes permisos para acceder a esta función.
-						</p>
-						<button 
-							onClick={() => router.push('/admin/dashboard')}
-							className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 shadow-md"
-						>
-							Volver al Dashboard
-						</button>
-					</div>
+			<div className="max-w-screen-2xl mx-auto px-4 py-16 flex flex-col items-center justify-center min-h-[40vh] text-center">
+				<div className="w-12 h-12 bg-red-50 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
+					<svg className="w-6 h-6 text-red-500 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+					</svg>
 				</div>
+				<h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Acceso Denegado</h3>
+				<p className="text-sm text-gray-600 dark:text-gray-400 mb-6">No se pudo cargar la información del usuario.</p>
+				<button 
+					onClick={() => router.push('/admin/dashboard')}
+					className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 shadow-md"
+				>
+					Volver al Dashboard
+				</button>
 			</div>
 		);
 	}
 
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+		<>
 			<div className="max-w-screen-2xl mx-auto px-0 sm:px-4 md:px-6 lg:px-8 py-8 pt-16">
 			{/* Header */}
-			<div className="mb-8 sm:mb-12">
-				<div className="relative">
-					<div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-xl blur-xl"></div>
-					<div className="relative bg-white/80 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
-						<div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-3">
-							<div className="flex items-center space-x-3 min-w-0 flex-1">
-								<div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
-									<svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-									</svg>
-								</div>
-								<div className="min-w-0 flex-1">
-									<h1 className="text-base sm:text-lg md:text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent leading-tight whitespace-nowrap overflow-hidden text-ellipsis">Definir RATES</h1>
-									<p className="mt-1 text-xs sm:text-sm text-gray-600 dark:text-gray-300 hidden sm:block">
-										{userInfo.role === 'super_admin' 
-											? 'Puedes gestionar RATES globales y por grupo'
-											: 'Solo puedes gestionar RATES de tus grupos asignados'
-										}
-									</p>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
+			<PageHeader 
+				title="Rates (Presente)"
+				subtitle={userInfo.role === 'super_admin' ? 'Puedes gestionar RATES globales y por grupo' : 'Solo puedes gestionar RATES de tus grupos asignados'}
+				icon={
+					<svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+					</svg>
+				}
+			/>
 
 			{/* Formulario Establecer rates manual */}
 				<div className="mb-8 relative z-[9997]">
-					<div className="bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-600/20 shadow-md dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15 relative z-[9997]">
-						<div className="flex items-center space-x-2 mb-4">
-							<svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+					{/* TÍTULO POR FUERA */}
+					<div className="flex items-center space-x-1.5 mb-2 px-1">
+						<div className="flex items-center justify-center text-blue-500 drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
+							<svg className="w-[1.125rem] h-[1.125rem]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
 							</svg>
-							<h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Establecer rates manual</h2>
 						</div>
+						<h2 className="text-[14px] sm:text-[15px] font-bold text-gray-900 dark:text-white tracking-tight drop-shadow-sm dark:drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">
+							Definir Rates
+						</h2>
+					</div>
+					<GlassCard padding="md" variant="card">
 						<form onSubmit={onCreate} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
 							<div>
 								<label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-2">Aplicar a</label>
@@ -374,25 +356,19 @@ export default function RatesPage() {
 								<input
 									type="number"
 									step="any"
-									className="w-full px-3 py-2 text-sm border border-gray-200/50 dark:border-gray-600/50 rounded-lg bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
+									className="apple-input w-full"
 									value={form.value}
 									onChange={(e) => setForm({ ...form, value: e.target.value })}
 									required
 								/>
 							</div>
-							<div className="flex gap-2">
+							<div className="flex items-center">
 								<button 
+									disabled={loading}
 									type="submit" 
-									className="flex-1 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg hover:from-blue-600 hover:to-indigo-700 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 shadow-md"
+									className="w-full btn-apple-primary"
 								>
-									Guardar
-								</button>
-								<button 
-									type="button" 
-									className="flex-1 px-4 py-2 text-sm font-medium text-blue-600 bg-white/80 backdrop-blur-sm border border-blue-200/50 rounded-lg hover:bg-blue-50/80 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
-									onClick={loadRates}
-								>
-									Refrescar
+									{loading ? 'Guardando...' : 'Guardar'}
 								</button>
 							</div>
 						</form>
@@ -401,15 +377,23 @@ export default function RatesPage() {
 								<p className="text-red-600 dark:text-red-400 text-xs">{error}</p>
 							</div>
 						)}
-					</div>
+					</GlassCard>
 				</div>
 
 				{/* Paneles de Tasas */}
-				<div className="grid grid-cols-1 lg:grid-cols-2 gap-6 relative z-0">
-					<ActiveRatesPanel refreshTrigger={refreshTrigger} />
-					<ReferenceRatesPanel />
-				</div>
+				<AdminWidgetsMobileCarousel
+					desktopChildren={
+						<div className="grid grid-cols-1 lg:grid-cols-2 gap-6 relative z-0">
+							<ActiveRatesPanel refreshTrigger={refreshTrigger} />
+							<ReferenceRatesPanel />
+						</div>
+					}
+					mobileChildren={[
+						<ActiveRatesPanel key="active" refreshTrigger={refreshTrigger} />,
+						<ReferenceRatesPanel key="reference" />
+					]}
+				/>
 			</div>
-		</div>
+		</>
 	);
 }

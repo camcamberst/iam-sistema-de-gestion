@@ -152,6 +152,7 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
   // Cerrar menú móvil al cambiar de página
   useEffect(() => {
     setMobileMenuOpen(false);
+    setActiveMenu(null);
   }, [pathname]);
 
   // Prevenir scroll del body cuando el menú móvil está abierto
@@ -190,7 +191,15 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
     }
   }, [isClient]);
 
-  // Funciones para manejar el dropdown con delay
+  // Funciones para manejar el dropdown
+  const handleMenuClick = (itemId: string) => {
+    if (activeMenu === itemId) {
+      setActiveMenu(null);
+    } else {
+      setActiveMenu(itemId);
+    }
+  };
+
   const handleMenuEnter = (itemId: string) => {
     if (menuTimeout) {
       clearTimeout(menuTimeout);
@@ -228,6 +237,24 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
       }
     };
   }, [menuTimeout]);
+
+  // Manejar clic fuera de los menús dropdown de escritorio
+  useEffect(() => {
+    const handleClickOutsideMenu = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (!target.closest('.desktop-dropdown-container')) {
+        setActiveMenu(null);
+      }
+    };
+
+    if (activeMenu) {
+      document.addEventListener('mousedown', handleClickOutsideMenu);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutsideMenu);
+    };
+  }, [activeMenu]);
 
   // Manejar clic fuera del panel de usuario
   useEffect(() => {
@@ -314,7 +341,7 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
       const calculatorIndex = baseItems.findIndex(item => item.id === 'calculator');
       if (calculatorIndex !== -1) {
         baseItems[calculatorIndex].subItems = [
-          { label: 'Definir RATES', href: '/admin/rates' },
+          { label: 'Rates (Presente)', href: '/admin/rates' },
           { label: 'Crear Plataforma', href: '/admin/calculator/create-platform' },
           { label: 'Configurar Calculadora', href: '/admin/calculator/config' },
           { label: 'Ver Calculadora Modelo', href: '/admin/calculator/view-model' }
@@ -388,13 +415,12 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
               {menuItems.map((item) => (
                 <div
                   key={item.id}
-                  className="relative"
-                  onMouseEnter={() => handleMenuEnter(item.id)}
-                  onMouseLeave={handleMenuLeave}
+                  className="relative desktop-dropdown-container"
                 >
                   {item.href === '#' ? (
                     <span
-                      className={`px-4 py-2 text-sm font-medium transition-all duration-300 cursor-default whitespace-nowrap rounded-lg hover:bg-white/60 dark:hover:bg-gray-800/60 hover:backdrop-blur-sm hover:shadow-sm ${
+                      onClick={() => item.subItems && item.subItems.length > 0 && handleMenuClick(item.id)}
+                      className={`px-4 py-2 text-sm font-medium transition-all duration-300 cursor-pointer whitespace-nowrap rounded-lg hover:bg-white/60 dark:hover:bg-gray-800/60 hover:backdrop-blur-sm hover:shadow-sm ${
                         isParentActive(item) 
                           ? 'text-gray-900 dark:text-white bg-white/50 dark:bg-gray-800/50 shadow-sm' 
                           : 'text-gray-600 dark:text-white hover:text-gray-900 dark:hover:text-gray-200'
@@ -419,8 +445,6 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
                   {activeMenu === item.id && (
                     <div 
                       className="absolute top-full left-0 mt-2 w-72 sm:w-80 bg-white/95 backdrop-blur-md border border-white/30 rounded-xl shadow-xl z-[9999999] animate-in slide-in-from-top-2 duration-200"
-                      onMouseEnter={handleDropdownEnter}
-                      onMouseLeave={handleDropdownLeave}
                     >
                       <div className="p-2">
                         {item.subItems.map((subItem) => (

@@ -60,7 +60,7 @@ export default function AuditPage() {
   });
 
   return (
-    <div className="min-h-screen" style={{
+    <div className="p-4 md:p-6" style={{
       background: 'radial-gradient(1200px 800px at 10% -10%, rgba(255,255,255,0.08), transparent), linear-gradient(180deg, rgb(16 18 27), rgb(16 18 27))'
     }}>
       <div className="p-6">

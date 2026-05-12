@@ -269,7 +269,7 @@ export default function DashboardSedesPage() {
         <div className="mb-12">
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-xl blur-xl"></div>
-            <div className="relative bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 shadow-lg">
+            <div className="glass-header p-4 sm:p-6 relative">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
@@ -318,7 +318,7 @@ export default function DashboardSedesPage() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-          <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6">
+          <div className="glass-card p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
@@ -334,7 +334,7 @@ export default function DashboardSedesPage() {
             </div>
           </div>
 
-          <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6">
+          <div className="glass-card p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div className="w-6 h-6 bg-gradient-to-br from-green-500 to-emerald-600 rounded-md flex items-center justify-center">
@@ -350,7 +350,7 @@ export default function DashboardSedesPage() {
             </div>
           </div>
 
-          <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6">
+          <div className="glass-card p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div className="w-6 h-6 bg-gradient-to-br from-purple-500 to-violet-600 rounded-md flex items-center justify-center">
@@ -366,7 +366,7 @@ export default function DashboardSedesPage() {
             </div>
           </div>
 
-          <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6">
+          <div className="glass-card p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div className="w-6 h-6 bg-gradient-to-br from-orange-500 to-amber-600 rounded-md flex items-center justify-center">

@@ -1245,7 +1245,7 @@ export default function ModelCalculatorPage() {
                     loadCalculatorConfig(user.id);
                   }
                 }}
-                className="px-3 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 text-sm shadow-md hover:shadow-lg transform hover:scale-105"
+                className="btn-apple-primary"
               >
                 Reintentar
               </button>

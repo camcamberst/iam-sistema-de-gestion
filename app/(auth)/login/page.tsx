@@ -76,7 +76,7 @@ export default function LoginPage() {
 
       switch (user.role) {
         case 'super_admin':
-          router.push('/superadmin/dashboard');
+          router.push('/admin/dashboard');
           break;
         case 'admin':
           router.push('/admin/dashboard');

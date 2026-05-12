@@ -40,25 +40,25 @@ const colorVariants = {
     shadow: 'hover:shadow-purple-200 dark:hover:shadow-purple-900/30 dark:hover:border-purple-400/30'
   },
   orange: {
-    gradient: 'bg-gradient-to-br from-orange-50 to-orange-100 dark:bg-white/[0.03] dark:from-transparent dark:to-transparent max-sm:dark:bg-black/20 backdrop-blur-md',
-    border: 'border-orange-200 dark:border-white/[0.03] max-sm:border-none',
-    text: 'text-orange-400 dark:text-orange-400',
-    badge: 'text-orange-400 bg-orange-50 dark:text-[#8f95a3] dark:bg-white/[0.04] max-sm:dark:bg-white/[0.06] max-sm:dark:text-[#a1a8b5]',
-    shadow: 'hover:shadow-orange-200 dark:hover:shadow-black/20 dark:hover:border-white/10'
+    gradient: 'bg-white/40 dark:bg-white/[0.03]',
+    border: 'border-white/50 dark:border-white/[0.08] max-sm:border-none',
+    text: 'text-orange-500 dark:text-[#fb923c] drop-shadow-none dark:drop-shadow-[0_0_8px_rgba(251,146,60,0.7)]',
+    badge: 'text-orange-500 bg-orange-50 dark:text-[#fb923c] dark:bg-orange-500/10 max-sm:dark:bg-orange-500/15',
+    shadow: 'hover:shadow-orange-200 dark:hover:shadow-orange-900/30 dark:hover:border-orange-400/30'
   },
   red: {
-    gradient: 'bg-gradient-to-br from-red-50 to-red-100 dark:bg-white/[0.03] dark:from-transparent dark:to-transparent max-sm:dark:bg-black/20 backdrop-blur-md',
-    border: 'border-red-200 dark:border-white/[0.03] max-sm:border-none',
-    text: 'text-red-400 dark:text-red-400',
-    badge: 'text-red-400 bg-red-50 dark:text-[#8f95a3] dark:bg-white/[0.04] max-sm:dark:bg-white/[0.06] max-sm:dark:text-[#a1a8b5]',
-    shadow: 'hover:shadow-red-200 dark:hover:shadow-black/20 dark:hover:border-white/10'
+    gradient: 'bg-white/40 dark:bg-white/[0.03]',
+    border: 'border-white/50 dark:border-white/[0.08] max-sm:border-none',
+    text: 'text-red-500 dark:text-[#f87171] drop-shadow-none dark:drop-shadow-[0_0_8px_rgba(248,113,113,0.7)]',
+    badge: 'text-red-500 bg-red-50 dark:text-[#f87171] dark:bg-red-500/10 max-sm:dark:bg-red-500/15',
+    shadow: 'hover:shadow-red-200 dark:hover:shadow-red-900/30 dark:hover:border-red-400/30'
   },
   yellow: {
-    gradient: 'bg-gradient-to-br from-yellow-50 to-yellow-100 dark:bg-white/[0.03] dark:from-transparent dark:to-transparent max-sm:dark:bg-black/20 backdrop-blur-md',
-    border: 'border-yellow-200 dark:border-white/[0.03] max-sm:border-none',
-    text: 'text-yellow-400 dark:text-yellow-400',
-    badge: 'text-yellow-400 bg-yellow-50 dark:text-[#8f95a3] dark:bg-white/[0.04] max-sm:dark:bg-white/[0.06] max-sm:dark:text-[#a1a8b5]',
-    shadow: 'hover:shadow-yellow-200 dark:hover:shadow-black/20 dark:hover:border-white/10'
+    gradient: 'bg-white/40 dark:bg-white/[0.03]',
+    border: 'border-white/50 dark:border-white/[0.08] max-sm:border-none',
+    text: 'text-yellow-500 dark:text-[#facc15] drop-shadow-none dark:drop-shadow-[0_0_8px_rgba(250,204,21,0.7)]',
+    badge: 'text-yellow-500 bg-yellow-50 dark:text-[#facc15] dark:bg-yellow-500/10 max-sm:dark:bg-yellow-500/15',
+    shadow: 'hover:shadow-yellow-200 dark:hover:shadow-yellow-900/30 dark:hover:border-yellow-400/30'
   }
 };
 
@@ -72,9 +72,12 @@ export default function InfoCard({
   size = 'md'
 }: InfoCardProps) {
   const colors = colorVariants[color];
-  const paddingClass = size === 'sm' ? 'px-2 py-2 sm:px-3 sm:py-2.5 md:px-4 md:py-3' : (size === 'lg' ? 'px-6 py-5 sm:px-8 sm:py-6' : 'px-4 py-3 sm:px-6 sm:py-4');
+  const paddingClass = size === 'sm' ? 'px-1.5 py-1.5 sm:px-2.5 sm:py-2 md:px-3 md:py-2 h-[64px] sm:h-[72px] md:h-[78px]' : (size === 'lg' ? 'px-6 py-5 sm:px-8 sm:py-6' : 'px-4 py-3 sm:px-6 sm:py-4');
   const valueTextClass = size === 'lg' ? 'text-2xl' : (size === 'sm' ? 'text-[15px] sm:text-[16px] max-sm:mb-1' : 'text-xl max-sm:mb-2');
-  const labelTextClass = size === 'sm' ? 'text-[9px] sm:text-[10px] tracking-tight sm:tracking-wide' : 'text-xs tracking-wide';
+  const labelTextClass = size === 'sm' ? 'text-[8.5px] sm:text-[9.5px] font-medium tracking-tight sm:tracking-wide' : 'text-xs font-medium tracking-wide';
+  const badgeClass = size === 'sm' 
+    ? 'px-1.5 sm:px-2 py-[2px] sm:py-[3px] rounded-md sm:rounded-lg w-auto inline-flex mx-auto min-h-[16px] sm:min-h-[18px]' 
+    : 'px-2 sm:px-3 py-1 sm:py-1 rounded-lg sm:rounded-xl w-full flex min-h-[20px] sm:min-h-[24px]';
   
   const formatValue = (val: string | number): string => {
     if (typeof val === 'number') {
@@ -92,17 +95,17 @@ export default function InfoCard({
       className={`
         w-full flex-1 w-full box-border
         text-center ${paddingClass} ${colors.gradient} rounded-xl sm:rounded-2xl border ${colors.border} 
-        hover:shadow-lg ${colors.shadow} transition-all duration-200 transform hover:scale-105
+        hover:shadow-lg ${colors.shadow} transition-all duration-200 transform hover:scale-105 flex flex-col justify-center items-center
         ${clickable || onClick ? 'cursor-pointer' : ''}
         ${className}
       `}
       onClick={onClick}
       title={clickable ? 'Hacer clic para interactuar' : undefined}
     >
-      <div className={`${valueTextClass} font-bold ${colors.text} mb-1 sm:mb-[0.35rem]`}>
+      <div className={`${valueTextClass} font-bold ${colors.text} mb-1 sm:mb-1.5`}>
         {formatValue(value)}
       </div>
-      <div className={`${labelTextClass} font-medium ${colors.badge} px-2 sm:px-3 py-1 sm:py-1 rounded-lg sm:rounded-xl w-full flex items-center justify-center leading-tight min-h-[20px] sm:min-h-[24px] whitespace-nowrap`}>
+      <div className={`${labelTextClass} ${colors.badge} ${badgeClass} items-center justify-center leading-tight whitespace-nowrap`}>
         {label}
       </div>
     </div>

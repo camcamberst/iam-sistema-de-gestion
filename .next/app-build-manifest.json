@@ -11,15 +11,40 @@
       "static/chunks/main-app.js",
       "static/chunks/app/admin/layout.js"
     ],
-    "/admin/model/calculator/page": [
+    "/admin/calculator/config/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/admin/model/calculator/page.js"
+      "static/chunks/app/admin/calculator/config/page.js"
     ],
-    "/admin/model/dashboard/page": [
+    "/admin/dashboard/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/admin/model/dashboard/page.js"
+      "static/chunks/app/admin/dashboard/page.js"
+    ],
+    "/admin/users/create/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/admin/users/create/page.js"
+    ],
+    "/admin/users/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/admin/users/page.js"
+    ],
+    "/admin/rates/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/admin/rates/page.js"
+    ],
+    "/admin/calculator/platforms/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/admin/calculator/platforms/page.js"
+    ],
+    "/admin/calculator/create-platform/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/admin/calculator/create-platform/page.js"
     ]
   }
 }

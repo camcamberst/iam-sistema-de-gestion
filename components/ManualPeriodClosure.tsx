@@ -592,7 +592,7 @@ export default function ManualPeriodClosure({ userId, userRole, groupId }: Manua
       {/* Modal: Confirmar Archivado */}
       {showArchiveModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-md w-full p-6">
+          <div className="glass-modal max-w-md w-full p-6">
             <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
               📦 Confirmar Creación de Archivo Histórico
             </h3>
@@ -633,7 +633,7 @@ export default function ManualPeriodClosure({ userId, userRole, groupId }: Manua
       {/* Modal: Confirmar Limpieza */}
       {showCleanupModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-md w-full p-6">
+          <div className="glass-modal max-w-md w-full p-6">
             <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
               🧹 Confirmar Limpieza y Reseteo
             </h3>
@@ -679,7 +679,7 @@ export default function ManualPeriodClosure({ userId, userRole, groupId }: Manua
       {/* Modal: Restaurar (Para implementar) */}
       {showRestoreModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-md w-full p-6">
+          <div className="glass-modal max-w-md w-full p-6">
             <h3 className="text-lg font-bold text-red-600 dark:text-red-400 mb-4">
               🚨 Restaurar Período (Emergencia)
             </h3>

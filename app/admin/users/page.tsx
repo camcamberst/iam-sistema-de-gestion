@@ -16,6 +16,7 @@ import { supabase } from '../../../lib/supabase';
 import AppleSearchBar from '../../../components/AppleSearchBar';
 import AppleDropdown from '@/components/ui/AppleDropdown';
 import StandardModal from '@/components/ui/StandardModal';
+import PageHeader from "@/components/ui/PageHeader";
 
 interface User {
   id: string;
@@ -25,6 +26,8 @@ interface User {
   is_active: boolean;
   last_login?: string;
   created_at: string;
+  avatar_url?: string;
+  photo_url?: string;
   groups: Array<{
     id: string;
     name: string;
@@ -51,11 +54,30 @@ export default function UsersListPage() {
   const [searchFilters, setSearchFilters] = useState<Record<string, string>>({});
   const [modalError, setModalError] = useState<string | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [zoomedImage, setZoomedImage] = useState<string | null>(null);
+  const [visibleIds, setVisibleIds] = useState<Record<string, boolean>>({});
   const router = useRouter();
 
   useEffect(() => {
     loadData();
   }, []);
+
+  // Manejador para cerrar la imagen ampliada con la tecla ESC
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && zoomedImage) {
+        setZoomedImage(null);
+      }
+    };
+    
+    if (zoomedImage) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [zoomedImage]);
 
 
 
@@ -483,7 +505,7 @@ export default function UsersListPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center pt-16">
+      <div className="flex min-h-[60vh] items-center justify-center pt-16">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-600 dark:text-gray-300">Cargando usuarios...</p>
@@ -493,68 +515,50 @@ export default function UsersListPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <>
       <div className="max-w-screen-2xl mx-auto px-0 sm:px-4 md:px-6 lg:px-8 py-8 pt-16">
         {/* Header */}
-        <div className="mb-8 sm:mb-12">
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-xl blur-xl"></div>
-            <div className="relative bg-white/80 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
-              {/* Layout móvil: vertical, escritorio: horizontal */}
-              <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-3">
-                {/* Título e icono */}
-                <div className="flex items-center space-x-3 min-w-0 flex-1">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
-                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-                    </svg>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h1 className="text-base sm:text-lg md:text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent leading-tight whitespace-nowrap overflow-hidden text-ellipsis">
-                      Gestión de Usuarios
-                    </h1>
-                    <p className="mt-1 text-xs sm:text-sm text-gray-600 dark:text-gray-300 hidden sm:block">Administra usuarios del sistema</p>
-                  </div>
-                </div>
-
-                {/* Botón - Ancho completo en móvil, auto en escritorio */}
-                <button
-                  onClick={() => router.push('/admin/users/create')}
-                  className="w-full md:w-auto px-4 py-2.5 sm:px-5 sm:py-3 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 flex items-center justify-center space-x-2 shadow-md hover:shadow-lg transform hover:scale-[1.02] md:hover:scale-105 font-medium text-sm sm:text-base"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                  <span>Nuevo Usuario</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <PageHeader
+          title="Gestión de Usuarios"
+          subtitle="Administra usuarios del sistema"
+          glow="admin"
+          icon={
+            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+            </svg>
+          }
+          actions={
+            <button
+              onClick={() => router.push('/admin/users/create')}
+              className="w-full sm:w-auto btn-apple-primary flex items-center justify-center h-[34px] px-6 py-0 text-sm"
+            >
+              <span>Nuevo Usuario</span>
+            </button>
+          }
+        />
 
         {/* Search and Filters */}
+        <div className="mb-2 px-1 sm:px-2 flex items-center gap-2">
+          <svg 
+            className="w-[18px] h-[18px] text-blue-500 dark:text-blue-400 drop-shadow-[0_0_8px_rgba(59,130,246,0.8)]" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <h2 className="text-[14px] sm:text-[15px] font-semibold tracking-wide text-gray-800 dark:text-gray-200">
+            Búsqueda y Filtros
+          </h2>
+        </div>
+        
         <div 
-          className={`mb-16 relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 z-10 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15 ${showEditModal ? 'opacity-30 blur-sm pointer-events-none' : ''}`}
+          className="mb-8 glass-card p-4 sm:p-6 relative z-[60]"
           aria-hidden={showEditModal}
           onClick={(e) => {
-            // Prevenir que los clics dentro del contenedor interfieran con dropdowns
             e.stopPropagation();
           }}
         >
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <svg className="w-[18px] h-[18px] text-gray-400 dark:text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              <h2 className="text-[15px] sm:text-base font-semibold tracking-tight text-gray-900 dark:text-gray-100">Búsqueda y Filtros</h2>
-            </div>
-            {filteredUsers.length > 0 && (
-              <div className="hidden sm:flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span>{filteredUsers.length} resultado(s) encontrado(s)</span>
-              </div>
-            )}
-          </div>
           <AppleSearchBar
             onSearch={handleSearch}
             placeholder="Buscar por nombre, email o ID de usuario..."
@@ -585,18 +589,29 @@ export default function UsersListPage() {
         )}
 
         {/* Users Table */}
-        <div className={`relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm border border-white/20 dark:border-gray-600/20 rounded-xl shadow-md transition-all duration-300 apple-scroll overflow-y-auto max-h-[70vh] p-0 z-10 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15 ${(isDropdownOpen || showEditModal) ? 'opacity-30 blur-sm pointer-events-none' : 'opacity-100 blur-none pointer-events-auto'}`}
+        <div className="mb-2 px-1 sm:px-2 flex items-center gap-2">
+          <svg 
+            className="w-[18px] h-[18px] text-purple-500 dark:text-purple-400 drop-shadow-[0_0_8px_rgba(168,85,247,0.8)]" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+          </svg>
+          <h2 className="text-[14px] sm:text-[15px] font-semibold tracking-wide text-gray-800 dark:text-gray-200">
+            Usuarios del Sistema ({users.length})
+          </h2>
+          {filteredUsers.length > 0 && filteredUsers.length !== users.length && (
+            <div className="hidden sm:flex items-center space-x-2 text-[13px] ml-auto text-gray-500 dark:text-gray-400 font-medium">
+              <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]"></div>
+              <span>{filteredUsers.length} resultado(s) encontrado(s)</span>
+            </div>
+          )}
+        </div>
+
+        <div className="glass-card relative z-[8] pt-4 sm:pt-6 px-3 sm:px-6 pb-0"
              aria-hidden={showEditModal}
         >
-          <div className="pt-4 sm:pt-6 px-3 sm:px-6 pb-0">
-            <div className="flex items-center gap-2 mb-4">
-              <svg className="w-[18px] h-[18px] text-gray-400 dark:text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-              </svg>
-              <h2 className="text-[15px] sm:text-base font-semibold tracking-tight text-gray-900 dark:text-gray-100">
-                Usuarios del Sistema ({users.length})
-              </h2>
-            </div>
             
             {users.length === 0 ? (
               <div className="text-center py-12">
@@ -608,7 +623,7 @@ export default function UsersListPage() {
                 <div className="text-gray-400 dark:text-gray-500 text-base font-medium">No hay usuarios registrados</div>
                 <button
                   onClick={() => router.push('/admin/users/create')}
-                  className="mt-4 px-3 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-lg transition-all duration-300 text-sm shadow-md hover:shadow-lg transform hover:scale-105"
+                  className="mt-4 btn-apple-primary"
                 >
                   Crear Primer Usuario
                 </button>
@@ -632,169 +647,141 @@ export default function UsersListPage() {
               <div className="overflow-x-auto -mx-3 sm:mx-0">
                 <div className="inline-block min-w-full align-middle">
                   <div className="overflow-hidden">
-                    <table className="min-w-full text-left text-xs md:table-fixed">
-                  <thead className="border-b border-white/20 dark:border-gray-600/20 bg-gradient-to-r from-gray-50/80 to-blue-50/60 dark:from-gray-700/80 dark:to-gray-600/60 backdrop-blur-sm">
+                    <table className="min-w-full text-center text-xs md:table-fixed border-separate border-spacing-0">
+                  <thead className="">
                     <tr>
-                      <th className="px-2 sm:px-4 py-3 sm:py-4 min-w-[120px] sm:w-[28%] text-gray-700 dark:text-white font-medium text-xs sm:text-sm uppercase tracking-wide text-center">
+                      <th className="bg-black/[0.04] dark:bg-white/[0.04] px-2 sm:px-4 py-3 sm:py-3.5 min-w-[120px] sm:w-[28%] text-gray-900 dark:text-white font-bold text-xs sm:text-[13px] capitalize tracking-tight text-center rounded-l-full pl-6">
                         Usuario
                       </th>
-                      <th className="px-2 sm:px-4 py-3 sm:py-4 min-w-[150px] sm:w-[28%] text-gray-700 dark:text-white font-medium text-xs sm:text-sm uppercase tracking-wide text-center">
+                      <th className="bg-black/[0.04] dark:bg-white/[0.04] px-2 sm:px-4 py-3 sm:py-3.5 min-w-[150px] sm:w-[28%] text-gray-900 dark:text-white font-bold text-xs sm:text-[13px] capitalize tracking-tight text-center">
                         Email
                       </th>
-                      <th className="px-2 sm:px-4 py-3 sm:py-4 min-w-[80px] sm:w-[10%] text-gray-700 dark:text-white font-medium text-xs sm:text-sm uppercase tracking-wide text-center">
+                      <th className="bg-black/[0.04] dark:bg-white/[0.04] px-2 sm:px-4 py-3 sm:py-3.5 min-w-[80px] sm:w-[10%] text-gray-900 dark:text-white font-bold text-xs sm:text-[13px] capitalize tracking-tight text-center">
                         Rol
                       </th>
-                      <th className="px-2 sm:px-4 py-3 sm:py-4 min-w-[100px] sm:w-[20%] text-gray-700 dark:text-white font-medium text-xs sm:text-sm uppercase tracking-wide text-center">
+                      <th className="bg-black/[0.04] dark:bg-white/[0.04] px-2 sm:px-4 py-3 sm:py-3.5 min-w-[100px] sm:w-[20%] text-gray-900 dark:text-white font-bold text-xs sm:text-[13px] capitalize tracking-tight text-center">
                         Grupos
                       </th>
-                      <th className="px-2 sm:px-4 py-3 sm:py-4 min-w-[70px] sm:w-[8%] text-gray-700 dark:text-white font-medium text-xs sm:text-sm uppercase tracking-wide text-center">
+                      <th className="bg-black/[0.04] dark:bg-white/[0.04] px-2 sm:px-4 py-3 sm:py-3.5 min-w-[70px] sm:w-[8%] text-gray-900 dark:text-white font-bold text-xs sm:text-[13px] capitalize tracking-tight text-center">
                         Estado
                       </th>
-                      <th className="px-2 sm:px-4 py-3 sm:py-4 min-w-[100px] sm:w-[6%] text-gray-700 dark:text-white font-medium text-xs sm:text-sm uppercase tracking-wide text-center">
+                      <th className="bg-black/[0.04] dark:bg-white/[0.04] px-2 sm:px-4 py-3 sm:py-3.5 min-w-[100px] sm:w-[6%] text-gray-900 dark:text-white font-bold text-xs sm:text-[13px] capitalize tracking-tight text-center rounded-r-full pr-6">
                         Acciones
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white/30 backdrop-blur-sm divide-y divide-white/20">
+                  <tbody className="divide-y divide-black/5 dark:divide-white/5">
                     {filteredUsers.map((user) => (
-                      <tr key={user.id} className="border-b border-white/10 hover:bg-white/60 hover:shadow-sm transition-all duration-200 h-auto sm:h-12 group">
-                        <td className="px-2 sm:px-4 py-2">
-                          <div className="flex items-center space-x-2">
-                            {(() => {
-                              // Avatar simbólico homogéneo por rol
-                              const role = user.role || 'modelo';
-                              
-                              let gradient = 'bg-gradient-to-br from-pink-500 via-rose-500 to-purple-500';
-                              let symbol: React.ReactElement;
-                              
-                              if (role === 'super_admin') {
-                                gradient = 'bg-gradient-to-br from-amber-500 via-yellow-500 to-amber-600';
-                                symbol = (
-                                  <svg viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5">
-                                    <path d="M5 16L3 10l5.5-2L12 10l3.5-2L21 10l-2 6H5zm14.5-7.5L18.5 8l-3.5 1.5L12 8l-2.5 1.5L6 8l-1 0.5L5 11l14 0.5z"/>
-                                    <circle cx="8" cy="16" r="1.5" fill="currentColor" opacity="0.8"/>
-                                    <circle cx="16" cy="16" r="1.5" fill="currentColor" opacity="0.8"/>
-                                    <circle cx="12" cy="14" r="1.5" fill="currentColor" opacity="0.9"/>
-                                  </svg>
-                                );
-                              } else if (role === 'admin') {
-                                gradient = 'bg-gradient-to-br from-blue-500 to-indigo-600';
-                                symbol = (
-                                  <svg viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5">
-                                    <path d="M12 15.5A3.5 3.5 0 0 1 8.5 12A3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5a3.5 3.5 0 0 1-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97c0-.33-.03-.66-.07-1l2.11-1.63c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.31-.61-.22l-2.49 1c-.52-.4-1.06-.73-1.69-.98l-.37-2.65A.506.506 0 0 0 14 2h-4c-.25 0-.46.18-.5.42l-.37 2.65c-.63.25-1.17.59-1.69.98l-2.49-1c-.22-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64L4.57 11c-.04.34-.07.67-.07 1c0 .33.03.65.07.97l-2.11 1.66c-.19.15-.25.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1.01c.52.4 1.06.74 1.69.99l.37 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.37-2.65c.63-.26 1.17-.59 1.69-.99l2.49 1.01c.22.08.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.66Z"/>
-                                  </svg>
-                                );
-                              } else if (role === 'gestor') {
-                                gradient = 'bg-gradient-to-br from-orange-500 to-amber-600';
-                                symbol = (
-                                  <svg viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5">
-                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                                  </svg>
-                                );
-                              } else if (role === 'fotografia') {
-                                gradient = 'bg-gradient-to-br from-purple-500 to-pink-600';
-                                symbol = (
-                                  <svg viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5">
-                                    <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
-                                  </svg>
-                                );
-                              } else {
-                                symbol = (
-                                  <svg viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5">
-                                    <circle cx="12" cy="12" r="2" fill="currentColor"/>
-                                    <circle cx="12" cy="8" r="1.5" fill="currentColor" opacity="0.8"/>
-                                    <circle cx="12" cy="16" r="1.5" fill="currentColor" opacity="0.8"/>
-                                    <circle cx="8" cy="12" r="1.5" fill="currentColor" opacity="0.8"/>
-                                    <circle cx="16" cy="12" r="1.5" fill="currentColor" opacity="0.8"/>
-                                    <circle cx="10" cy="10" r="1.2" fill="currentColor" opacity="0.7"/>
-                                    <circle cx="14" cy="10" r="1.2" fill="currentColor" opacity="0.7"/>
-                                    <circle cx="10" cy="14" r="1.2" fill="currentColor" opacity="0.7"/>
-                                    <circle cx="14" cy="14" r="1.2" fill="currentColor" opacity="0.7"/>
-                                  </svg>
-                                );
-                              }
-                              
-                              return (
-                                <div 
-                                  className={`w-6 h-6 ${gradient} rounded-full flex items-center justify-center text-xs shadow-sm border border-white/20 flex-shrink-0 relative overflow-hidden`}
-                                >
-                                  <div className="text-white flex items-center justify-center">
-                                    {symbol}
+                      <tr key={user.id} className="group hover:bg-black/[0.02] dark:hover:bg-white/[0.04] transition-all duration-200 h-auto sm:h-14">
+                        <td className="px-2 sm:px-4 py-3 pl-6">
+                          <div className="flex items-center space-x-3">
+                            <div 
+                              className="w-8 h-8 rounded-full overflow-hidden bg-black/5 dark:bg-white/5 flex-shrink-0 border border-black/5 dark:border-white/10 cursor-pointer hover:opacity-80 transition-all ring-2 ring-transparent hover:ring-black/10 dark:hover:ring-white/20"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setZoomedImage(user.avatar_url || user.photo_url || '/favicon.png');
+                              }}
+                            >
+                              <img 
+                                src={user.avatar_url || user.photo_url || '/favicon.png'} 
+                                alt={user.name}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  // Fallback robusto en caso de que la imagen falle al cargar
+                                  (e.target as HTMLImageElement).src = '/favicon.png';
+                                }}
+                              />
                             </div>
-                                </div>
-                              );
-                            })()}
                             <div className="min-w-0 flex-1">
-                              <div className="text-gray-900 dark:text-gray-100 font-medium text-xs truncate" title={user.name}>{user.name}</div>
-                              <div className="flex items-center gap-1.5 mt-0.5 group/id">
-                                <span 
-                                  className="text-gray-400 dark:text-gray-500 text-xs font-mono select-all cursor-text hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                                  title={`ID: ${user.id} (click para seleccionar, botón para copiar)`}
-                                >
-                                  {user.id}
-                                </span>
-                                <button
-                                  onClick={async (e) => {
-                                    e.stopPropagation();
-                                    try {
-                                      await navigator.clipboard.writeText(user.id);
-                                      // Feedback visual temporal
-                                      const btn = e.currentTarget;
-                                      const originalHTML = btn.innerHTML;
-                                      btn.innerHTML = '<svg class="w-3 h-3 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>';
-                                      setTimeout(() => {
-                                        btn.innerHTML = originalHTML;
-                                      }, 1500);
-                                    } catch (err) {
-                                      console.error('Error copiando ID:', err);
-                                    }
-                                  }}
-                                  className="opacity-0 group-hover:opacity-100 group-hover/id:opacity-100 transition-opacity p-0.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded flex-shrink-0"
-                                  title="Copiar ID al portapapeles"
-                                >
-                                  <svg className="w-3 h-3 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                  </svg>
-                                </button>
-                              </div>
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); setVisibleIds(prev => ({...prev, [user.id]: !prev[user.id]})); }}
+                                className="text-gray-900 dark:text-gray-100 font-medium text-xs truncate hover:text-blue-500 dark:hover:text-blue-400 transition-colors cursor-pointer text-left w-full focus:outline-none" 
+                              >
+                                {user.name}
+                              </button>
+                              {visibleIds[user.id] && (
+                                <div className="flex items-center gap-1.5 mt-0.5 animate-in fade-in slide-in-from-top-1">
+                                  <button
+                                    onClick={async (e) => {
+                                      e.stopPropagation();
+                                      try {
+                                        await navigator.clipboard.writeText(user.id);
+                                        const btn = e.currentTarget;
+                                        const originalHTML = btn.innerHTML;
+                                        btn.innerHTML = 'Copiado';
+                                        btn.classList.add('text-green-600', 'dark:text-green-400');
+                                        setTimeout(() => {
+                                          btn.innerHTML = originalHTML;
+                                          btn.classList.remove('text-green-600', 'dark:text-green-400');
+                                        }, 1500);
+                                      } catch (err) {
+                                        console.error('Error copiando ID:', err);
+                                      }
+                                    }}
+                                    className="text-[10px] sm:text-xs text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 flex items-center bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 px-3 py-1 rounded-full transition-colors focus:outline-none font-medium"
+                                  >
+                                    Copiar ID
+                                  </button>
+                                </div>
+                              )}
                             </div>
                           </div>
                         </td>
-                        <td className="px-2 sm:px-4 py-2 text-gray-800 truncate max-w-[220px] text-xs text-center" title={user.email}>{user.email}</td>
-                        <td className="px-2 sm:px-4 py-2 text-center">
-                          <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap border shadow-sm backdrop-blur-sm ${
+                        <td className="px-2 sm:px-4 py-3">
+                          {user.email.includes('@') ? (
+                            <div className="flex items-center w-full text-gray-600 dark:text-gray-400 text-[11px] sm:text-xs">
+                              <span className="flex-1 text-right truncate">{user.email.split('@')[0]}</span>
+                              <span className="mx-0.5 opacity-40 font-light">@</span>
+                              <span className="flex-1 text-left truncate">{user.email.split('@')[1]}</span>
+                            </div>
+                          ) : (
+                            <div className="text-center text-gray-600 dark:text-gray-400 text-xs">{user.email}</div>
+                          )}
+                        </td>
+                        <td className="px-2 sm:px-4 py-3 text-center">
+                          <span className={`w-[100px] flex items-center justify-center px-3 py-1 rounded-full text-[11px] font-semibold tracking-wide capitalize border whitespace-nowrap shadow-[0_0_8px_rgba(0,0,0,0.1)] dark:shadow-none mx-auto ${
                             user.role === 'super_admin'
-                              ? 'bg-gradient-to-r from-gray-800 to-gray-900 text-white border-gray-600/30'
+                              ? 'bg-rose-50/50 text-rose-700 border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-400/50 dark:shadow-[0_0_8px_rgba(244,63,94,0.15)]'
                               : user.role === 'admin'
-                                ? 'bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 border-blue-200/50'
-                                : 'bg-gradient-to-r from-green-50 to-emerald-50 text-green-700 border-green-200/50'
+                                ? 'bg-cyan-50/50 text-cyan-700 border-cyan-500/30 dark:bg-cyan-500/10 dark:text-cyan-400 dark:border-cyan-400/50 dark:shadow-[0_0_8px_rgba(34,211,238,0.15)]'
+                                : user.role === 'modelo'
+                                  ? 'bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-500/10 dark:text-slate-300 dark:border-slate-400/50 dark:shadow-[0_0_8px_rgba(148,163,184,0.2)]'
+                                  : 'bg-black/5 text-gray-700 border-black/5 dark:bg-white/5 dark:text-gray-300 dark:border-white/10'
                           }`}>
-                            {user.role.replace('_', ' ').toUpperCase()}
+                            {user.role.replace('_', ' ')}
                           </span>
                         </td>
                         <td className="px-2 sm:px-4 py-2 text-center">
                           {user.groups.length > 0 ? (
-                            <div className="flex items-center justify-center gap-1 overflow-hidden">
-                              {user.groups.slice(0,2).map((group) => (
-                                <span key={group.id} className="bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-700 dark:to-gray-600 text-gray-700 dark:text-gray-200 px-2 py-1 rounded-md text-xs whitespace-nowrap border border-gray-200/30 dark:border-gray-600/30 shadow-sm backdrop-blur-sm">
+                            <div className="relative inline-flex items-center justify-center">
+                              {user.groups.slice(0, 1).map((group) => (
+                                <span key={group.id} className="w-[100px] flex items-center justify-center px-3 py-1 rounded-full text-[11px] font-medium whitespace-nowrap border bg-purple-50/50 text-purple-700 border-purple-500/30 dark:bg-purple-500/10 dark:text-purple-400 dark:border-purple-400/50 dark:shadow-[0_0_8px_rgba(168,85,247,0.15)]">
                                   {group.name}
                                 </span>
                               ))}
-                              {user.groups.length > 2 && (
-                                <span
-                                  className="text-gray-500 text-xs whitespace-nowrap cursor-help"
-                                  title={user.groups.map(g=>g.name).join(', ')}
-                                >
-                                  +{user.groups.length - 2}
-                                </span>
+                              {user.groups.length > 1 && (
+                                <div className="absolute left-full ml-1.5 group/tooltip flex items-center justify-center h-full">
+                                  <span
+                                    className="text-[11px] font-medium text-gray-400 dark:text-gray-500 cursor-help transition-colors hover:text-gray-600 dark:hover:text-gray-400"
+                                  >
+                                    +{user.groups.length - 1}
+                                  </span>
+                                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900/90 dark:bg-gray-100/90 backdrop-blur-md text-white dark:text-gray-900 text-[11px] font-medium rounded-lg opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all whitespace-nowrap z-50 shadow-lg pointer-events-none">
+                                    {user.groups.slice(1).map(g => g.name).join(', ')}
+                                  </div>
+                                </div>
                               )}
                             </div>
                           ) : (
                             <span className="text-gray-400 text-xs">Sin grupos</span>
                           )}
                         </td>
-                        <td className="px-2 sm:px-4 py-2 text-center">
-                          <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold border shadow-sm backdrop-blur-sm ${user.is_active ? 'bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 text-green-700 dark:text-green-300 border-green-200/50 dark:border-green-700/50' : 'bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-700 dark:to-gray-600 text-gray-600 dark:text-gray-300 border-gray-200/50 dark:border-gray-600/50'}`}>
+                        <td className="px-2 sm:px-4 py-3 text-center">
+                          <span className={`w-[80px] flex items-center justify-center mx-auto px-3 py-1 rounded-full text-[11px] font-semibold border whitespace-nowrap ${
+                            user.is_active 
+                              ? 'bg-emerald-50/50 text-emerald-700 border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-400/50 dark:shadow-[0_0_8px_rgba(16,185,129,0.15)]' 
+                              : 'bg-gray-50/80 text-gray-500 border-gray-200/50 dark:bg-white/5 dark:text-gray-400 dark:border-white/10'
+                          }`}>
                             {user.is_active ? 'Activo' : 'Inactivo'}
                           </span>
                         </td>
@@ -803,24 +790,22 @@ export default function UsersListPage() {
                             <button
                               onClick={() => handleEditUser(user)}
                               disabled={!currentUser || !canEditUser(currentUser, user)}
-                              className={`px-2.5 py-1.5 text-xs rounded-lg border transition-all duration-200 backdrop-blur-sm ${
+                              className={`w-[75px] flex items-center justify-center px-3 py-1 text-[11px] font-semibold tracking-wide rounded-full border bg-transparent transition-all duration-300 ${
                                 !currentUser || !canEditUser(currentUser, user)
-                                  ? 'bg-gray-100 dark:bg-gray-700 border-gray-200/30 text-gray-400 dark:text-gray-500 cursor-not-allowed'
-                                  : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200/30 text-blue-700 hover:from-blue-100 hover:to-indigo-100 hover:shadow-sm'
+                                  ? 'opacity-50 cursor-not-allowed text-gray-400 border-gray-300 dark:text-gray-600 dark:border-gray-700'
+                                  : 'text-cyan-600 border-cyan-500/60 hover:bg-cyan-50/80 hover:border-cyan-500 dark:text-cyan-400 dark:border-cyan-400/50 dark:hover:bg-cyan-500/20 dark:hover:border-cyan-300 dark:hover:shadow-[0_0_10px_rgba(34,211,238,0.3)]'
                               }`}
-                              title={!currentUser || !canEditUser(currentUser, user) ? 'Solo puedes editar modelos de tus grupos' : 'Editar usuario'}
                             >
                               Editar
                             </button>
                             <button
                               onClick={() => handleDeleteUser(user.id)}
                               disabled={!currentUser || !canDeleteUser(currentUser, user)}
-                              className={`px-2.5 py-1.5 text-xs rounded-lg border transition-all duration-200 backdrop-blur-sm ${
+                              className={`w-[75px] flex items-center justify-center px-3 py-1 text-[11px] font-semibold tracking-wide rounded-full border bg-transparent transition-all duration-300 ${
                                 !currentUser || !canDeleteUser(currentUser, user)
-                                  ? 'bg-gray-100 dark:bg-gray-700 border-gray-200/30 text-gray-400 dark:text-gray-500 cursor-not-allowed'
-                                  : 'bg-gradient-to-r from-red-50 to-rose-50 border-red-200/30 text-red-700 hover:from-red-100 hover:to-rose-100 hover:shadow-sm'
+                                  ? 'opacity-50 cursor-not-allowed text-gray-400 border-gray-300 dark:text-gray-600 dark:border-gray-700'
+                                  : 'text-rose-600 border-rose-500/60 hover:bg-rose-50/80 hover:border-rose-500 dark:text-rose-400 dark:border-rose-400/50 dark:hover:bg-rose-500/20 dark:hover:border-rose-300 dark:hover:shadow-[0_0_10px_rgba(244,63,94,0.3)]'
                               }`}
-                              title={!currentUser || !canDeleteUser(currentUser, user) ? 'Solo puedes eliminar modelos de tus grupos' : 'Eliminar usuario'}
                             >
                               Eliminar
                             </button>
@@ -834,7 +819,6 @@ export default function UsersListPage() {
                 </div>
               </div>
             )}
-          </div>
         </div>
 
 
@@ -883,8 +867,30 @@ export default function UsersListPage() {
             }}
           />
         )}
+        {/* Zoomed Image Modal */}
+        {zoomedImage && (
+          <div 
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md p-4 cursor-zoom-out"
+            onClick={() => setZoomedImage(null)}
+          >
+            <img 
+              src={zoomedImage} 
+              alt="Avatar Ampliado" 
+              className="w-full max-w-[360px] h-auto max-h-[360px] rounded-2xl shadow-2xl object-cover border border-white/10 cursor-default"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <button 
+              className="absolute top-6 right-6 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 backdrop-blur-md transition-colors"
+              onClick={() => setZoomedImage(null)}
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        )}
       </div>
-    </div>
+    </>
   );
 }
 
@@ -1219,7 +1225,7 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
             </button>
             <button
               type="submit"
-              className="px-6 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg hover:from-blue-600 hover:to-indigo-700 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 shadow-md"
+              className="btn-apple-primary"
             >
               Actualizar Usuario
             </button>
@@ -1321,7 +1327,7 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
               type="button"
               onClick={handleChangePassword}
               disabled={savingPassword || !passwordData.newPassword || !passwordData.confirmPassword || passwordData.newPassword !== passwordData.confirmPassword || passwordData.newPassword.length < 6}
-              className="px-6 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg hover:from-blue-600 hover:to-indigo-700 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 shadow-md flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="disabled:opacity-50 disabled:cursor-not-allowed btn-apple-primary"
             >
               {savingPassword ? (
                 <>

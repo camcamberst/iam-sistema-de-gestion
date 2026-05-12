@@ -133,64 +133,89 @@ export default function GestionAnticiposPage() {
         {/* Opciones principales */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Solicitudes Pendientes */}
-          <div className="relative bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-700/20 p-4 hover:shadow-lg transition-all duration-300 flex flex-col h-full group">
-            <div className="flex items-center mb-3">
-              <div className="w-6 h-6 bg-gradient-to-br from-orange-500 to-amber-600 rounded-lg flex items-center justify-center shadow-md">
-                <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+          <div className="flex flex-col gap-1.5 sm:gap-2 h-full">
+            <div className="flex items-center justify-between px-1">
+              <div className="flex items-center space-x-1 sm:space-x-1.5 min-w-0">
+                <div className="flex items-center justify-center text-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]">
+                  <svg className="w-4 h-4 sm:w-[1.125rem] sm:h-[1.125rem]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="relative flex items-center">
+                  <h2 className="text-[14px] sm:text-[15px] font-bold text-gray-900 dark:text-white tracking-tight drop-shadow-sm dark:drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">
+                    Solicitudes Pendientes
+                  </h2>
+                </div>
               </div>
             </div>
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">Solicitudes Pendientes</h3>
-            <p className="text-gray-500 text-xs mb-3 flex-grow">
-              Revisa y gestiona las solicitudes pendientes de aprobación
-            </p>
-            <div className="w-full px-3 py-2 bg-gradient-to-r from-orange-500 to-amber-600 text-white rounded-lg hover:from-orange-600 hover:to-amber-700 transition-all duration-300 mt-auto text-center cursor-default text-xs shadow-md group-hover:shadow-lg transform group-hover:scale-105">
-              Gestionar Solicitudes
+            <div className="relative bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-700/20 p-4 hover:shadow-lg transition-all duration-300 flex flex-col h-full group flex-1">
+              <p className="text-gray-500 text-xs mb-3 flex-grow mt-1">
+                Revisa y gestiona las solicitudes pendientes de aprobación
+              </p>
+              <div className="w-full px-3 py-2 bg-gradient-to-r from-orange-500 to-amber-600 text-white rounded-lg hover:from-orange-600 hover:to-amber-700 transition-all duration-300 mt-auto text-center cursor-default text-xs shadow-md group-hover:shadow-lg transform group-hover:scale-105">
+                Gestionar Solicitudes
+              </div>
             </div>
           </div>
 
           {/* Historial de Anticipos */}
-          <div className="relative bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-700/20 p-4 hover:shadow-lg transition-all duration-300 flex flex-col h-full group">
-            <div className="flex items-center mb-3">
-              <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
-                <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
+          <div className="flex flex-col gap-1.5 sm:gap-2 h-full">
+            <div className="flex items-center justify-between px-1">
+              <div className="flex items-center space-x-1 sm:space-x-1.5 min-w-0">
+                <div className="flex items-center justify-center text-blue-500 drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
+                  <svg className="w-4 h-4 sm:w-[1.125rem] sm:h-[1.125rem]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                </div>
+                <div className="relative flex items-center">
+                  <h2 className="text-[14px] sm:text-[15px] font-bold text-gray-900 dark:text-white tracking-tight drop-shadow-sm dark:drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">
+                    Historial de Anticipos
+                  </h2>
+                </div>
               </div>
             </div>
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">Historial de Anticipos</h3>
-            <p className="text-gray-500 text-xs mb-3 flex-grow">
-              Consulta el historial completo de anticipos procesados
-            </p>
-            <div className="w-full px-3 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 mt-auto text-center cursor-default text-xs shadow-md group-hover:shadow-lg transform group-hover:scale-105">
-              Ver Historial
+            <div className="relative bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-700/20 p-4 hover:shadow-lg transition-all duration-300 flex flex-col h-full group flex-1">
+              <p className="text-gray-500 text-xs mb-3 flex-grow mt-1">
+                Consulta el historial completo de anticipos procesados
+              </p>
+              <div className="w-full px-3 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 mt-auto text-center cursor-default text-xs shadow-md group-hover:shadow-lg transform group-hover:scale-105">
+                Ver Historial
+              </div>
             </div>
           </div>
         </div>
 
         {/* Estadísticas rápidas */}
-        <div className="mt-6 relative bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-700/20 p-4">
-          <div className="flex items-center space-x-2 mb-4">
-            <div className="w-4 h-4 bg-gradient-to-br from-purple-500 to-violet-600 rounded flex items-center justify-center">
-              <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
+        <div className="mt-6 flex flex-col gap-1.5 sm:gap-2 h-full">
+          {/* TÍTULO MINIMALISTA POR FUERA DE LA CAJA */}
+          <div className="flex items-center justify-between px-1">
+            <div className="flex items-center space-x-1 sm:space-x-1.5 min-w-0">
+              <div className="flex items-center justify-center text-purple-500 drop-shadow-[0_0_8px_rgba(168,85,247,0.6)]">
+                <svg className="w-4 h-4 sm:w-[1.125rem] sm:h-[1.125rem]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <div className="relative flex items-center">
+                <h2 className="text-[14px] sm:text-[15px] font-bold text-gray-900 dark:text-white tracking-tight drop-shadow-sm dark:drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">
+                  Resumen del Sistema
+                </h2>
+              </div>
             </div>
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Resumen del Sistema</h3>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className="text-center p-3 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg border border-gray-200/50 dark:border-gray-700/50 shadow-sm">
-              <div className="text-base font-bold text-gray-900">-</div>
-              <div className="text-xs text-gray-500 font-medium">Solicitudes Pendientes</div>
-            </div>
-            <div className="text-center p-3 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg border border-gray-200/50 dark:border-gray-700/50 shadow-sm">
-              <div className="text-base font-bold text-gray-900">-</div>
-              <div className="text-xs text-gray-500 font-medium">Solicitudes Aprobadas</div>
-            </div>
-            <div className="text-center p-3 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg border border-gray-200/50 dark:border-gray-700/50 shadow-sm">
-              <div className="text-base font-bold text-gray-900">-</div>
-              <div className="text-xs text-gray-500 font-medium">Total Procesadas</div>
+          <div className="relative bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-700/20 p-4 flex-1">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="text-center p-3 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg border border-gray-200/50 dark:border-gray-700/50 shadow-sm hover:shadow-md transition-shadow">
+                <div className="text-base font-bold text-gray-900">-</div>
+                <div className="text-xs text-gray-500 font-medium">Solicitudes Pendientes</div>
+              </div>
+              <div className="text-center p-3 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg border border-gray-200/50 dark:border-gray-700/50 shadow-sm hover:shadow-md transition-shadow">
+                <div className="text-base font-bold text-gray-900">-</div>
+                <div className="text-xs text-gray-500 font-medium">Solicitudes Aprobadas</div>
+              </div>
+              <div className="text-center p-3 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg border border-gray-200/50 dark:border-gray-700/50 shadow-sm hover:shadow-md transition-shadow">
+                <div className="text-base font-bold text-gray-900">-</div>
+                <div className="text-xs text-gray-500 font-medium">Total Procesadas</div>
+              </div>
             </div>
           </div>
         </div>

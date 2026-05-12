@@ -968,7 +968,7 @@ export default function GestorStatsPage() {
                   <button
                     onClick={() => handleSaveRates('1-15')}
                     disabled={savingRates}
-                    className="flex-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded text-xs font-medium transition-colors"
+                    className="flex-1 disabled:bg-gray-400 btn-apple-primary"
                   >
                     {savingRates ? 'Guardando...' : 'Guardar'}
                   </button>
@@ -1060,7 +1060,7 @@ export default function GestorStatsPage() {
                   <button
                     onClick={() => handleSaveRates('16-31')}
                     disabled={savingRates}
-                    className="flex-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded text-xs font-medium transition-colors"
+                    className="flex-1 disabled:bg-gray-400 btn-apple-primary"
                   >
                     {savingRates ? 'Guardando...' : 'Guardar'}
                   </button>
@@ -1138,7 +1138,7 @@ export default function GestorStatsPage() {
               )}
               <button
                 onClick={loadData}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-medium"
+                className="btn-apple-primary"
               >
                 Recargar Datos
               </button>
@@ -1203,7 +1203,7 @@ export default function GestorStatsPage() {
                   ))}
                   {/* Columnas de totales */}
                   <th
-                    className="px-2 py-1 text-xs text-center font-semibold text-gray-700 dark:text-white border-l-2 border-gray-300 dark:border-gray-500 border-r border-gray-200 dark:border-gray-600 bg-blue-100 dark:bg-blue-900/30"
+                    className="btn-apple-primary"
                     colSpan={2}
                   >
                     <div className="flex flex-col">

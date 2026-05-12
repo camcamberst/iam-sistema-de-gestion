@@ -1065,59 +1065,63 @@ export default function GestionarSedesPage() {
         </div>
 
         {/* Información de la Sede Seleccionada */}
+        {/* Información de la Sede Seleccionada */}
         {selectedSedeInfo && (
-          <div className="relative mb-10">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/5 rounded-xl blur-sm"></div>
-            <div className="relative bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-lg shadow-md border border-white/20 dark:border-gray-600/20 p-4 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{selectedSedeInfo.name}</h2>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {selectedSedeInfo.rooms?.length || 0} rooms configurados
-                    </p>
-                  </div>
+          <div className="flex flex-col gap-1.5 sm:gap-2 mb-10">
+            {/* TÍTULO MINIMALISTA POR FUERA DE LA CAJA */}
+            <div className="flex items-center justify-between px-1">
+              <div className="flex items-center space-x-1 sm:space-x-1.5 min-w-0">
+                <div className="flex items-center justify-center text-blue-500 drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
+                  <svg className="w-4 h-4 sm:w-[1.125rem] sm:h-[1.125rem]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <div className="flex items-center space-x-1.5 bg-blue-100 dark:bg-blue-900/30 px-2 py-1 rounded-full">
-                    <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></div>
-                    <span className="text-xs text-blue-700 dark:text-blue-300 font-medium">Activa</span>
-                  </div>
-                  {/* Botones de editar y eliminar para superadmin */}
-                  {(userRole === 'super_admin' || userRole === 'superadmin_aff') && (
-                    <div className="flex items-center space-x-1">
-                      <button
-                        onClick={() => {
-                          setSedeToEdit(selectedSedeInfo);
-                          setEditSedeName(selectedSedeInfo.name);
-                          setEditSedeDescription(selectedSedeInfo.description || '');
-                          setEditSedeActive(selectedSedeInfo.is_active !== false);
-                          setShowEditSedeModal(true);
-                        }}
-                        className="px-2 py-1 text-xs font-medium text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition-colors"
-                        title="Editar sede"
-                      >
-                        Editar
-                      </button>
-                      <button
-                        onClick={() => {
-                          setSedeToDelete(selectedSedeInfo);
-                          setShowDeleteSedeModal(true);
-                        }}
-                        className="px-2 py-1 text-xs font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors"
-                        title="Eliminar sede"
-                      >
-                        Eliminar
-                      </button>
-                    </div>
-                  )}
+                <div className="relative flex items-center">
+                  <h2 className="text-[14px] sm:text-[15px] font-bold text-gray-900 dark:text-white tracking-tight drop-shadow-sm dark:drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">
+                    {selectedSedeInfo.name}
+                  </h2>
+                  <span className="ml-2 text-[10px] sm:text-[11px] text-gray-500 dark:text-gray-400 font-medium tracking-wide hidden sm:block">
+                    {selectedSedeInfo.rooms?.length || 0} rooms configurados
+                  </span>
                 </div>
               </div>
+              <div className="flex items-center justify-between sm:justify-end space-x-2">
+                <div className="flex items-center space-x-1.5 bg-blue-100 dark:bg-blue-900/30 px-2 py-1 rounded-full">
+                  <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></div>
+                  <span className="text-[10px] sm:text-xs text-blue-700 dark:text-blue-300 font-medium">Activa</span>
+                </div>
+                {/* Botones de editar y eliminar para superadmin */}
+                {(userRole === 'super_admin' || userRole === 'superadmin_aff') && (
+                  <div className="flex items-center space-x-1">
+                    <button
+                      onClick={() => {
+                        setSedeToEdit(selectedSedeInfo);
+                        setEditSedeName(selectedSedeInfo.name);
+                        setEditSedeDescription(selectedSedeInfo.description || '');
+                        setEditSedeActive(selectedSedeInfo.is_active !== false);
+                        setShowEditSedeModal(true);
+                      }}
+                      className="px-2 py-1 text-xs font-medium text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition-colors"
+                      title="Editar sede"
+                    >
+                      Editar
+                    </button>
+                    <button
+                      onClick={() => {
+                        setSedeToDelete(selectedSedeInfo);
+                        setShowDeleteSedeModal(true);
+                      }}
+                      className="px-2 py-1 text-xs font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors"
+                      title="Eliminar sede"
+                    >
+                      Eliminar
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="relative bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-lg shadow-md border border-white/20 dark:border-gray-600/20 p-4 sm:p-5 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
 
             {/* Información del Admin Asignado */}
             {sedeAdminInfo ? (

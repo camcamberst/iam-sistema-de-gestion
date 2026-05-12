@@ -161,6 +161,25 @@ className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium b
 className="w-3 h-3 mr-1.5"
 ```
 
+### **8. PLANILLAS Y FORMULARIOS (ZERO-NOISE)**
+```css
+/* Cabeceras de Tabla Iluminadas */
+className="... text-gray-900 dark:text-white font-bold tracking-tight ..." (Destacan sobre el fondo como los títulos principales)
+
+/* Píldora Transparente para Botones de Acción (Formularios) */
+className="flex items-center gap-1 p-1.5 bg-black/[0.03] dark:bg-white/[0.03] border border-black/[0.05] dark:border-white/[0.05] rounded-[2rem] backdrop-blur-xl shadow-sm"
+
+/* Botón Primario en Píldora (Gradient Glow) */
+className="px-6 py-2 text-[13px] font-bold text-white bg-gradient-to-r from-sky-500 to-fuchsia-500 rounded-full shadow-[0_0_15px_rgba(14,165,233,0.4)] dark:shadow-[0_0_15px_rgba(14,165,233,0.3)] hover:shadow-[0_0_25px_rgba(14,165,233,0.6)]"
+
+/* Ocultación de Flechas en Inputs Numéricos (Global) */
+.apple-input[type="number"]::-webkit-inner-spin-button,
+.apple-input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+```
+
 ---
 
 ## 🔄 Apple Style Minimalista (Anterior)

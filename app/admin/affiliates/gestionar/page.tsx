@@ -614,33 +614,67 @@ export default function GestionarAfiliadosPage() {
                 </button>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-6 sm:space-y-8">
                 {affiliates.map((affiliate) => (
                   <div
                     key={affiliate.id}
-                    className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-gray-200/50 dark:border-gray-600/50 hover:border-purple-300 dark:hover:border-purple-600 transition-all duration-200 hover:shadow-md"
+                    className="flex flex-col gap-1.5 sm:gap-2 h-full"
                   >
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-3 mb-2">
-                          <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg flex items-center justify-center shadow-md">
-                            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                            </svg>
-                          </div>
-                          <div>
-                            <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">
-                              {affiliate.name}
-                            </h3>
-                            {affiliate.description && (
-                              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                {affiliate.description}
-                              </p>
-                            )}
-                          </div>
+                    {/* TÍTULO MINIMALISTA POR FUERA DE LA CAJA */}
+                    <div className="flex items-center justify-between px-1">
+                      <div className="flex items-center space-x-1 sm:space-x-1.5 min-w-0">
+                        <div className="flex items-center justify-center text-purple-500 drop-shadow-[0_0_8px_rgba(168,85,247,0.6)]">
+                          <svg className="w-4 h-4 sm:w-[1.125rem] sm:h-[1.125rem]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                          </svg>
                         </div>
-                        
-                        <div className="flex flex-wrap gap-4 mt-3">
+                        <div className="relative flex items-center">
+                          <h2 className="text-[14px] sm:text-[15px] font-bold text-gray-900 dark:text-white tracking-tight drop-shadow-sm dark:drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">
+                            {affiliate.name}
+                          </h2>
+                          {affiliate.description && (
+                            <span className="ml-2 text-[10px] sm:text-[11px] text-gray-500 dark:text-gray-400 font-medium tracking-wide hidden sm:block truncate max-w-xs">
+                              {affiliate.description}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between sm:justify-end space-x-2">
+                        <div className={`flex items-center space-x-1.5 px-2 py-1 rounded-full ${
+                          affiliate.is_active
+                            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                            : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
+                        }`}>
+                          <div className={`w-1.5 h-1.5 rounded-full ${affiliate.is_active ? 'bg-green-500 animate-pulse' : 'bg-gray-500'}`}></div>
+                          <span className="text-[10px] sm:text-xs font-medium">{affiliate.is_active ? 'Activo' : 'Inactivo'}</span>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setSelectedAffiliateId(affiliate.id);
+                            setSelectedAffiliateName(affiliate.name);
+                            setEditAffiliateName(affiliate.name);
+                            setEditAffiliateDescription(affiliate.description || '');
+                            setEditAffiliateCommission(affiliate.commission_percentage.toString());
+                            setEditAffiliateIsActive(affiliate.is_active);
+                            setShowEditAffiliate(true);
+                          }}
+                          className="px-2 py-1 text-xs font-medium text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded transition-colors"
+                        >
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => handleDeleteAffiliate(affiliate.id, affiliate.name)}
+                          className="px-2 py-1 text-xs font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                        >
+                          Eliminar
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-lg p-4 sm:p-5 border border-gray-200/50 dark:border-gray-600/50 hover:border-purple-300 dark:hover:border-purple-600 transition-all duration-200 hover:shadow-md flex-1">
+                      <div className="flex flex-col gap-3">
+                        <div className="flex flex-wrap gap-4">
                           <div className="flex items-center space-x-2">
                             <span className="text-xs text-gray-500 dark:text-gray-400">Comisión:</span>
                             <span className="text-sm font-semibold text-purple-600 dark:text-purple-400">
@@ -667,44 +701,13 @@ export default function GestionarAfiliadosPage() {
                           </div>
                         </div>
                       </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        <div className={`px-3 py-1 rounded-full text-xs font-medium ${
-                          affiliate.is_active
-                            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                            : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
-                        }`}>
-                          {affiliate.is_active ? 'Activo' : 'Inactivo'}
-                        </div>
-                        <button
-                          onClick={() => {
-                            setSelectedAffiliateId(affiliate.id);
-                            setSelectedAffiliateName(affiliate.name);
-                            setEditAffiliateName(affiliate.name);
-                            setEditAffiliateDescription(affiliate.description || '');
-                            setEditAffiliateCommission(affiliate.commission_percentage.toString());
-                            setEditAffiliateIsActive(affiliate.is_active);
-                            setShowEditAffiliate(true);
-                          }}
-                          className="px-2 py-1 text-xs font-medium text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded transition-colors"
-                        >
-                          Editar
-                        </button>
-                        <button
-                          onClick={() => handleDeleteAffiliate(affiliate.id, affiliate.name)}
-                          className="px-2 py-1 text-xs font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
-                        >
-                          Eliminar
-                        </button>
-                      </div>
-                    </div>
                     
                     {/* Información del Superadmin AFF */}
-                    <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+                    <div className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-600">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center space-x-2">
-                          <div className="w-6 h-6 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center">
-                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <div className="w-5 h-5 bg-gradient-to-br from-purple-500/10 to-pink-600/10 rounded-full flex items-center justify-center">
+                            <svg className="w-2.5 h-2.5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                             </svg>
                           </div>
@@ -789,6 +792,7 @@ export default function GestionarAfiliadosPage() {
                         </p>
                       </div>
                     )}
+                    </div>
                   </div>
                 ))}
               </div>

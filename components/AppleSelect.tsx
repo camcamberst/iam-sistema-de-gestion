@@ -228,7 +228,6 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
       ref={ref}
       onMouseEnter={() => {
         setIsHovering(true);
-        if (!open) setOpen(true);
       }}
       onMouseLeave={(e) => {
         // Solo mantener hover si el mouse está entrando al dropdown
@@ -243,7 +242,7 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
     >
       {label && <div className="text-gray-500 dark:text-gray-400 text-xs font-medium mb-1">{label}</div>}
       <div
-        className="w-full px-3 py-2.5 text-sm text-left border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 cursor-pointer flex items-center justify-between hover:border-gray-400 dark:hover:border-gray-500 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200 touch-manipulation"
+        className="apple-input cursor-pointer flex items-center justify-between touch-manipulation active:scale-[0.98]"
         onFocus={handleFocus}
         onBlur={handleBlur}
         onMouseDown={(e) => {
@@ -282,8 +281,12 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
           // Prevenir propagación para evitar conflictos
           e.stopPropagation();
           // Solo abrir/cerrar con click explícito (en desktop)
-          if (!isMobile && !open) {
-            handleFocus();
+          if (!isMobile) {
+            if (open) {
+              setOpen(false);
+            } else {
+              handleFocus();
+            }
           }
           setTouchHandled(false);
         }}
@@ -305,7 +308,7 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
       {open && (
         <div 
           ref={dropdownRef}
-          className="absolute z-[9999] w-full mt-1 top-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 shadow-lg dark:shadow-lg dark:shadow-cyan-900/10 dark:ring-0.5 dark:ring-cyan-500/15 overflow-auto apple-scroll"
+          className="absolute z-[99999] w-full mt-1.5 top-full rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-white/95 dark:bg-[#0a0a0c]/95 backdrop-blur-3xl shadow-[0_8px_32px_rgba(0,0,0,0.08)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] overflow-y-auto overflow-x-hidden apple-scroll"
           style={{ 
             maxHeight,
             // Sin altura mínima cuando hay override para permitir tamaño compacto según contenido
@@ -341,7 +344,7 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
           {options.map((opt, index) => (
             <div key={opt.value}>
               {index > 0 && (
-                <div className="w-full h-px bg-gray-100 dark:bg-gray-600/50 dark:shadow-sm dark:shadow-blue-900/10"></div>
+                <div className="w-full h-px bg-black/[0.04] dark:bg-white/[0.06]"></div>
               )}
               <button
                 type="button"
@@ -422,10 +425,10 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
                     setTouchHandled(false);
                   }
                 }}
-                className={`w-full px-4 py-3 text-sm text-left cursor-pointer transition-colors duration-150 flex items-center justify-between touch-manipulation active:scale-[0.98] ${
+                className={`w-full px-4 py-3 text-sm text-left cursor-pointer transition-all duration-200 flex items-center justify-between touch-manipulation mx-0.5 my-0.5 rounded-lg ${
                   value === opt.value 
-                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-100 font-medium'
-                    : 'hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100'
+                    ? 'bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-violet-500/10 dark:from-blue-500/20 dark:via-indigo-500/20 dark:to-violet-500/20 text-indigo-700 dark:text-white font-bold border border-indigo-500/20'
+                    : 'hover:bg-black/[0.04] dark:hover:bg-white/[0.08] text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
                 }`}
               >
                 <span className="truncate">{opt.label}</span>

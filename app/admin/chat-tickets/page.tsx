@@ -215,7 +215,7 @@ export default function ChatTicketsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="flex min-h-[60vh] items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Cargando tickets...</p>
@@ -225,7 +225,7 @@ export default function ChatTicketsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="p-4 md:p-6">
       <div className="max-w-7xl mx-auto px-0 sm:px-4 md:px-6 lg:px-8 py-8">
         {/* Header con métricas */}
         <div className="mb-8">
@@ -241,7 +241,7 @@ export default function ChatTicketsPage() {
                 <div className="relative">
                   <button
                     onClick={markNotificationsAsRead}
-                    className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+                    className="btn-apple-primary"
                   >
                     Marcar como leídas ({unreadCount})
                   </button>

@@ -106,6 +106,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       setCalculatorDropdownOpen(false);
       setAnticiposDropdownOpen(false);
       setBottomSheetActive(null);
+      setActiveMenu(null);
     }, 100);
     
     return () => clearTimeout(timer);
@@ -166,6 +167,24 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       }
     };
   }, [menuTimeout]);
+
+  // Manejar clic fuera de los menús dropdown de escritorio
+  useEffect(() => {
+    const handleClickOutsideMenu = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (!target.closest('.desktop-dropdown-container')) {
+        setActiveMenu(null);
+      }
+    };
+
+    if (activeMenu) {
+      document.addEventListener('mousedown', handleClickOutsideMenu);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutsideMenu);
+    };
+  }, [activeMenu]);
 
   // Manejar clic fuera del panel de usuario
   useEffect(() => {
@@ -446,10 +465,12 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   // Determinación mutuamente excluyente de la pestaña móvil activa basada ÚNICAMENTE en la ruta actual
   const activeMobileTab = (() => {
     // La píldora solo se expande si estamos REALMENTE navegando en esa página
-    if (pathname.includes('calculator')) return 'calculator';
+    if (pathname.includes('/users')) return 'users';
+    if (pathname.includes('/sedes') || pathname.includes('/affiliates')) return 'sedes';
+    if (pathname.includes('calculator') || pathname.includes('rates') || pathname.includes('config')) return 'calculator';
     if (pathname.includes('anticipos') || pathname.includes('finanzas')) return 'finanzas';
     if (pathname.includes('portafolio')) return 'portafolio';
-    if (pathname.includes('shop') || pathname.includes('store')) return 'shop';
+    if (pathname.includes('shop') || pathname.includes('store') || pathname.includes('orders')) return 'shop';
     
     return null;
   })();
@@ -543,7 +564,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               {menuItems.length > 0 ? (
                 menuItems.map((item) => {
                   // Renderizar Mi Portafolio con el componente especial
-                  if (item.id === 'portafolio') {
+                  if (item.id === 'portafolio' && getUserRole() === 'modelo') {
                     return (
                       <PortfolioDropdown
                         key={item.id}
@@ -554,8 +575,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                     );
                   }
 
-                  // Renderizar Mi Calculadora con el componente especial
-                  if (item.id === 'calculator') {
+                  // Renderizar Mi Calculadora con el componente especial (solo para modelos)
+                  if (item.id === 'calculator' && getUserRole() === 'modelo') {
                     return (
                       <CalculatorDropdown
                         key={item.id}
@@ -567,7 +588,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                   }
 
                   // Renderizar Mis Finanzas con el componente especial (solo para modelos)
-                  if (item.id === 'finanzas') {
+                  if (item.id === 'finanzas' && getUserRole() === 'modelo') {
                     return (
                       <AnticiposDropdown
                         key={item.id}
@@ -584,87 +605,105 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                   return (
                   <div
                     key={item.id}
-                    className="relative"
-                      onMouseEnter={() => handleMenuEnter(item.id)}
-                      onMouseLeave={handleMenuLeave}
-                      onClick={() => item.subItems && item.subItems.length > 0 && handleMenuClick(item.id)}
+                    className="relative desktop-dropdown-container"
                     >
                       {item.href === '#' ? (
-                        <span
-                          className={`px-4 py-2 text-[15px] transition-all duration-300 ${item.subItems && item.subItems.length > 0 ? 'cursor-pointer' : 'cursor-default'} whitespace-nowrap rounded-full ${
-                            isParentActive(item) 
-                              ? 'font-bold text-gray-900 dark:text-white bg-black/5 dark:bg-white/10 shadow-inner dark:shadow-[inset_0_1px_rgba(255,255,255,0.1)] border border-transparent dark:border-white/10 backdrop-blur-md' 
-                              : 'font-semibold text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
+                        <button
+                          onClick={() => item.subItems && item.subItems.length > 0 && handleMenuClick(item.id)}
+                          className={`px-3 py-1.5 sm:px-4 sm:py-2 text-[14px] sm:text-[15px] transition-all duration-200 cursor-pointer whitespace-nowrap rounded-full touch-manipulation flex items-center space-x-1.5 group active:scale-[0.97] ${
+                            isParentActive(item) || shouldShowDropdown(item)
+                              ? 'font-bold text-gray-900 dark:text-white bg-black/5 dark:bg-white/15 shadow-[0_0_15px_rgba(0,0,0,0.1)] dark:shadow-[0_0_15px_rgba(255,255,255,0.2)] border border-black/10 dark:border-white/20 backdrop-blur-md'
+                              : 'font-semibold text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 hover:shadow-[0_0_10px_rgba(0,0,0,0.05)] dark:hover:shadow-[0_0_10px_rgba(255,255,255,0.1)] border border-transparent'
                           }`}
                         >
-                          {item.label}
-                        </span>
+                          <span>{item.label}</span>
+                          {item.subItems && item.subItems.length > 0 && (
+                            <svg 
+                              className={`w-3.5 h-3.5 lg:w-4 lg:h-4 transition-transform duration-300 ${
+                                shouldShowDropdown(item) ? 'rotate-180' : ''
+                              } ${
+                                isParentActive(item) || shouldShowDropdown(item) ? 'text-gray-900 dark:text-white' : 'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300'
+                              }`}
+                              fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                          )}
+                        </button>
                       ) : (
-                    <Link
-                      href={item.href}
-                          className={`px-4 py-2 text-[15px] transition-all duration-300 whitespace-nowrap rounded-full ${
-                        isActive(item.href) || isParentActive(item) 
-                              ? 'font-bold text-gray-900 dark:text-white bg-black/5 dark:bg-white/10 shadow-inner dark:shadow-[inset_0_1px_rgba(255,255,255,0.1)] border border-transparent dark:border-white/10 backdrop-blur-md' 
-                              : 'font-semibold text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
-                      }`}
-                    >
-                      {item.label}
-                    </Link>
+                        <Link
+                          href={item.href}
+                          className={`px-3 py-1.5 sm:px-4 sm:py-2 text-[14px] sm:text-[15px] transition-all duration-200 cursor-pointer whitespace-nowrap rounded-full touch-manipulation flex items-center space-x-1.5 group active:scale-[0.97] ${
+                            isActive(item.href) || isParentActive(item)
+                              ? 'font-bold text-gray-900 dark:text-white bg-black/5 dark:bg-white/15 shadow-[0_0_15px_rgba(0,0,0,0.1)] dark:shadow-[0_0_15px_rgba(255,255,255,0.2)] border border-black/10 dark:border-white/20 backdrop-blur-md'
+                              : 'font-semibold text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 hover:shadow-[0_0_10px_rgba(0,0,0,0.05)] dark:hover:shadow-[0_0_10px_rgba(255,255,255,0.1)] border border-transparent'
+                          }`}
+                        >
+                          <span>{item.label}</span>
+                        </Link>
                       )}
 
                   {/* Dropdown Menu */}
                       {shouldShowDropdown(item) && (
                         <div
-                          className="absolute top-full left-0 mt-2 w-72 sm:w-80 bg-white/95 backdrop-blur-md border border-white/30 rounded-xl shadow-xl z-[9999999] animate-in slide-in-from-top-2 duration-200"
-                          onMouseEnter={handleDropdownEnter}
-                          onMouseLeave={handleDropdownLeave}
+                          className="absolute top-full left-0 mt-2 w-72 sm:w-80 z-[9999999] animate-in slide-in-from-top-2 duration-200"
                         >
-                          <div className="p-3">
-                            <div className="mb-2">
-                              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                          {/* Glass Layer - Aislada para evitar bugs de WebKit/Blink */}
+                          <div className="absolute inset-0 bg-white dark:bg-gray-900 bg-opacity-40 dark:bg-opacity-40 backdrop-filter backdrop-blur-xl border border-white/40 dark:border-white/10 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)] -z-10"></div>
+                          
+                          <div className="relative z-10 p-2 sm:p-3">
+                            <div className="mb-2 px-2 pt-1">
+                              <h3 className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
                                 {item.label}
                               </h3>
                             </div>
-                        {item.subItems.map((subItem) => (
-                          <Link
-                            key={subItem.href}
-                            href={subItem.href}
-                                className={`block px-4 py-3 text-sm transition-all duration-200 rounded-lg group ${
-                                  isExactPath(pathname, subItem.href)
-                                    ? 'bg-blue-50/80 text-blue-900 font-medium shadow-sm border border-blue-200/30'
-                                    : 'text-gray-600 hover:bg-white/60 hover:text-gray-900 hover:shadow-sm'
-                                }`}
-                              >
-                                <div className="flex items-center space-x-3">
-                                  <div className={`flex-shrink-0 ${
-                                    isExactPath(pathname, subItem.href) ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'
-                                  }`}>
-                                    {subItem.icon || (
-                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                      </svg>
-                                    )}
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <div className="font-medium">{subItem.label}</div>
-                                    {subItem.description && (
-                                      <div className={`text-xs ${
-                                        isExactPath(pathname, subItem.href) ? 'text-blue-600' : 'text-gray-500'
+                            
+                            <div className="space-y-1">
+                              {item.subItems.map((subItem) => {
+                                const isCurrentPage = isExactPath(pathname, subItem.href);
+                                
+                                return (
+                                  <Link
+                                    key={subItem.href}
+                                    href={subItem.href}
+                                    className={`block px-3 py-2.5 sm:px-4 sm:py-3 text-sm transition-all duration-200 rounded-xl group touch-manipulation active:scale-[0.98] ${
+                                      isCurrentPage
+                                        ? 'bg-black/5 dark:bg-white/10 text-gray-900 dark:text-white font-medium shadow-sm border border-black/5 dark:border-white/5'
+                                        : 'text-gray-700 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white'
+                                    }`}
+                                  >
+                                    <div className="flex items-center space-x-3">
+                                      <div className={`flex-shrink-0 transition-colors duration-200 ${
+                                        isCurrentPage ? 'text-gray-900 dark:text-white' : 'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300'
                                       }`}>
-                                        {subItem.description}
+                                        {subItem.icon || (
+                                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                          </svg>
+                                        )}
                                       </div>
-                                    )}
-                                  </div>
-                                  {isExactPath(pathname, subItem.href) && (
-                                    <div className="flex-shrink-0">
-                                      <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                      </svg>
+                                      <div className="flex-1 min-w-0">
+                                        <div className="font-medium tracking-tight">{subItem.label}</div>
+                                        {subItem.description && (
+                                          <div className={`text-xs mt-0.5 leading-snug ${
+                                            isCurrentPage ? 'text-gray-600 dark:text-gray-300' : 'text-gray-500 dark:text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300'
+                                          }`}>
+                                            {subItem.description}
+                                          </div>
+                                        )}
+                                      </div>
+                                      {isCurrentPage && (
+                                        <div className="flex-shrink-0">
+                                          <svg className="w-4 h-4 text-gray-900 dark:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                          </svg>
+                                        </div>
+                                      )}
                                     </div>
-                                  )}
-                                </div>
-                          </Link>
-                        ))}
+                                  </Link>
+                                );
+                              })}
+                            </div>
                       </div>
                     </div>
                   )}
@@ -866,86 +905,163 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       <nav className="md:hidden fixed bottom-4 sm:bottom-6 left-4 right-4 sm:left-1/2 sm:-translate-x-1/2 sm:max-w-md z-[500] bg-white/80 dark:bg-[#0a0f1a]/60 dark:bg-gradient-to-t dark:from-[#0a0f1a]/80 dark:to-[#141226]/60 backdrop-blur-[40px] rounded-[32px] border border-black/5 dark:border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.05)] transition-transform duration-300 translate-y-0 group-[.keyboard-open]/body:translate-y-[150%]">
         <div className="flex items-center justify-between px-2 py-2 gap-1">
           
-          {/* Ingresos (Calculadora) */}
-          <button 
-            onClick={() => { const item = menuItems.find(i => i.id === 'calculator'); if (item && item.subItems?.length) setBottomSheetActive(bottomSheetActive === 'calculator' ? null : 'calculator'); else router.push('/admin/model/calculator'); }}
-            className={`relative flex flex-row items-center justify-center h-[44px] sm:h-[48px] rounded-full transition-all duration-300 active:scale-[0.95] overflow-hidden ${activeMobileTab === 'calculator' ? 'w-auto px-4 bg-cyan-500/15 dark:bg-cyan-400/15 text-cyan-600 dark:text-cyan-400' : 'w-[44px] sm:w-[48px] px-0 bg-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
-          >
-            <svg className="shrink-0 w-[22px] h-[22px] sm:w-[24px] sm:h-[24px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={activeMobileTab === 'calculator' ? 2.5 : 1.8} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            <div className={`overflow-hidden transition-all duration-300 flex items-center ${activeMobileTab === 'calculator' ? 'max-w-[100px] ml-1.5 opacity-100' : 'max-w-0 ml-0 opacity-0'}`}>
-              <span className="font-medium text-[13px] sm:text-[14px] whitespace-nowrap dark:[text-shadow:0_0_3px_currentColor]">Ingresos</span>
-            </div>
-          </button>
+          {(!userInfo || userInfo?.role === 'modelo') ? (
+            <>
+              {/* Ingresos (Calculadora) */}
+              <button 
+                onClick={() => { const item = menuItems.find(i => i.id === 'calculator'); if (item && item.subItems?.length) setBottomSheetActive(bottomSheetActive === 'calculator' ? null : 'calculator'); else router.push('/admin/model/calculator'); }}
+                className={`relative flex flex-row items-center justify-center h-[44px] sm:h-[48px] rounded-full transition-all duration-300 active:scale-[0.95] overflow-hidden ${activeMobileTab === 'calculator' ? 'w-auto px-4 bg-cyan-500/15 dark:bg-cyan-400/15 text-cyan-600 dark:text-cyan-400' : 'w-[44px] sm:w-[48px] px-0 bg-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
+              >
+                <svg className="shrink-0 w-[22px] h-[22px] sm:w-[24px] sm:h-[24px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={activeMobileTab === 'calculator' ? 2.5 : 1.8} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <div className={`overflow-hidden transition-all duration-300 flex items-center ${activeMobileTab === 'calculator' ? 'max-w-[100px] ml-1.5 opacity-100' : 'max-w-0 ml-0 opacity-0'}`}>
+                  <span className="font-medium text-[13px] sm:text-[14px] whitespace-nowrap dark:[text-shadow:0_0_3px_currentColor]">Ingresos</span>
+                </div>
+              </button>
 
-          {/* Servicios (Finanzas/Anticipos) */}
-          <button 
-            onClick={() => { const item = menuItems.find(i => i.id === 'finanzas'); if (item && item.subItems?.length) setBottomSheetActive(bottomSheetActive === 'finanzas' ? null : 'finanzas'); else router.push('/admin/model/anticipos/solicitar'); }}
-            className={`relative flex flex-row items-center justify-center h-[44px] sm:h-[48px] rounded-full transition-all duration-300 active:scale-[0.95] overflow-hidden ${activeMobileTab === 'finanzas' ? 'w-auto px-4 bg-indigo-500/15 dark:bg-indigo-400/15 text-indigo-600 dark:text-indigo-400' : 'w-[44px] sm:w-[48px] px-0 bg-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
-          >
-            <svg className="shrink-0 w-[22px] h-[22px] sm:w-[24px] sm:h-[24px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={activeMobileTab === 'finanzas' ? 2.5 : 1.8} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
-            <div className={`overflow-hidden transition-all duration-300 flex items-center ${activeMobileTab === 'finanzas' ? 'max-w-[100px] ml-1.5 opacity-100' : 'max-w-0 ml-0 opacity-0'}`}>
-              <span className="font-medium text-[13px] sm:text-[14px] whitespace-nowrap dark:[text-shadow:0_0_3px_currentColor]">Servicios</span>
-            </div>
-          </button>
+              {/* Servicios (Finanzas/Anticipos) */}
+              <button 
+                onClick={() => { const item = menuItems.find(i => i.id === 'finanzas'); if (item && item.subItems?.length) setBottomSheetActive(bottomSheetActive === 'finanzas' ? null : 'finanzas'); else router.push('/admin/model/anticipos/solicitar'); }}
+                className={`relative flex flex-row items-center justify-center h-[44px] sm:h-[48px] rounded-full transition-all duration-300 active:scale-[0.95] overflow-hidden ${activeMobileTab === 'finanzas' ? 'w-auto px-4 bg-indigo-500/15 dark:bg-indigo-400/15 text-indigo-600 dark:text-indigo-400' : 'w-[44px] sm:w-[48px] px-0 bg-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
+              >
+                <svg className="shrink-0 w-[22px] h-[22px] sm:w-[24px] sm:h-[24px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={activeMobileTab === 'finanzas' ? 2.5 : 1.8} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+                <div className={`overflow-hidden transition-all duration-300 flex items-center ${activeMobileTab === 'finanzas' ? 'max-w-[100px] ml-1.5 opacity-100' : 'max-w-0 ml-0 opacity-0'}`}>
+                  <span className="font-medium text-[13px] sm:text-[14px] whitespace-nowrap dark:[text-shadow:0_0_3px_currentColor]">Servicios</span>
+                </div>
+              </button>
 
-          {/* Asistente (Chat Integrado) */}
-          <button 
-            onClick={() => window.dispatchEvent(new CustomEvent('open-aim-chat'))}
-            className={`relative flex flex-row items-center justify-center h-[44px] sm:h-[48px] w-[44px] sm:w-[48px] rounded-full transition-all duration-300 active:scale-[0.95] overflow-hidden bg-black/5 dark:bg-white/5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200`}
-          >
-            <div className="relative shrink-0 flex items-center justify-center">
-              <svg className="w-[22px] h-[22px] sm:w-[24px] sm:h-[24px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
-              {chatUnreadCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-fuchsia-500 text-[10px] font-bold text-white shadow-[0_0_8px_rgba(217,70,239,0.8)] ring-2 ring-white/10 dark:ring-[#0a0f1a]/80">
-                  {chatUnreadCount}
-                </span>
-              )}
-            </div>
-            {/* The chat button doesn't have an active route in layout, so it stays as an icon button usually, or we can expand it if chat is active. Since chat is an overlay, we leave it closed here. */}
-            <div className="overflow-hidden transition-all duration-300 flex items-center max-w-0 ml-0 opacity-0">
-              <span className="font-semibold text-[13px] sm:text-[14px] whitespace-nowrap">Chat</span>
-            </div>
-          </button>
+              {/* Asistente (Chat Integrado) */}
+              <button 
+                onClick={() => window.dispatchEvent(new CustomEvent('open-aim-chat'))}
+                className={`relative flex flex-row items-center justify-center h-[44px] sm:h-[48px] w-[44px] sm:w-[48px] rounded-full transition-all duration-300 active:scale-[0.95] overflow-hidden bg-black/5 dark:bg-white/5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200`}
+              >
+                <div className="relative shrink-0 flex items-center justify-center">
+                  <svg className="w-[22px] h-[22px] sm:w-[24px] sm:h-[24px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                  {chatUnreadCount > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-fuchsia-500 text-[10px] font-bold text-white shadow-[0_0_8px_rgba(217,70,239,0.8)] ring-2 ring-white/10 dark:ring-[#0a0f1a]/80">
+                      {chatUnreadCount}
+                    </span>
+                  )}
+                </div>
+                <div className="overflow-hidden transition-all duration-300 flex items-center max-w-0 ml-0 opacity-0">
+                  <span className="font-semibold text-[13px] sm:text-[14px] whitespace-nowrap">Chat</span>
+                </div>
+              </button>
 
-          {/* Plataformas (Portafolio) */}
-          <button 
-            onClick={() => router.push('/admin/model/portafolio')}
-            className={`relative flex flex-row items-center justify-center h-[44px] sm:h-[48px] rounded-full transition-all duration-300 active:scale-[0.95] overflow-hidden ${activeMobileTab === 'portafolio' ? 'w-auto px-4 bg-cyan-500/15 dark:bg-cyan-400/15 text-cyan-600 dark:text-cyan-400' : 'w-[44px] sm:w-[48px] px-0 bg-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
-          >
-            <svg className="shrink-0 w-[22px] h-[22px] sm:w-[24px] sm:h-[24px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={activeMobileTab === 'portafolio' ? 2.5 : 1.8} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" /></svg>
-            <div className={`overflow-hidden transition-all duration-300 flex items-center ${activeMobileTab === 'portafolio' ? 'max-w-[100px] ml-1.5 opacity-100' : 'max-w-0 ml-0 opacity-0'}`}>
-              <span className="font-medium text-[13px] sm:text-[14px] whitespace-nowrap dark:[text-shadow:0_0_3px_currentColor]">Portafolio</span>
-            </div>
-          </button>
+              {/* Plataformas (Portafolio) */}
+              <button 
+                onClick={() => router.push('/admin/model/portafolio')}
+                className={`relative flex flex-row items-center justify-center h-[44px] sm:h-[48px] rounded-full transition-all duration-300 active:scale-[0.95] overflow-hidden ${activeMobileTab === 'portafolio' ? 'w-auto px-4 bg-cyan-500/15 dark:bg-cyan-400/15 text-cyan-600 dark:text-cyan-400' : 'w-[44px] sm:w-[48px] px-0 bg-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
+              >
+                <svg className="shrink-0 w-[22px] h-[22px] sm:w-[24px] sm:h-[24px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={activeMobileTab === 'portafolio' ? 2.5 : 1.8} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" /></svg>
+                <div className={`overflow-hidden transition-all duration-300 flex items-center ${activeMobileTab === 'portafolio' ? 'max-w-[100px] ml-1.5 opacity-100' : 'max-w-0 ml-0 opacity-0'}`}>
+                  <span className="font-medium text-[13px] sm:text-[14px] whitespace-nowrap dark:[text-shadow:0_0_3px_currentColor]">Portafolio</span>
+                </div>
+              </button>
 
-          {/* Store (Market) */}
-          <button 
-            onClick={() => router.push(getUserRole() === 'modelo' ? '/admin/model/shop' : '/admin/shop/orders')}
-            className={`relative flex flex-row items-center justify-center h-[44px] sm:h-[48px] rounded-full transition-all duration-300 active:scale-[0.95] overflow-hidden ${activeMobileTab === 'shop' ? 'w-auto px-4 bg-fuchsia-500/15 dark:bg-fuchsia-400/15 text-fuchsia-600 dark:text-fuchsia-400' : 'w-[44px] sm:w-[48px] px-0 bg-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
-          >
-            <div className={`relative shrink-0 flex items-center justify-center ${cartCount > 0 && activeMobileTab !== 'shop' ? 'animate-subtle-bounce' : ''}`}>
-              <svg className={`w-[22px] h-[22px] sm:w-[24px] sm:h-[24px] ${cartCount > 0 && activeMobileTab !== 'shop' ? 'text-fuchsia-500 drop-shadow-sm' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={activeMobileTab === 'shop' ? 2.5 : 1.8} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
-              {cartCount > 0 && activeMobileTab !== 'shop' && (
-                <span className="absolute -top-0.5 -right-1 w-[8px] h-[8px] sm:w-[10px] sm:h-[10px]">
-                  <svg className="w-full h-full animate-lucero text-fuchsia-400 drop-shadow-[0_0_3px_rgba(217,70,239,0.8)]" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 0C12 6.627 17.373 12 24 12C17.373 12 12 17.373 12 24C12 17.373 6.627 12 0 12C6.627 12 12 6.627 12 0Z" />
-                  </svg>
-                </span>
-              )}
-            </div>
-            <div className={`overflow-hidden transition-all duration-300 flex items-center ${activeMobileTab === 'shop' ? 'max-w-[120px] ml-1.5 opacity-100' : 'max-w-0 ml-0 opacity-0'}`}>
-              <span className={`relative flex items-center font-medium text-[13px] sm:text-[14px] whitespace-nowrap`}>
-                <span className={cartCount > 0 ? "text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-indigo-500 to-fuchsia-400 drop-shadow-[0_0_4px_rgba(217,70,239,0.5)]" : "dark:[text-shadow:0_0_3px_currentColor]"}>Market</span>
-                {cartCount > 0 && (
-                  <span className="absolute -top-[2px] -right-[8px] w-[6px] h-[6px]">
-                    <svg className="w-full h-full animate-lucero text-fuchsia-400" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 0C12 6.627 17.373 12 24 12C17.373 12 12 17.373 12 24C12 17.373 6.627 12 0 12C6.627 12 12 6.627 12 0Z" />
-                    </svg>
+              {/* Store (Market) */}
+              <button 
+                onClick={() => router.push(getUserRole() === 'modelo' ? '/admin/model/shop' : '/admin/shop/orders')}
+                className={`relative flex flex-row items-center justify-center h-[44px] sm:h-[48px] rounded-full transition-all duration-300 active:scale-[0.95] overflow-hidden ${activeMobileTab === 'shop' ? 'w-auto px-4 bg-fuchsia-500/15 dark:bg-fuchsia-400/15 text-fuchsia-600 dark:text-fuchsia-400' : 'w-[44px] sm:w-[48px] px-0 bg-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
+              >
+                <div className={`relative shrink-0 flex items-center justify-center ${cartCount > 0 && activeMobileTab !== 'shop' ? 'animate-subtle-bounce' : ''}`}>
+                  <svg className={`w-[22px] h-[22px] sm:w-[24px] sm:h-[24px] ${cartCount > 0 && activeMobileTab !== 'shop' ? 'text-fuchsia-500 drop-shadow-sm' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={activeMobileTab === 'shop' ? 2.5 : 1.8} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
+                  {cartCount > 0 && activeMobileTab !== 'shop' && (
+                    <span className="absolute -top-0.5 -right-1 w-[8px] h-[8px] sm:w-[10px] sm:h-[10px]">
+                      <svg className="w-full h-full animate-lucero text-fuchsia-400 drop-shadow-[0_0_3px_rgba(217,70,239,0.8)]" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 0C12 6.627 17.373 12 24 12C17.373 12 12 17.373 12 24C12 17.373 6.627 12 0 12C6.627 12 12 6.627 12 0Z" />
+                      </svg>
+                    </span>
+                  )}
+                </div>
+                <div className={`overflow-hidden transition-all duration-300 flex items-center ${activeMobileTab === 'shop' ? 'max-w-[120px] ml-1.5 opacity-100' : 'max-w-0 ml-0 opacity-0'}`}>
+                  <span className={`relative flex items-center font-medium text-[13px] sm:text-[14px] whitespace-nowrap`}>
+                    <span className={cartCount > 0 ? "text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-indigo-500 to-fuchsia-400 drop-shadow-[0_0_4px_rgba(217,70,239,0.5)]" : "dark:[text-shadow:0_0_3px_currentColor]"}>Market</span>
+                    {cartCount > 0 && (
+                      <span className="absolute -top-[2px] -right-[8px] w-[6px] h-[6px]">
+                        <svg className="w-full h-full animate-lucero text-fuchsia-400" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M12 0C12 6.627 17.373 12 24 12C17.373 12 12 17.373 12 24C12 17.373 6.627 12 0 12C6.627 12 12 6.627 12 0Z" />
+                        </svg>
+                      </span>
+                    )}
                   </span>
-                )}
-              </span>
-            </div>
-          </button>
+                </div>
+              </button>
+            </>
+          ) : (
+            <>
+              {/* Usuarios (Admin) */}
+              <button 
+                onClick={() => { const item = menuItems.find(i => i.id === 'users'); if (item && item.subItems?.length) setBottomSheetActive(bottomSheetActive === 'users' ? null : 'users'); else router.push('/admin/users'); }}
+                className={`relative flex flex-row items-center justify-center h-[44px] sm:h-[48px] rounded-full transition-all duration-300 active:scale-[0.95] overflow-hidden ${activeMobileTab === 'users' ? 'w-auto px-4 bg-sky-500/15 dark:bg-sky-400/15 text-sky-600 dark:text-sky-400' : 'w-[44px] sm:w-[48px] px-0 bg-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
+              >
+                <svg className="shrink-0 w-[22px] h-[22px] sm:w-[24px] sm:h-[24px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={activeMobileTab === 'users' ? 2.5 : 1.8} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                <div className={`overflow-hidden transition-all duration-300 flex items-center ${activeMobileTab === 'users' ? 'max-w-[100px] ml-1.5 opacity-100' : 'max-w-0 ml-0 opacity-0'}`}>
+                  <span className="font-medium text-[13px] sm:text-[14px] whitespace-nowrap dark:[text-shadow:0_0_3px_currentColor]">Usuarios</span>
+                </div>
+              </button>
+
+              {/* Settings (Admin) */}
+              <button 
+                onClick={() => { const item = menuItems.find(i => i.id === 'calculator'); if (item && item.subItems?.length) setBottomSheetActive(bottomSheetActive === 'calculator' ? null : 'calculator'); else router.push('/admin/calculator/config'); }}
+                className={`relative flex flex-row items-center justify-center h-[44px] sm:h-[48px] rounded-full transition-all duration-300 active:scale-[0.95] overflow-hidden ${activeMobileTab === 'calculator' ? 'w-auto px-4 bg-fuchsia-500/15 dark:bg-fuchsia-400/15 text-fuchsia-600 dark:text-fuchsia-400' : 'w-[44px] sm:w-[48px] px-0 bg-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
+              >
+                <svg className="shrink-0 w-[22px] h-[22px] sm:w-[24px] sm:h-[24px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={activeMobileTab === 'calculator' ? 2.5 : 1.8} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={activeMobileTab === 'calculator' ? 2.5 : 1.8} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <div className={`overflow-hidden transition-all duration-300 flex items-center ${activeMobileTab === 'calculator' ? 'max-w-[100px] ml-1.5 opacity-100' : 'max-w-0 ml-0 opacity-0'}`}>
+                  <span className="font-medium text-[13px] sm:text-[14px] whitespace-nowrap dark:[text-shadow:0_0_3px_currentColor]">Settings</span>
+                </div>
+              </button>
+
+              {/* BottyHome (Chat Integrado) */}
+              <button 
+                onClick={() => window.dispatchEvent(new CustomEvent('open-aim-chat'))}
+                className={`relative flex flex-row items-center justify-center h-[44px] sm:h-[48px] w-[44px] sm:w-[48px] rounded-full transition-all duration-300 active:scale-[0.95] overflow-hidden bg-black/5 dark:bg-white/5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200`}
+              >
+                <div className="relative shrink-0 flex items-center justify-center">
+                  <svg className="w-[22px] h-[22px] sm:w-[24px] sm:h-[24px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                  {chatUnreadCount > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-fuchsia-500 text-[10px] font-bold text-white shadow-[0_0_8px_rgba(217,70,239,0.8)] ring-2 ring-white/10 dark:ring-[#0a0f1a]/80">
+                      {chatUnreadCount}
+                    </span>
+                  )}
+                </div>
+              </button>
+
+              {/* Servicios (Finanzas Admin) */}
+              <button 
+                onClick={() => { const item = menuItems.find(i => i.id === 'finanzas'); if (item && item.subItems?.length) setBottomSheetActive(bottomSheetActive === 'finanzas' ? null : 'finanzas'); else router.push('/admin/anticipos/pending'); }}
+                className={`relative flex flex-row items-center justify-center h-[44px] sm:h-[48px] rounded-full transition-all duration-300 active:scale-[0.95] overflow-hidden ${activeMobileTab === 'finanzas' ? 'w-auto px-4 bg-indigo-500/15 dark:bg-indigo-400/15 text-indigo-600 dark:text-indigo-400' : 'w-[44px] sm:w-[48px] px-0 bg-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
+              >
+                <svg className="shrink-0 w-[22px] h-[22px] sm:w-[24px] sm:h-[24px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={activeMobileTab === 'finanzas' ? 2.5 : 1.8} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+                <div className={`overflow-hidden transition-all duration-300 flex items-center ${activeMobileTab === 'finanzas' ? 'max-w-[100px] ml-1.5 opacity-100' : 'max-w-0 ml-0 opacity-0'}`}>
+                  <span className="font-medium text-[13px] sm:text-[14px] whitespace-nowrap dark:[text-shadow:0_0_3px_currentColor]">Servicios</span>
+                </div>
+              </button>
+
+              {/* Agencia / Sedes (Admin) */}
+              <button 
+                onClick={() => { const item = menuItems.find(i => i.id === 'sedes'); if (item && item.subItems?.length) setBottomSheetActive(bottomSheetActive === 'sedes' ? null : 'sedes'); else router.push('/admin/sedes/dashboard'); }}
+                className={`relative flex flex-row items-center justify-center h-[44px] sm:h-[48px] rounded-full transition-all duration-300 active:scale-[0.95] overflow-hidden ${activeMobileTab === 'sedes' ? 'w-auto px-4 bg-teal-500/15 dark:bg-teal-400/15 text-teal-600 dark:text-teal-400' : 'w-[44px] sm:w-[48px] px-0 bg-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
+              >
+                <svg className="shrink-0 w-[22px] h-[22px] sm:w-[24px] sm:h-[24px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={activeMobileTab === 'sedes' ? 2.5 : 1.8} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+                <div className={`overflow-hidden transition-all duration-300 flex items-center ${activeMobileTab === 'sedes' ? 'max-w-[100px] ml-1.5 opacity-100' : 'max-w-0 ml-0 opacity-0'}`}>
+                  <span className="font-medium text-[13px] sm:text-[14px] whitespace-nowrap dark:[text-shadow:0_0_3px_currentColor]">
+                    {userInfo?.role === 'super_admin' ? 'Agencia' : 'Mis sedes'}
+                  </span>
+                </div>
+              </button>
+            </>
+          )}
         </div>
       </nav>
 

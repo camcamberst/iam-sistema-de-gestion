@@ -546,7 +546,7 @@ export default function AdminModelCalculator({
                 console.log('🔄 [ADMIN-MODEL-CALCULATOR] Manual refresh triggered');
                 await loadModelValuesOnly(modelId);
               }}
-              className="px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 active:scale-[0.98] text-sm font-medium transition-all duration-200"
+              className="btn-apple-primary"
             >
               🔄 Actualizar
             </button>

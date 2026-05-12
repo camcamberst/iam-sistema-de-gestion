@@ -23,11 +23,11 @@ interface AppleDropdownProps {
 }
 
 const badgeColors = {
-  green: 'bg-green-100 text-green-800',
-  blue: 'bg-blue-100 text-blue-800',
-  red: 'bg-red-100 text-red-800',
-  yellow: 'bg-yellow-100 text-yellow-800',
-  gray: 'bg-gray-100 text-gray-800'
+  green: 'bg-transparent text-green-500 border border-green-500/30 drop-shadow-[0_0_2px_rgba(34,197,94,0.3)]',
+  blue: 'bg-transparent text-blue-500 border border-blue-500/30 drop-shadow-[0_0_2px_rgba(59,130,246,0.3)]',
+  red: 'bg-transparent text-red-500 border border-red-500/30 drop-shadow-[0_0_2px_rgba(239,68,68,0.3)]',
+  yellow: 'bg-transparent text-yellow-500 border border-yellow-500/30 drop-shadow-[0_0_2px_rgba(234,179,8,0.3)]',
+  gray: 'bg-transparent text-gray-400 border border-gray-400/30 drop-shadow-[0_0_2px_rgba(156,163,175,0.3)]'
 };
 
 export default function AppleDropdown({
@@ -103,8 +103,8 @@ export default function AppleDropdown({
   };
 
   const buttonBaseClass = "w-full text-left flex items-center justify-between transition-all duration-300";
-  const glassClass = "px-3 py-1.5 text-sm rounded-xl bg-black/[0.04] dark:bg-white/[0.06] backdrop-blur-xl border border-black/[0.06] dark:border-white/[0.08] text-gray-900 dark:text-gray-100 hover:bg-black/[0.06] dark:hover:bg-white/[0.08] hover:border-black/10 dark:hover:border-white/[0.15] focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500/40 shadow-[0_4px_12px_rgba(0,0,0,0.02)]";
-  const inputClass = "px-3 py-3 h-auto text-sm font-semibold rounded-xl bg-black/[0.04] dark:bg-white/[0.06] backdrop-blur-xl border border-black/[0.06] dark:border-white/[0.08] text-gray-900 dark:text-white hover:bg-black/[0.06] dark:hover:bg-white/[0.08] hover:border-black/10 dark:hover:border-white/[0.15] focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 shadow-[0_4px_12px_rgba(0,0,0,0.02)] transition-all";
+  const glassClass = "px-3 py-2 text-sm rounded-xl bg-black/[0.04] dark:bg-white/[0.06] backdrop-blur-xl border border-black/[0.06] dark:border-white/[0.08] text-gray-900 dark:text-gray-100 hover:bg-black/[0.06] dark:hover:bg-white/[0.08] hover:border-black/10 dark:hover:border-white/[0.15] focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500/40 shadow-[0_4px_12px_rgba(0,0,0,0.02)]";
+  const inputClass = "px-3 py-2 h-auto text-sm font-semibold rounded-xl bg-black/[0.04] dark:bg-white/[0.06] backdrop-blur-xl border border-black/[0.06] dark:border-white/[0.08] text-gray-900 dark:text-white hover:bg-black/[0.06] dark:hover:bg-white/[0.08] hover:border-black/10 dark:hover:border-white/[0.15] focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 shadow-[0_4px_12px_rgba(0,0,0,0.02)] transition-all";
   
   return (
     <div className={`relative ${className}`} ref={dropdownRef}>

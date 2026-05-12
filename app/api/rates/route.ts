@@ -8,6 +8,12 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+// Cliente con privilegios para saltar RLS al consultar la tabla users
+const supabaseAdmin = createClient(
+  supabaseUrl, 
+  process.env.SUPABASE_SERVICE_ROLE_KEY || supabaseKey
+);
+
 // GET /api/rates - Listar tasas vigentes desde Supabase
 export async function GET(request: NextRequest) {
   try {
@@ -18,7 +24,7 @@ export async function GET(request: NextRequest) {
     // Construir query
     let query = supabase
       .from('rates')
-      .select('*')
+      .select('*, author:users(name)')
       .order('valid_from', { ascending: false });
 
     // Aplicar filtros
@@ -34,6 +40,25 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       throw new Error(`Error de Supabase: ${error.message}`);
+    }
+
+    // Cruce manual para obtener nombres de autores
+    if (rates && rates.length > 0) {
+      const authorIds = [...new Set(rates.map(r => r.author_id).filter(id => id))];
+      if (authorIds.length > 0) {
+        const { data: usersData } = await supabaseAdmin
+          .from('users')
+          .select('id, name')
+          .in('id', authorIds);
+          
+        const usersMap = new Map(usersData?.map(u => [u.id, u.name]) || []);
+        
+        rates.forEach(rate => {
+          if (!rate.author || !rate.author.name) {
+             rate.author = { name: usersMap.get(rate.author_id) || 'Sistema' };
+          }
+        });
+      }
     }
 
     return NextResponse.json({

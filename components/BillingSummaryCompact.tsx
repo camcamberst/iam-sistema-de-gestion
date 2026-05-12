@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useBillingPolling } from '@/hooks/useBillingPolling';
 import { getColombiaDate } from '@/utils/calculator-dates';
+import { InfoCardGrid } from '@/components/ui/InfoCard';
 
 interface BillingSummaryCompactProps {
   userRole: 'admin' | 'super_admin' | 'superadmin_aff';
@@ -57,10 +58,16 @@ interface SedeData {
   affiliate_studio_id?: string;
 }
 
+// Caché global para evitar parpadeos de carga en el carrusel infinito
+const globalCache = new Map<string, { summary: Summary, groupedData: SedeData[], time: number }>();
+
 export default function BillingSummaryCompact({ userRole, userId, userGroups = [] }: BillingSummaryCompactProps) {
-  const [summary, setSummary] = useState<Summary | null>(null);
-  const [groupedData, setGroupedData] = useState<SedeData[]>([]);
-  const [loading, setLoading] = useState(true);
+  const cacheKey = `${userId}-${userRole}-${userGroups.join(',')}`;
+  const initialCache = globalCache.get(cacheKey);
+
+  const [summary, setSummary] = useState<Summary | null>(initialCache?.summary || null);
+  const [groupedData, setGroupedData] = useState<SedeData[]>(initialCache?.groupedData || []);
+  const [loading, setLoading] = useState(!initialCache);
   const [error, setError] = useState<string | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState<string>('current');
   const [affiliateStudioName, setAffiliateStudioName] = useState<string | null>(null);
@@ -119,6 +126,19 @@ export default function BillingSummaryCompact({ userRole, userId, userGroups = [
         setAffiliateStudioName(data.affiliateStudioName);
       }
 
+      const sortGroupedData = (data: SedeData[]) => {
+        data.forEach(sede => {
+          sede.groups.sort((a, b) => b.totalUsdBruto - a.totalUsdBruto);
+        });
+        return data.sort((a, b) => {
+          const isAInnova = a.sedeName === 'Agencia Innova';
+          const isBInnova = b.sedeName === 'Agencia Innova';
+          if (isAInnova && !isBInnova) return -1;
+          if (!isAInnova && isBInnova) return 1;
+          return b.totalUsdBruto - a.totalUsdBruto;
+        });
+      };
+
       // Si la API retorna groupedData (para super_admin), usarlo directamente
       if (data.groupedData && Array.isArray(data.groupedData) && data.groupedData.length > 0) {
         // Usar datos agrupados de la API (ya incluye separación de afiliados)
@@ -131,8 +151,10 @@ export default function BillingSummaryCompact({ userRole, userId, userGroups = [
           totalCopSede: data.groupedData.reduce((sum: number, sede: SedeData) => sum + (sede.totalCopSede || 0), 0),
         };
         
+        const finalGroupedData = sortGroupedData([...data.groupedData]);
         setSummary(summaryData);
-        setGroupedData(data.groupedData);
+        setGroupedData(finalGroupedData);
+        globalCache.set(cacheKey, { summary: summaryData, groupedData: finalGroupedData, time: Date.now() });
       } else {
         // Fallback: procesar datos individuales (para admin o superadmin_aff)
         let billingData: BillingData[] = data.data || [];
@@ -204,9 +226,11 @@ export default function BillingSummaryCompact({ userRole, userId, userGroups = [
           group.totalUsdModelo += model.usdModelo;
           group.totalUsdSede += model.usdSede;
         });
-
+        
+        const finalGroupedData = sortGroupedData(Array.from(sedeMap.values()));
         setSummary(summaryData);
-        setGroupedData(Array.from(sedeMap.values()));
+        setGroupedData(finalGroupedData);
+        globalCache.set(cacheKey, { summary: summaryData, groupedData: finalGroupedData, time: Date.now() });
       }
     } catch (error: any) {
       console.error('Error loading billing data:', error);
@@ -235,164 +259,148 @@ export default function BillingSummaryCompact({ userRole, userId, userGroups = [
 
   useEffect(() => {
     if (userId && userRole) {
-      loadBillingData();
+      loadBillingData(!!initialCache);
     }
   }, [userId, userRole, userGroups, selectedPeriod]);
 
-  if (loading) {
-    return (
-      <div className="relative bg-white/70 dark:bg-white/[0.08] backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-white/[0.10] p-6">
-        <div className="flex items-center space-x-2 mb-4">
-          <div className="w-6 h-6 bg-gradient-to-br from-green-500 to-emerald-600 rounded-md flex items-center justify-center">
-            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-            </svg>
-          </div>
-          <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">Resumen de Facturación</h3>
-        </div>
-        <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-500"></div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="relative bg-white/70 dark:bg-white/[0.08] backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-white/[0.10] p-6">
-        <div className="flex items-center space-x-2 mb-4">
-          <div className="w-6 h-6 bg-gradient-to-br from-red-500 to-red-600 rounded-md flex items-center justify-center">
-            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">Resumen de Facturación</h3>
-        </div>
-        <div className="text-center py-4">
-          <div className="text-sm text-red-600 mb-2">{error}</div>
-          <button
-            onClick={() => loadBillingData()}
-            className="p-2 min-h-[36px] text-xs text-blue-600 hover:text-blue-800 font-medium"
-          >
-            Reintentar
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="relative bg-white/70 dark:bg-white/[0.08] backdrop-blur-sm rounded-xl shadow-md dark:shadow-[0_1px_0_0_rgba(255,255,255,0.05)_inset,0_4px_20px_rgba(0,0,0,0.4)] dark:ring-1 dark:ring-green-500/10 border border-white/20 dark:border-white/[0.10] p-3 sm:p-4 hover:shadow-xl hover:bg-white/95 dark:hover:bg-white/[0.12] hover:scale-[1.02] transition-all duration-300">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center space-x-2">
-          <div className="w-6 h-6 bg-gradient-to-br from-green-500 to-emerald-600 rounded-md flex items-center justify-center">
-            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+    <div className="flex flex-col gap-1.5 sm:gap-2 h-full">
+      {/* TÍTULO MINIMALISTA POR FUERA DE LA CAJA */}
+      <div className="flex items-center justify-between px-1 h-[40px]">
+        <div className="flex items-center space-x-1 sm:space-x-1.5 min-w-0">
+          <div className="flex items-center justify-center text-emerald-500 drop-shadow-[0_0_8px_rgba(16,185,129,0.6)] -mr-1.5 sm:-mr-2">
+            <svg className="w-5 h-5 sm:w-[1.375rem] sm:h-[1.375rem]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
             </svg>
           </div>
-          <div>
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Resumen de Facturación</h3>
-            <p className="text-xs text-gray-500 dark:text-gray-300">Período actual</p>
+          <div className="relative flex items-center">
+            <h2 className="text-[14px] sm:text-[15px] font-bold text-gray-900 dark:text-white tracking-tight drop-shadow-sm dark:drop-shadow-[0_0_8px_rgba(255,255,255,0.4)] whitespace-nowrap">
+              Resumen de Facturación
+            </h2>
           </div>
         </div>
-        <Link 
-          href="/admin/sedes/dashboard" 
-          className="p-2 -m-2 inline-flex items-center text-xs text-blue-600 dark:text-white hover:text-blue-800 dark:hover:text-gray-200 font-medium"
-        >
-          Ver completo →
-        </Link>
       </div>
 
-      {summary && (
-        <div className="space-y-3">
-          {/* Resumen compacto */}
-          <div className="grid grid-cols-3 gap-2">
-            <div className="text-center p-2 rounded-lg bg-blue-50/80">
-              <div className="text-sm font-bold text-blue-600">${formatCurrency(summary.totalUsdBruto)}</div>
-              <div className="text-xs text-blue-700">USD Bruto</div>
-            </div>
-            <div className="text-center p-2 rounded-lg bg-green-50/80">
-              <div className="text-sm font-bold text-green-600">${formatCurrency(summary.totalUsdModelo)}</div>
-              <div className="text-xs text-green-700">USD Modelos</div>
-            </div>
-            <div className="text-center p-2 rounded-lg bg-purple-50/80">
-              <div className="text-sm font-bold text-purple-600">${formatCurrency(summary.totalUsdSede)}</div>
-              <div className="text-xs text-purple-700">
-                {userRole === 'superadmin_aff' && affiliateStudioName 
-                  ? `USD ${affiliateStudioName}` 
-                  : 'USD Agencia'}
-              </div>
-            </div>
+      <>
+        {loading ? (
+          <div className="glass-card p-3 sm:p-4 flex-1 flex items-center justify-center">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-500"></div>
           </div>
+        ) : error ? (
+          <div className="glass-card p-3 sm:p-4 flex-1 flex flex-col items-center justify-center">
+            <div className="text-sm text-red-600 mb-2">{error}</div>
+            <button
+              onClick={() => loadBillingData()}
+              className="p-2 min-h-[36px] text-xs text-blue-600 hover:text-blue-800 font-medium"
+            >
+              Reintentar
+            </button>
+          </div>
+        ) : summary && (
+          <div className="flex flex-col gap-1.5 sm:gap-2 flex-1 min-h-0">
+            {/* Primera Caja: Tarjetas de Resumen (Ajustada según Regla Cards) */}
+            <div className="glass-card bg-black/[0.08] dark:bg-white/[0.08] backdrop-blur-3xl border border-white/40 dark:border-white/[0.08] max-sm:dark:border-white/8 max-sm:p-1.5 sm:p-2 !rounded-[1.25rem] sm:!rounded-2xl shadow-sm shadow-black/5 dark:shadow-[0_1px_0_0_rgba(255,255,255,0.02)_inset,0_4px_20px_rgba(0,0,0,0.4)] relative flex-none">
+              <InfoCardGrid
+                columns={3}
+                cards={[
+                  {
+                    value: `$${formatCurrency(summary.totalUsdBruto)}`,
+                    label: 'Gross',
+                    color: 'blue',
+                    size: 'sm'
+                  },
+                  {
+                    value: `$${formatCurrency(summary.totalUsdModelo)}`,
+                    label: 'Team Cut',
+                    color: 'green',
+                    size: 'sm'
+                  },
+                  {
+                    value: `$${formatCurrency(summary.totalUsdSede)}`,
+                    label: userRole === 'superadmin_aff' && affiliateStudioName 
+                      ? affiliateStudioName 
+                      : 'Profit',
+                    color: 'purple',
+                    size: 'sm'
+                  }
+                ]}
+              />
+            </div>
 
-          {/* Listado de sedes y grupos con scrollbar */}
-          {groupedData.length > 0 && (
-            <div className="border-t border-gray-200/50 pt-3">
-              <div className="text-xs font-medium text-gray-900 dark:text-white mb-2">
-                {summary.totalModels} modelos • {userRole === 'super_admin' ? 'Todas las sedes' : 'Tu sede'}
-              </div>
-              <div className="max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-                <div className="space-y-2 pr-2">
-                  {groupedData.map((sede) => (
-                    <div key={sede.sedeId} className="bg-white dark:bg-white rounded-lg border border-gray-200/40 dark:border-gray-600/40 p-2">
-                      {/* Header de Sede */}
-                      <div className="flex items-center space-x-2 mb-1">
-                        <div className={`w-4 h-4 rounded flex items-center justify-center ${
-                          sede.isAffiliate 
-                            ? 'bg-gradient-to-br from-purple-500/10 to-pink-500/10' 
-                            : 'bg-gradient-to-br from-blue-500/10 to-indigo-500/10'
-                        }`}>
-                          <svg className={`w-2.5 h-2.5 ${
-                            sede.isAffiliate ? 'text-purple-600' : 'text-blue-600'
-                          }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                          </svg>
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-1.5">
-                            <div className="text-xs font-semibold text-gray-900 dark:text-gray-900">{sede.sedeName}</div>
-                            {sede.isAffiliate && (
-                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
-                                Afiliado
-                              </span>
-                            )}
-                          </div>
-                          <div className="text-xs text-gray-900 dark:text-gray-900">{sede.totalModels} modelos • {sede.groups.length} grupos</div>
-                        </div>
-                      </div>
+            {/* Segunda Caja: Lista y Footer (Expansiva) */}
+            <div className="glass-card p-3 sm:p-4 hover:shadow-xl transition-all duration-300 relative flex-1 flex flex-col min-h-0">
+              {groupedData.length > 0 && (
+                <div className="flex flex-col flex-1 min-h-0">
+                  <div className="text-xs font-medium text-gray-900 dark:text-white mb-2 shrink-0">
+                    {summary.totalModels} modelos • {userRole === 'super_admin' ? 'Todas las sedes' : 'Tu sede'}
+                  </div>
+                  <div className="flex-1 overflow-y-auto apple-scroll pb-2 max-h-[14rem] lg:max-h-[15.5rem] 2xl:max-h-[18rem]">
+                    <div className="space-y-2 pr-1.5">
+                      {groupedData.map((sede, sIndex) => (
+                        <div key={`${sede.sedeId}-${sIndex}`} className="bg-white dark:bg-white/[0.06] rounded-xl p-3">
+                          {/* Header de Sede */}
+                          <div className="flex items-center justify-between mb-1">
+                            <div className="flex items-center space-x-2 flex-1 min-w-0">
 
-                      {/* Grupos de la Sede */}
-                      {sede.groups.length > 0 && (
-                        <div className="ml-6 space-y-1">
-                          {sede.groups.map((group) => (
-                            <div key={group.groupId} className="flex items-center justify-between p-1.5 bg-gray-50/60 rounded">
-                              <div className="flex items-center space-x-1.5">
-                                <div className="w-3 h-3 bg-gradient-to-br from-gray-400/20 to-gray-500/20 rounded flex items-center justify-center">
-                                  <svg className="w-1.5 h-1.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                                  </svg>
-                                </div>
-                                <div>
-                                  <div className="text-xs font-medium text-gray-900 dark:text-gray-900">{group.groupName}</div>
-                                  <div className="text-xs text-gray-900 dark:text-gray-900">{group.totalModels} modelos</div>
-                                </div>
-                              </div>
-                              <div className="flex flex-col items-end min-w-[70px]">
-                                <div className="text-xs font-semibold text-blue-600 dark:text-blue-600 leading-tight">${formatCurrency(group.totalUsdBruto)}</div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400 leading-tight mt-0.5">USD Bruto</div>
+                              <div className="flex-1 min-w-0">
+                                <div className="text-xs font-semibold text-gray-900 dark:text-gray-100 truncate">{sede.sedeName.replace(/\s*-\s*Afiliado/i, '')}</div>
+                                {!sede.isAffiliate && (
+                                  <div className="text-xs text-gray-600 dark:text-gray-400 truncate">{sede.totalModels} modelos • {sede.groups.length} grupos</div>
+                                )}
                               </div>
                             </div>
-                          ))}
+                            {sede.isAffiliate && (
+                              <div className="flex-shrink-0 ml-2">
+                                <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider text-purple-400 bg-purple-500/10 border border-purple-500/20 drop-shadow-[0_0_8px_rgba(168,85,247,0.4)]">
+                                  Afiliado
+                                </span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Grupos de la Sede */}
+                          {sede.groups.length > 0 && (
+                            <div className="mt-2 space-y-1.5">
+                              {sede.groups.map((group, gIndex) => (
+                                <div key={`${group.groupId}-${gIndex}`} className="flex items-center justify-between px-2.5 py-1.5 bg-gray-50/80 dark:bg-white/[0.04] rounded-lg">
+                                  <div className="flex items-center space-x-1.5">
+
+                                    <div>
+                                      <div className="text-xs font-medium text-gray-900 dark:text-gray-200">{group.groupName}</div>
+                                      <div className="text-xs text-gray-600 dark:text-gray-400">{group.totalModels} modelos</div>
+                                    </div>
+                                  </div>
+                                  <div className="flex flex-col items-end min-w-[70px]">
+                                    <div className="text-xs font-semibold text-blue-400 dark:text-[#5caaf5] drop-shadow-none dark:drop-shadow-[0_0_8px_rgba(92,170,245,0.7)] leading-tight">${formatCurrency(group.totalUsdBruto)}</div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400 leading-tight mt-0.5">Gross</div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
-                      )}
+                      ))}
                     </div>
-                  ))}
+                  </div>
                 </div>
+              )}
+
+              {/* Footer del widget */}
+              <div className="mt-auto pt-2 border-t border-gray-100 dark:border-gray-700/50 flex justify-between items-center px-1">
+                <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-medium">
+                  Período actual
+                </span>
+                <Link 
+                  href="/admin/sedes/dashboard" 
+                  className="text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors"
+                >
+                  Ver panel completo →
+                </Link>
               </div>
             </div>
-          )}
-        </div>
-      )}
+          </div>
+        )}
+      </>
     </div>
   );
 }

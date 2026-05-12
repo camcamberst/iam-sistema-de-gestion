@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import AppleDropdown from '@/components/ui/AppleDropdown';
 import { supabase } from '@/lib/supabase';
+import PageHeader from "@/components/ui/PageHeader";
 
 export default function CreateUserPage() {
   const router = useRouter();
@@ -226,310 +227,291 @@ export default function CreateUserPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <>
       <div className="max-w-screen-2xl mx-auto px-0 sm:px-4 md:px-6 lg:px-8 py-8 pt-16 pb-16">
-        {/* Header Card Separado */}
-        <div className="mb-8 sm:mb-12">
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-xl blur-xl"></div>
-            <div className="relative bg-white/80 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
-              <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-3">
-                <div className="flex items-center space-x-3 min-w-0 flex-1">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
-                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
+        {/* Header */}
+        <PageHeader
+          title="Crear Usuario"
+          subtitle="Registra un nuevo usuario en el sistema"
+          glow="admin"
+          icon={
+            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+          }
+        />
+
+        {/* Formulario Estándar Apple Style 2 */}
+        <div className="max-w-lg mx-auto">
+          <div className="glass-card p-4 sm:p-6 z-[99999] relative">
+            
+            {/* Mensajes de error y éxito */}
+            {error && (
+              <div className="mb-5 p-3 bg-red-50/80 dark:bg-red-900/20 backdrop-blur-sm border border-red-200/50 dark:border-red-700/50 rounded-xl shadow-sm">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <div className="w-5 h-5 bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400 rounded-full flex items-center justify-center">
+                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                    </div>
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <h1 className="text-base sm:text-lg md:text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent leading-tight whitespace-nowrap overflow-hidden text-ellipsis">
-                      Crear Usuario
-                    </h1>
-                    <p className="mt-1 text-xs sm:text-sm text-gray-600 dark:text-gray-300 hidden sm:block">
-                      Registra un nuevo usuario en el sistema
-                    </p>
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-red-800 dark:text-red-300">{error}</p>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
+            )}
 
-        {/* Formulario Compacto */}
-        <div className="max-w-lg">
-          <div className="bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-2 pb-8 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15 z-[99999]">
-        
-        {/* Mensajes de error y éxito */}
-        {error && (
-          <div className="mb-4 p-3 bg-red-50/80 dark:bg-red-900/20 backdrop-blur-sm border border-red-200/50 dark:border-red-700/50 rounded-lg shadow-sm">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <div className="w-4 h-4 bg-red-500 rounded-sm flex items-center justify-center">
-                  <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                  </svg>
+            {success && (
+              <div className="mb-5 p-3 bg-green-50/80 dark:bg-green-900/20 backdrop-blur-sm border border-green-200/50 dark:border-green-700/50 rounded-xl shadow-sm">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <div className="w-5 h-5 bg-green-100 dark:bg-green-500/20 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center">
+                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-green-800 dark:text-green-300">{success}</p>
+                  </div>
                 </div>
               </div>
-              <div className="ml-3">
-                <p className="text-sm text-red-800 dark:text-red-300">{error}</p>
+            )}
+            
+            <form onSubmit={onSubmit} className="flex flex-col space-y-4">
+              
+              <div className="flex flex-col space-y-1.5">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-200">Nombre</label>
+                <input
+                  placeholder="Nombre Completo"
+                  value={form.name}
+                  onChange={e=>setForm({...form, name: titleCaseWords(e.target.value)})}
+                  required
+                  autoComplete="name"
+                  autoCapitalize="words"
+                  spellCheck={true}
+                  className="apple-input"
+                />
               </div>
-            </div>
-          </div>
-        )}
 
-        {success && (
-          <div className="mb-4 p-3 bg-green-50/80 dark:bg-green-900/20 backdrop-blur-sm border border-green-200/50 dark:border-green-700/50 rounded-lg shadow-sm">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <div className="w-4 h-4 bg-green-500 rounded-sm flex items-center justify-center">
-                  <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                </div>
+              <div className="flex flex-col space-y-1.5">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-200">Correo electrónico</label>
+                <input
+                  placeholder="Correo electrónico"
+                  type="email"
+                  value={form.email}
+                  onChange={e=>setForm({...form, email:e.target.value})}
+                  required
+                  autoComplete="email"
+                  className="apple-input"
+                />
               </div>
-              <div className="ml-3">
-                <p className="text-sm text-green-800 dark:text-green-300">{success}</p>
-              </div>
-            </div>
-          </div>
-        )}
-        
-        <form onSubmit={onSubmit} className="grid grid-cols-1 gap-2 items-start">
-          <label className="text-sm font-medium text-gray-700 dark:text-gray-200">Nombre</label>
-          <div>
-            <input
-              placeholder="Nombre"
-              value={form.name}
-              onChange={e=>setForm({...form, name: titleCaseWords(e.target.value)})}
-              required
-              autoComplete="name"
-              autoCapitalize="words"
-              spellCheck={true}
-              className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
-            />
-          </div>
 
-          <label className="text-sm font-medium text-gray-700 dark:text-gray-200">Correo electrónico</label>
-          <div>
-            <input
-              placeholder="Correo electrónico"
-              type="email"
-              value={form.email}
-              onChange={e=>setForm({...form, email:e.target.value})}
-              required
-              autoComplete="email"
-              className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
-            />
-          </div>
-
-          <label className="text-sm font-medium text-gray-700 dark:text-gray-200">Contraseña</label>
-          <div>
-            <div className="relative">
-              <input
-                placeholder="Contraseña"
-                type={showPassword ? 'text' : 'password'}
-                value={form.password}
-                onChange={e=>setForm({...form, password:e.target.value})}
-                required
-                autoComplete="new-password"
-                className="w-full px-3 py-2 pr-12 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(v=>!v)}
-                aria-label={showPassword ? 'Ocultar contraseña' : 'Ver contraseña'}
-                className="absolute right-2 top-2 px-2 py-1 rounded-md text-xs text-white bg-gray-900 dark:bg-gray-700 hover:bg-gray-800 dark:hover:bg-gray-600"
-              >
-                {showPassword ? 'Ocultar' : 'Ver'}
-              </button>
-            </div>
-          </div>
-
-          <label className="text-sm font-medium text-gray-700 dark:text-gray-200">Rol</label>
-          <div>
-            <AppleDropdown
-              options={(() => {
-                const allRoles = [
-                  { value: 'modelo', label: 'Modelo' },
-                  { value: 'fotografia', label: 'Fotografía' },
-                  { value: 'gestor', label: 'Gestor' },
-                  { value: 'admin', label: 'Admin' },
-                  { value: 'super_admin', label: 'Super Admin' }
-                ];
-                
-                // Aplicar límites de jerarquía
-                if (currentUser?.role === 'admin') {
-                  // Admin solo puede crear 'modelo'
-                  return allRoles.filter(role => role.value === 'modelo');
-                }
-                
-                // Superadmin_aff solo puede crear 'modelo' y 'admin' para su estudio
-                if (currentUser?.role === 'superadmin_aff') {
-                  return allRoles.filter(role => 
-                    role.value === 'modelo' || role.value === 'admin'
-                  );
-                }
-                
-                // Super admin puede crear todos los roles
-                return allRoles;
-              })()}
-              value={form.role}
-              onChange={(value) => {
-                const newRole = value as any;
-                // Limpiar grupos si se selecciona gestor o fotografia
-                if (newRole === 'gestor' || newRole === 'fotografia') {
-                  setForm({ ...form, role: newRole, groups: [], room_id: '', jornada: '' });
-                } else {
-                  setForm({ ...form, role: newRole });
-                }
-              }}
-              placeholder="Selecciona un rol"
-              className="text-sm"
-            />
-          </div>
-
-          {/* Ocultar grupos para gestor y fotografia */}
-          {form.role !== 'gestor' && form.role !== 'fotografia' && (
-            <>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-200">Grupos</label>
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setOpenGroups(v => !v)}
-                  className="w-full text-left border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 flex items-center justify-between text-sm hover:border-gray-400 dark:hover:border-gray-500 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
-                >
-                  <span className={form.groups.length ? 'text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400'}>
-                    {form.groups.length
-                      ? groups.filter(g => form.groups.includes(g.id)).map(g => g.name).join(', ')
-                      : (form.role === 'modelo' ? 'Selecciona un grupo' : 'Selecciona uno o varios grupos')}
-                  </span>
-                  <svg 
-                    className="w-5 h-5 text-gray-400 dark:text-gray-500 transition-transform duration-200"
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24"
+              <div className="flex flex-col space-y-1.5">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-200">Contraseña</label>
+                <div className="relative">
+                  <input
+                    placeholder="Contraseña"
+                    type={showPassword ? 'text' : 'password'}
+                    value={form.password}
+                    onChange={e=>setForm({...form, password:e.target.value})}
+                    required
+                    autoComplete="new-password"
+                    className="apple-input pr-12"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(v=>!v)}
+                    aria-label={showPassword ? 'Ocultar contraseña' : 'Ver contraseña'}
+                    className="absolute right-2 top-1.5 px-2 py-1 rounded-md text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                {openGroups && (
-                  <div className="apple-scroll absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                    {loadingGroups ? (
-                        <div className="p-3 text-sm text-gray-500 dark:text-gray-400">Cargando grupos…</div>
-                    ) : (
-                      groups.map((g, index) => {
-                        const isSelected = form.groups.includes(g.id);
-                        const isSingleRole = form.role === 'modelo';
-                        const isDisabled = isSingleRole && form.groups.length > 0 && !isSelected;
-                        
-                        // Aplicar límites de jerarquía para grupos
-                        // Superadmin_aff puede asignar cualquier grupo de su estudio (ya filtrados por la API)
-                        // Super_admin puede asignar cualquier grupo
-                        // Admin solo puede asignar grupos a los que pertenece
-                        const canAssignGroup = currentUser?.role === 'super_admin' || 
-                          currentUser?.role === 'superadmin_aff' ||
-                          (currentUser?.role === 'admin' && currentUser?.groups.includes(g.id));
-                        
-                        return (
-                          <button
-                            key={g.id}
-                            type="button"
-                            disabled={isDisabled || !canAssignGroup}
-                            onClick={() => {
-                              if (isSingleRole) {
-                                setForm({ ...form, groups: isSelected ? [] : [g.id] });
-                                setOpenGroups(false);
-                              } else {
-                                setForm({
-                                  ...form,
-                                  groups: isSelected
-                                    ? form.groups.filter(id => id !== g.id)
-                                    : [...form.groups, g.id]
-                                });
-                              }
-                            }}
-                            className={`w-full text-left px-3 py-2 text-sm transition-colors duration-150 ${
-                              index > 0 ? 'border-t border-gray-100 dark:border-gray-700' : ''
-                            } ${
-                              isDisabled || !canAssignGroup 
-                                ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed' 
-                                : 'text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700'
-                            } ${
-                              isSelected ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-100' : ''
-                            }`}
-                          >
-                            <span>{g.name}</span>
-                            {isSelected && (
-                              <span className="text-blue-600 dark:text-blue-400 ml-auto">✓</span>
-                            )}
-                          </button>
-                        );
-                      })
+                    {showPassword ? 'Ocultar' : 'Ver'}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex flex-col space-y-1.5">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-200">Rol</label>
+                <AppleDropdown
+                  options={(() => {
+                    const allRoles = [
+                      { value: 'modelo', label: 'Modelo' },
+                      { value: 'fotografia', label: 'Fotografía' },
+                      { value: 'gestor', label: 'Gestor' },
+                      { value: 'admin', label: 'Admin' },
+                      { value: 'super_admin', label: 'Super Admin' }
+                    ];
+                    
+                    if (currentUser?.role === 'admin') {
+                      return allRoles.filter(role => role.value === 'modelo');
+                    }
+                    
+                    if (currentUser?.role === 'superadmin_aff') {
+                      return allRoles.filter(role => 
+                        role.value === 'modelo' || role.value === 'admin'
+                      );
+                    }
+                    
+                    return allRoles;
+                  })()}
+                  value={form.role}
+                  onChange={(value) => {
+                    const newRole = value as any;
+                    if (newRole === 'gestor' || newRole === 'fotografia') {
+                      setForm({ ...form, role: newRole, groups: [], room_id: '', jornada: '' });
+                    } else {
+                      setForm({ ...form, role: newRole });
+                    }
+                  }}
+                  placeholder="Selecciona un rol"
+                />
+              </div>
+
+              {/* Ocultar grupos para gestor y fotografia */}
+              {form.role !== 'gestor' && form.role !== 'fotografia' && (
+                <div className="flex flex-col space-y-1.5">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-200">Grupos</label>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setOpenGroups(v => !v)}
+                      className="apple-input flex items-center justify-between"
+                    >
+                      <span className={form.groups.length ? 'text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400'}>
+                        {form.groups.length
+                          ? groups.filter(g => form.groups.includes(g.id)).map(g => g.name).join(', ')
+                          : (form.role === 'modelo' ? 'Selecciona un grupo' : 'Selecciona uno o varios grupos')}
+                      </span>
+                      <svg 
+                        className={`w-4 h-4 text-gray-400 dark:text-gray-500 transition-transform duration-200 ${openGroups ? 'rotate-180' : ''}`}
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    {openGroups && (
+                      <div className="apple-scroll absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                        {loadingGroups ? (
+                            <div className="p-3 text-sm text-gray-500 dark:text-gray-400 text-center">Cargando grupos...</div>
+                        ) : (
+                          groups.map((g, index) => {
+                            const isSelected = form.groups.includes(g.id);
+                            const isSingleRole = form.role === 'modelo';
+                            const isDisabled = isSingleRole && form.groups.length > 0 && !isSelected;
+                            
+                            const canAssignGroup = currentUser?.role === 'super_admin' || 
+                              currentUser?.role === 'superadmin_aff' ||
+                              (currentUser?.role === 'admin' && currentUser?.groups.includes(g.id));
+                            
+                            return (
+                              <button
+                                key={g.id}
+                                type="button"
+                                disabled={isDisabled || !canAssignGroup}
+                                onClick={() => {
+                                  if (isSingleRole) {
+                                    setForm({ ...form, groups: isSelected ? [] : [g.id] });
+                                    setOpenGroups(false);
+                                  } else {
+                                    setForm({
+                                      ...form,
+                                      groups: isSelected
+                                        ? form.groups.filter(id => id !== g.id)
+                                        : [...form.groups, g.id]
+                                    });
+                                  }
+                                }}
+                                className={`w-full flex items-center justify-between px-3 py-2.5 text-sm transition-colors duration-150 ${
+                                  index > 0 ? 'border-t border-gray-100 dark:border-gray-700' : ''
+                                } ${
+                                  isDisabled || !canAssignGroup 
+                                    ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed bg-gray-50 dark:bg-gray-800/50' 
+                                    : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700'
+                                } ${
+                                  isSelected ? 'bg-blue-50/50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium' : ''
+                                }`}
+                              >
+                                <span>{g.name}</span>
+                                {isSelected && (
+                                  <svg className="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                                )}
+                              </button>
+                            );
+                          })
+                        )}
+                      </div>
                     )}
                   </div>
-                )}
-              </div>
-            </>
-          )}
+                </div>
+              )}
 
-          {form.role === 'modelo' && (
-            <>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-200">Room {groupRequiresRooms(selectedGroupName) && <span className="text-red-500">*</span>}</label>
-              <div>
-                <AppleDropdown
-                  options={availableRooms.map(room => ({ value: room.id, label: room.room_name }))}
-                  value={form.room_id}
-                  onChange={(value) => setForm({ ...form, room_id: value })}
-                  placeholder={loadingRooms ? 'Cargando rooms...' : 'Selecciona un room'}
-                  disabled={loadingRooms || availableRooms.length === 0}
-                  maxHeight="max-h-40"
-                />
-                {form.groups.length === 0 && (
-                  <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Primero selecciona un grupo</p>
-                )}
-                {!groupRequiresRooms(selectedGroupName) && selectedGroupName && (
-                  <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Opcional para {selectedGroupName}</p>
-                )}
-              </div>
+              {form.role === 'modelo' && (
+                <>
+                  <div className="flex flex-col space-y-1.5">
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                      Room {groupRequiresRooms(selectedGroupName) && <span className="text-red-500">*</span>}
+                    </label>
+                    <AppleDropdown
+                      options={availableRooms.map(room => ({ value: room.id, label: room.room_name }))}
+                      value={form.room_id}
+                      onChange={(value) => setForm({ ...form, room_id: value })}
+                      placeholder={loadingRooms ? 'Cargando rooms...' : 'Selecciona un room'}
+                      disabled={loadingRooms || availableRooms.length === 0}
+                      maxHeight="max-h-40"
+                    />
+                    {form.groups.length === 0 && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Primero selecciona un grupo</p>
+                    )}
+                    {!groupRequiresRooms(selectedGroupName) && selectedGroupName && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Opcional para {selectedGroupName}</p>
+                    )}
+                  </div>
 
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-200">Jornada {groupRequiresJornada(selectedGroupName) && <span className="text-red-500">*</span>}</label>
-              <div>
-                <AppleDropdown
-                  options={[
-                    { value: 'MAÑANA', label: 'Mañana' },
-                    { value: 'TARDE', label: 'Tarde' },
-                    { value: 'NOCHE', label: 'Noche' }
-                  ]}
-                  value={form.jornada}
-                  onChange={(value) => setForm({ ...form, jornada: value })}
-                  placeholder="Selecciona una jornada"
-                />
-                {!groupRequiresJornada(selectedGroupName) && selectedGroupName && (
-                  <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Opcional para {selectedGroupName}</p>
-                )}
-              </div>
-            </>
-          )}
+                  <div className="flex flex-col space-y-1.5">
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                      Jornada {groupRequiresJornada(selectedGroupName) && <span className="text-red-500">*</span>}
+                    </label>
+                    <AppleDropdown
+                      options={[
+                        { value: 'MAÑANA', label: 'Mañana' },
+                        { value: 'TARDE', label: 'Tarde' },
+                        { value: 'NOCHE', label: 'Noche' }
+                      ]}
+                      value={form.jornada}
+                      onChange={(value) => setForm({ ...form, jornada: value })}
+                      placeholder="Selecciona una jornada"
+                    />
+                    {!groupRequiresJornada(selectedGroupName) && selectedGroupName && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Opcional para {selectedGroupName}</p>
+                    )}
+                  </div>
+                </>
+              )}
 
-          <div className="flex gap-2 pt-1">
-            <button 
-              disabled={submitting} 
-              type="submit"
-              className="flex-1 px-3 py-1.5 text-xs font-medium text-white bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg hover:from-blue-600 hover:to-indigo-700 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 shadow-md"
-            >
-              {submitting ? 'Creando...' : 'Crear Usuario'}
-            </button>
-            <button 
-              type="button"
-              onClick={() => router.back()}
-              className="px-3 py-1.5 text-xs font-medium text-blue-600 dark:text-blue-400 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-blue-200/50 dark:border-blue-700/50 rounded-lg hover:bg-blue-50/80 dark:hover:bg-gray-700/80 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
-            >
-              Volver
-            </button>
-          </div>
-        </form>
+              <div className="flex gap-1 p-1 mt-4 rounded-full border border-black/5 dark:border-white/10 bg-transparent">
+                <button 
+                  type="button"
+                  onClick={() => router.back()}
+                  className="px-5 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/10 rounded-full transition-colors duration-200"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  disabled={submitting} 
+                  type="submit"
+                  className="flex-1 btn-apple-primary"
+                >
+                  {submitting ? 'Creando...' : 'Crear Usuario'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

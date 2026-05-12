@@ -11,6 +11,7 @@ export interface ProductivityModel {
   modelId: string;
   name: string;
   email: string;
+  avatarUrl?: string | null;
   groupId: string | null;
   groupName: string | null;
   usdBruto: number;
@@ -63,7 +64,7 @@ export async function GET(request: NextRequest) {
     // 2. Obtener modelos según jerarquía
     let modelsQuery = supabase
       .from('users')
-      .select('id, email, name, affiliate_studio_id')
+      .select('id, email, name, affiliate_studio_id, avatar_url')
       .eq('role', 'modelo')
       .eq('is_active', true)
       .neq('id', AIM_BOTTY_ID)
@@ -180,6 +181,7 @@ export async function GET(request: NextRequest) {
         modelId: model.id,
         name: model.email.split('@')[0],
         email: model.email.split('@')[0],
+        avatarUrl: model.avatar_url || null,
         groupId: group?.id ?? null,
         groupName: group?.name ?? null,
         usdBruto,

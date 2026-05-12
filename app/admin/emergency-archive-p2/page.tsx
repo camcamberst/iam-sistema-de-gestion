@@ -302,7 +302,7 @@ export default function EmergencyArchiveP2Page() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4 sm:p-6 lg:p-8">
+    <div className="p-4 md:p-6">
       <div className="max-w-4xl mx-auto">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 sm:p-8">
           <div className="mb-6">
@@ -342,7 +342,7 @@ export default function EmergencyArchiveP2Page() {
             <button
               onClick={handleArchive}
               disabled={loading || verifying || cleaning || deleting}
-              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold rounded-lg shadow-md transition-colors duration-200 disabled:cursor-not-allowed active:scale-95 touch-manipulation"
+              className="disabled:bg-gray-400 disabled:cursor-not-allowed btn-apple-primary"
             >
               {loading ? '⏳ Archivando...' : '🚀 Archivar P2 de Diciembre'}
             </button>

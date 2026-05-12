@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { supabase } from '@/lib/supabase';
+import Link from 'next/link';
 
 interface Announcement {
   id: string;
@@ -55,9 +56,14 @@ export default function AnnouncementBoardWidget({ userId, userGroups, userRole =
   const [modalTouchStartY, setModalTouchStartY] = useState<number | null>(null);
   const [modalTouchEndX, setModalTouchEndX] = useState<number | null>(null);
   const [modalTouchEndY, setModalTouchEndY] = useState<number | null>(null);
+  const [isMobileView, setIsMobileView] = useState(false);
 
   useEffect(() => {
     setMounted(true);
+    const checkMobile = () => setIsMobileView(window.innerWidth < 1024);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   // Cargar publicaciones leídas desde localStorage
@@ -137,9 +143,9 @@ export default function AnnouncementBoardWidget({ userId, userGroups, userRole =
     }
   }, [announcements, readAnnouncements, userId]);
 
-  // Rotación Automática del Carrusel
+  // Rotación Automática del Carrusel (Solo en Escritorio)
   useEffect(() => {
-    if (announcements.length <= 1 || isPaused) return;
+    if (announcements.length <= 1 || isPaused || isMobileView) return;
 
     const displayAnnouncements = showAll ? announcements : announcements.slice(0, 5);
     if (currentIndex >= displayAnnouncements.length) {
@@ -152,7 +158,7 @@ export default function AnnouncementBoardWidget({ userId, userGroups, userRole =
     }, 6000);
 
     return () => clearInterval(timer);
-  }, [announcements, isPaused, currentIndex, showAll]);
+  }, [announcements, isPaused, currentIndex, showAll, isMobileView]);
 
   const loadAnnouncements = async () => {
     try {
@@ -250,7 +256,7 @@ export default function AnnouncementBoardWidget({ userId, userGroups, userRole =
 
   if (loading) {
     return (
-      <div className="relative bg-white/80 dark:bg-white/[0.08] backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-white/[0.10] p-4 sm:p-6">
+      <div className="glass-card p-4 sm:p-6">
         <div className="flex items-center justify-center py-6 sm:py-8">
           <div className="animate-spin rounded-full h-5 w-5 sm:h-6 sm:w-6 border-b-2 border-blue-600"></div>
         </div>
@@ -358,7 +364,7 @@ export default function AnnouncementBoardWidget({ userId, userGroups, userRole =
   return (
     <div className="flex flex-col gap-1.5 sm:gap-2 h-full">
       {/* TÍTULO MINIMALISTA POR FUERA DE LA CAJA */}
-      <div className="flex items-center justify-between px-1">
+      <div className="flex items-center justify-between px-1 h-[40px]">
         <div className="flex items-center space-x-1 sm:space-x-1.5 min-w-0">
           <div className="flex items-center justify-center text-sky-500 drop-shadow-[0_0_8px_rgba(14,165,233,0.6)]">
             <svg className="w-4 h-4 sm:w-[1.125rem] sm:h-[1.125rem]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -369,26 +375,14 @@ export default function AnnouncementBoardWidget({ userId, userGroups, userRole =
             <h2 className="text-[14px] sm:text-[15px] font-bold text-gray-900 dark:text-white tracking-tight drop-shadow-sm dark:drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">
               What&apos;s News?
             </h2>
-            {/* Badge sutil - Punto rojo pequeño con animación suave */}
-            {hasNewAnnouncements && (
-              <div className="ml-1.5 relative w-2 h-2 bg-red-500 rounded-full shadow-sm">
-                <span className="absolute inset-0 bg-red-500 rounded-full animate-ping opacity-40"></span>
-              </div>
-            )}
+
           </div>
         </div>
-        {announcements.length > 3 && (
-          <button
-            onClick={() => setShowAll(!showAll)}
-            className="text-[11px] sm:text-[12px] font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors flex-shrink-0 whitespace-nowrap"
-          >
-            {showAll ? 'Ver menos' : `Todas (${announcements.length})`}
-          </button>
-        )}
+
       </div>
 
-      <div className="flex-1 glass-card bg-black/[0.08] dark:bg-white/[0.08] backdrop-blur-3xl border border-white/40 dark:border-white/[0.08] max-sm:p-1.5 sm:p-2.5 rounded-[1.25rem] sm:rounded-2xl shadow-sm shadow-black/5 dark:shadow-[0_1px_0_0_rgba(255,255,255,0.02)_inset,0_4px_20px_rgba(0,0,0,0.4)] flex flex-col overflow-hidden">
-
+      <div className="flex flex-col gap-1.5 sm:gap-2 flex-1 min-h-0">
+        <div className="glass-card p-3 sm:p-4 hover:shadow-xl transition-all duration-300 relative flex-1 flex flex-col min-h-0 overflow-hidden">
       {/* Lista de anuncios o mensaje vacío */}
       {announcements.length === 0 ? (
         <div className="py-6 text-center text-gray-400 dark:text-gray-500">
@@ -422,10 +416,10 @@ export default function AnnouncementBoardWidget({ userId, userGroups, userRole =
                     markAsRead(currentItem.id);
                     setSelectedAnnouncement(currentItem);
                   }}
-                  className="flex-1 relative group rounded-xl sm:rounded-xl md:rounded-2xl overflow-hidden cursor-pointer shadow-xl bg-white/90 dark:bg-[#0f111a] backdrop-blur-3xl border border-white/60 dark:border-white/10 flex flex-col transition-all duration-500 hover:shadow-2xl hover:border-white/80 dark:hover:border-white/20 dark:hover:bg-[#161925] hover:-translate-y-1"
+                  className="flex-1 relative group rounded-xl sm:rounded-xl md:rounded-2xl overflow-hidden cursor-pointer shadow-xl bg-white/90 dark:bg-[#0f111a] border border-white/60 dark:border-white/10 flex flex-col transition-all duration-500 hover:shadow-2xl hover:border-white/80 dark:hover:border-white/20 dark:hover:bg-[#161925] hover:-translate-y-1"
                 >
-                  {/* Top: Image Container (Fixed Height reduced for mobile) */}
-                  <div className="relative w-full h-[70px] sm:h-28 lg:h-auto lg:flex-1 lg:min-h-[70px] bg-gray-100 dark:bg-black/40 overflow-hidden flex-shrink-0">
+                  {/* Top: Image Container (Fixed Height increased for mobile) */}
+                  <div className="relative w-full h-[160px] sm:h-[180px] lg:h-auto lg:flex-1 lg:min-h-[140px] bg-gray-100 dark:bg-black/40 overflow-hidden flex-shrink-0">
                     {heroImageUrl ? (
                       <div className="absolute inset-0 w-full h-full">
                         <img
@@ -480,22 +474,22 @@ export default function AnnouncementBoardWidget({ userId, userGroups, userRole =
                     </div>
 
                     {/* Meta Bottom: Date & All Pills */}
-                    <div className="flex flex-wrap items-center justify-between gap-y-2 gap-x-3 mt-auto shrink-0 pt-3 pb-0.5 mt-2 border-t border-gray-100 dark:border-white/5">
-                      <span className="text-[12px] sm:text-[13px] font-bold text-slate-600 dark:text-slate-300 tracking-tight drop-shadow-sm flex-shrink-0">
+                    <div className="flex flex-nowrap items-center justify-between gap-x-3 mt-auto shrink-0 pt-3 pb-0.5 mt-2 border-t border-gray-100 dark:border-white/5 overflow-hidden">
+                      <span className="text-[12px] sm:text-[13px] font-bold text-slate-600 dark:text-slate-300 tracking-tight drop-shadow-sm flex-shrink-0 whitespace-nowrap">
                         {formatDate(currentItem.published_at || currentItem.created_at)}
                       </span>
                       
-                      <div className="flex flex-wrap items-center justify-end gap-1.5 flex-1">
+                      <div className="flex flex-nowrap items-center justify-end gap-1.5 flex-1 overflow-hidden">
                         {/* Nuevo */}
                         {isNew && (
-                          <span className="inline-flex items-center justify-center px-2 h-[20px] text-[9px] font-extrabold uppercase tracking-widest text-white leading-none bg-gradient-to-r from-fuchsia-600 via-cyan-500 to-emerald-500 rounded-full shadow-sm drop-shadow-md">
+                          <span className="inline-flex items-center justify-center px-2 h-[20px] text-[9px] font-extrabold uppercase tracking-widest text-white leading-none bg-gradient-to-r from-fuchsia-600 via-cyan-500 to-emerald-500 rounded-full shadow-sm drop-shadow-md shrink-0">
                             <span className="mt-[1px]">NUEVO</span>
                           </span>
                         )}
                         
                         {/* Categoría */}
                         {currentItem.category && (
-                          <span className={`inline-flex items-center justify-center px-2 h-[20px] rounded-full text-[9px] font-extrabold uppercase tracking-widest w-max backdrop-blur-md border shadow-sm transition-all leading-none ${
+                          <span className={`inline-flex items-center justify-center px-2 h-[20px] rounded-full text-[9px] font-extrabold uppercase tracking-widest w-max backdrop-blur-md border shadow-sm transition-all leading-none shrink-0 ${
                             (() => {
                               const n = currentItem.category.name.toLowerCase();
                               if (n.includes('recordatorio')) return 'bg-violet-500/10 border-violet-500/20 text-violet-500 dark:text-violet-400';
@@ -511,7 +505,7 @@ export default function AnnouncementBoardWidget({ userId, userGroups, userRole =
 
                         {/* Priority */}
                         {currentItem.priority > 0 && (
-                          <span className={`inline-flex items-center justify-center px-2 h-[20px] leading-none rounded-full text-[9px] font-extrabold uppercase tracking-widest backdrop-blur-md border shadow-sm ${
+                          <span className={`inline-flex items-center justify-center px-2 h-[20px] leading-none rounded-full text-[9px] font-extrabold uppercase tracking-widest backdrop-blur-md border shadow-sm shrink-0 ${
                             currentItem.priority === 2 
                               ? 'bg-fuchsia-500/10 border-fuchsia-500/20 text-fuchsia-600 dark:text-fuchsia-400' 
                               : 'bg-cyan-500/10 border-cyan-500/20 text-cyan-700 dark:text-cyan-400'
@@ -522,7 +516,7 @@ export default function AnnouncementBoardWidget({ userId, userGroups, userRole =
 
                         {/* Pin */}
                         {currentItem.is_pinned && (
-                          <span className="flex items-center justify-center text-rose-500 dark:text-rose-400 drop-shadow-[0_0_3px_rgba(244,63,94,0.5)] bg-rose-500/10 p-0.5 px-1.5 h-[20px] rounded-full border border-rose-500/20">
+                          <span className="flex items-center justify-center text-rose-500 dark:text-rose-400 drop-shadow-[0_0_3px_rgba(244,63,94,0.5)] bg-rose-500/10 p-0.5 px-1.5 h-[20px] rounded-full border border-rose-500/20 shrink-0">
                             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 17v5" />
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z" />
@@ -559,7 +553,15 @@ export default function AnnouncementBoardWidget({ userId, userGroups, userRole =
           })()}
         </div>
       )}
-      </div> {/* <-- CIERRE DE LA NUEVA CAJA MINIMALISTA */}
+          {/* Footer del widget */}
+          <div className="mt-auto pt-2 border-t border-gray-100 dark:border-gray-700/50 flex justify-between items-center px-1 shrink-0">
+            <span className="text-[10px] sm:text-xs font-medium text-gray-500 dark:text-gray-400">Anuncios</span>
+            <Link href="/admin/sedes/dashboard#new-announcement" className="text-xs font-medium text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 transition-colors">
+              Ver panel editor →
+            </Link>
+          </div>
+        </div>
+      </div>
 
       {/* Modal de Anuncio (Side-by-Side Style) */}
       {/* Modal de Anuncio (Concepto "Store Product") */}
