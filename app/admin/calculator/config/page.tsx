@@ -716,7 +716,7 @@ export default function ConfigCalculatorPage() {
                                 type="button"
                                 onClick={() => handlePlatformToggle(platform.id)}
                                 className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors flex-shrink-0 ml-2 ${
-                                  enabledPlatforms.includes(platform.id) ? 'bg-gradient-to-r from-sky-400 to-fuchsia-500 shadow-[0_0_10px_rgba(217,70,239,0.4)]' : 'bg-black/10 dark:bg-white/10'
+                                  enabledPlatforms.includes(platform.id) ? 'bg-gradient-to-r from-cyan-600 to-fuchsia-600 shadow-[0_0_10px_rgba(6,182,212,0.4)]' : 'bg-black/10 dark:bg-white/10'
                                 }`}
                               >
                                 <span
@@ -796,7 +796,7 @@ export default function ConfigCalculatorPage() {
                           type="button"
                           onClick={handleSave}
                           disabled={saving}
-                          className="w-full py-3 text-sm font-medium text-white bg-gradient-to-r from-sky-400 to-fuchsia-500 hover:from-sky-300 hover:to-fuchsia-400 rounded-full transition-all duration-300 shadow-[0_0_15px_rgba(56,189,248,0.4)] hover:shadow-[0_0_25px_rgba(217,70,239,0.6)] active:scale-95 touch-manipulation disabled:opacity-50"
+                          className="w-full py-3 btn-apple-primary active:scale-95 touch-manipulation disabled:opacity-50 border-none"
                         >
                           {saving ? 'Guardando...' : 'Guardar Configuración'}
                         </button>
@@ -864,7 +864,7 @@ export default function ConfigCalculatorPage() {
                           type="button"
                           onClick={handleSave}
                           disabled={saving}
-                          className="w-full py-3 text-sm font-medium text-white bg-gradient-to-r from-sky-400 to-fuchsia-500 hover:from-sky-300 hover:to-fuchsia-400 rounded-full transition-all duration-300 shadow-[0_0_15px_rgba(56,189,248,0.4)] hover:shadow-[0_0_25px_rgba(217,70,239,0.6)] active:scale-95 touch-manipulation disabled:opacity-50"
+                          className="w-full py-3 btn-apple-primary active:scale-95 touch-manipulation disabled:opacity-50 border-none"
                         >
                           {saving ? 'Guardando...' : 'Guardar Configuración'}
                         </button>
@@ -984,7 +984,7 @@ export default function ConfigCalculatorPage() {
                             type="button"
                             onClick={() => handlePlatformToggle(platform.id)}
                             className={`relative inline-flex h-4 w-7 sm:h-5 sm:w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-fuchsia-500 focus:ring-offset-2 flex-shrink-0 ml-2 ${
-                              enabledPlatforms.includes(platform.id) ? 'bg-gradient-to-r from-sky-400 to-fuchsia-500 shadow-[0_0_10px_rgba(217,70,239,0.4)]' : 'bg-black/10 dark:bg-white/10'
+                              enabledPlatforms.includes(platform.id) ? 'bg-gradient-to-r from-cyan-600 to-fuchsia-600 shadow-[0_0_10px_rgba(6,182,212,0.4)]' : 'bg-black/10 dark:bg-white/10'
                             }`}
                           >
                             <span className="sr-only">Enable platform</span>
@@ -1153,7 +1153,7 @@ export default function ConfigCalculatorPage() {
                     type="button"
                     onClick={handleSave}
                     disabled={saving}
-                    className="px-6 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-sky-400 to-fuchsia-500 hover:from-sky-300 hover:to-fuchsia-400 rounded-full focus:ring-2 focus:ring-fuchsia-500/20 transition-all duration-300 shadow-[0_0_15px_rgba(56,189,248,0.4)] hover:shadow-[0_0_25px_rgba(217,70,239,0.6)] disabled:opacity-50"
+                    className="px-6 py-2.5 btn-apple-primary disabled:opacity-50 border-none"
                   >
                     {saving ? 'Guardando...' : 'Guardar'}
                   </button>
