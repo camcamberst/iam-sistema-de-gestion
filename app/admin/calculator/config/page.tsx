@@ -791,12 +791,12 @@ export default function ConfigCalculatorPage() {
                   {/* Botón Guardar Móvil (Adosado a la Caja 2) */}
                   {hasChanges && (
                     <div className="pt-1 animate-fade-in-up">
-                      <div className="p-1.5 rounded-2xl md:rounded-3xl bg-white/5 dark:bg-[#1a1a1c]/80 backdrop-blur-3xl border border-white/50 dark:border-white/10 shadow-lg">
+                      <div className="p-1.5 rounded-full bg-white/5 dark:bg-[#1a1a1c]/80 backdrop-blur-3xl border border-white/50 dark:border-white/10 shadow-lg">
                         <button
                           type="button"
                           onClick={handleSave}
                           disabled={saving}
-                          className="w-full py-3 text-sm font-medium text-white bg-gradient-to-r from-sky-400 to-fuchsia-500 hover:from-sky-300 hover:to-fuchsia-400 rounded-xl transition-all duration-300 shadow-[0_0_15px_rgba(56,189,248,0.4)] hover:shadow-[0_0_25px_rgba(217,70,239,0.6)] active:scale-95 touch-manipulation disabled:opacity-50"
+                          className="w-full py-3 text-sm font-medium text-white bg-gradient-to-r from-sky-400 to-fuchsia-500 hover:from-sky-300 hover:to-fuchsia-400 rounded-full transition-all duration-300 shadow-[0_0_15px_rgba(56,189,248,0.4)] hover:shadow-[0_0_25px_rgba(217,70,239,0.6)] active:scale-95 touch-manipulation disabled:opacity-50"
                         >
                           {saving ? 'Guardando...' : 'Guardar Configuración'}
                         </button>
@@ -859,12 +859,12 @@ export default function ConfigCalculatorPage() {
                   {/* Botón Guardar Móvil (Adosado a la Caja 3) */}
                   {(activeSlide === 2 || hasChanges) && (
                     <div className="pt-1 animate-fade-in-up">
-                      <div className="p-1.5 rounded-2xl md:rounded-3xl bg-white/5 dark:bg-[#1a1a1c]/80 backdrop-blur-3xl border border-white/50 dark:border-white/10 shadow-lg">
+                      <div className="p-1.5 rounded-full bg-white/5 dark:bg-[#1a1a1c]/80 backdrop-blur-3xl border border-white/50 dark:border-white/10 shadow-lg">
                         <button
                           type="button"
                           onClick={handleSave}
                           disabled={saving}
-                          className="w-full py-3 text-sm font-medium text-white bg-gradient-to-r from-sky-400 to-fuchsia-500 hover:from-sky-300 hover:to-fuchsia-400 rounded-xl transition-all duration-300 shadow-[0_0_15px_rgba(56,189,248,0.4)] hover:shadow-[0_0_25px_rgba(217,70,239,0.6)] active:scale-95 touch-manipulation disabled:opacity-50"
+                          className="w-full py-3 text-sm font-medium text-white bg-gradient-to-r from-sky-400 to-fuchsia-500 hover:from-sky-300 hover:to-fuchsia-400 rounded-full transition-all duration-300 shadow-[0_0_15px_rgba(56,189,248,0.4)] hover:shadow-[0_0_25px_rgba(217,70,239,0.6)] active:scale-95 touch-manipulation disabled:opacity-50"
                         >
                           {saving ? 'Guardando...' : 'Guardar Configuración'}
                         </button>
