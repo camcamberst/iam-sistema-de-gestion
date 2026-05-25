@@ -36,4 +36,4 @@ npm run build && npm start
 ## Notas
 
 - Botty se identifica por `AIM_BOTTY_ID` y está excluido de resúmenes de facturación.
-- Sonidos de chat deshabilitados; parpadeo de pestaña y apertura automática no intrusiva activados.
+- Sonidos de chat deshabilitados; parpadeo de pestaña y apertura automática no intrusiva activados. 
