@@ -291,19 +291,22 @@ export async function POST(request: NextRequest) {
        return NextResponse.json({ success: false, error: 'No se pudo asignar un período válido' }, { status: 500 });
     }
 
-    // Verificar que no haya anticipos pendientes para el mismo período
-    const { data: existingAnticipo, error: existingError } = await supabase
+    // Verificar que no haya anticipos activos (en proceso: pendiente o aprobado)
+    const { data: activeAnticipo, error: activeError } = await supabase
       .from('anticipos')
       .select('id, estado')
       .eq('model_id', model_id)
-      .eq('period_id', periodId)
-      .eq('estado', 'pendiente')
-      .single();
+      .in('estado', ['pendiente', 'aprobado'])
+      .limit(1)
+      .maybeSingle();
 
-    if (existingAnticipo) {
+    if (activeAnticipo) {
+      const msg = activeAnticipo.estado === 'pendiente'
+        ? 'Ya tienes una solicitud de anticipo pendiente de revisión.'
+        : 'Ya tienes una solicitud de anticipo aprobada en proceso de desembolso.';
       return NextResponse.json({ 
         success: false, 
-        error: 'Ya tienes una solicitud pendiente para este período' 
+        error: `${msg} Debes esperar a que se complete todo el ciclo (Realizado o Rechazado) antes de realizar una nueva solicitud.` 
       }, { status: 400 });
     }
 

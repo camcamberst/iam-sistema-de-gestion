@@ -113,6 +113,30 @@ export default function SolicitarAnticipoPage() {
       }
 
       setUser(userData);
+
+      // 🔒 Verificar si la modelo ya tiene un anticipo activo (pendiente o aprobado)
+      const { data: activeAnticipos, error: activeError } = await supabase
+        .from('anticipos')
+        .select('id, estado')
+        .eq('model_id', userData.id)
+        .in('estado', ['pendiente', 'aprobado'])
+        .limit(1);
+
+      if (activeError) {
+        console.error('Error al consultar anticipos activos:', activeError);
+      } else if (activeAnticipos && activeAnticipos.length > 0) {
+        const active = activeAnticipos[0];
+        const activeReason = active.estado === 'pendiente'
+          ? 'Ya tienes una solicitud de anticipo pendiente de revisión por el administrador.'
+          : 'Ya tienes una solicitud de anticipo aprobada en proceso de desembolso.';
+        
+        setRestrictionInfo({
+          allowed: false,
+          reason: `${activeReason} Debes esperar a que se complete todo el ciclo (Realizado o Rechazado) antes de realizar una nueva solicitud.`
+        });
+        return;
+      }
+
       await loadProductivityData(userData.id);
     } catch (error) {
       console.error('Error loading user:', error);
@@ -422,17 +446,19 @@ export default function SolicitarAnticipoPage() {
             <p className="text-gray-600 dark:text-gray-300 mb-4">
               {restrictionInfo.reason}
             </p>
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/50 rounded-lg p-4">
-              <p className="text-sm text-blue-800 dark:text-blue-300">
-                <strong>Próxima fecha disponible:</strong><br />
-                {restrictionInfo.nextAvailable?.toLocaleDateString('es-CO', {
-                  weekday: 'long',
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
-                })}
-              </p>
-            </div>
+            {restrictionInfo.nextAvailable && (
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/50 rounded-lg p-4">
+                <p className="text-sm text-blue-800 dark:text-blue-300">
+                  <strong>Próxima fecha disponible:</strong><br />
+                  {restrictionInfo.nextAvailable.toLocaleDateString('es-CO', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </p>
+              </div>
+            )}
           </div>
           <button
             onClick={() => router.back()}
