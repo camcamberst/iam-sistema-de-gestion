@@ -333,17 +333,28 @@ export const atomicArchiveAndReset = async (
       archived_at: new Date().toISOString()
     }));
 
-    // Insertar en calculator_history (upsert para evitar duplicados)
+    // Insertar en calculator_history (limpieza previa para evitar duplicados sin depender del UNIQUE constraint)
     if (historyInserts.length > 0) {
+      console.log(`🧹 [ATOMIC-CLOSE] Limpiando registros históricos previos para evitar duplicados...`);
+      const { error: deleteHistoryError } = await supabase
+        .from('calculator_history')
+        .delete()
+        .eq('model_id', modelId)
+        .eq('period_date', startDate)
+        .eq('period_type', periodType);
+
+      if (deleteHistoryError) {
+        console.error(`❌ [ATOMIC-CLOSE] Error limpiando duplicados en history:`, deleteHistoryError);
+        throw deleteHistoryError;
+      }
+
+      console.log(`📝 [ATOMIC-CLOSE] Insertando ${historyInserts.length} nuevos registros en calculator_history...`);
       const { error: historyError } = await supabase
         .from('calculator_history')
-        .upsert(historyInserts, { 
-          onConflict: 'model_id,platform_id,period_date,period_type',
-          ignoreDuplicates: false 
-        });
+        .insert(historyInserts);
 
       if (historyError) {
-        console.error(`❌ [ATOMIC-CLOSE] Error archivando en history:`, historyError);
+        console.error(`❌ [ATOMIC-CLOSE] Error insertando en history:`, historyError);
         throw historyError;
       }
 
