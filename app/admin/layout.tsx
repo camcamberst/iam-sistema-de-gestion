@@ -28,6 +28,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const [showUserPanel, setShowUserPanel] = useState(false);
   const [loadingUser, setLoadingUser] = useState(false);
   const [isClient, setIsClient] = useState(false);
+  const [isEmbedded, setIsEmbedded] = useState(pathname.startsWith('/admin/model/calculator/historial'));
   const [portfolioDropdownOpen, setPortfolioDropdownOpen] = useState(false);
   const [calculatorDropdownOpen, setCalculatorDropdownOpen] = useState(false);
   const [anticiposDropdownOpen, setAnticiposDropdownOpen] = useState(false);
@@ -66,9 +67,64 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
   // Cliente centralizado de Supabase
 
-  // Manejar hidratación del cliente
+  // Manejar hidratación del cliente y verificación de iframe/embebido
   useEffect(() => {
     setIsClient(true);
+    if (typeof window !== 'undefined') {
+      const embeddedQuery = window.location.search.includes('embedded=true') || window.location.href.includes('embedded=true');
+      setIsEmbedded(window.self !== window.top || embeddedQuery || pathname.startsWith('/admin/model/calculator/historial'));
+    }
+  }, [pathname]);
+
+  // Sincronización de tema para la subventana/iframe (heredar del padre)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const applyTheme = () => {
+        let isDark = false;
+        try {
+          // 1. Intentar heredar directamente del documento de la ventana padre (si comparte origen)
+          if (window.parent && window.parent !== window) {
+            isDark = window.parent.document.documentElement.classList.contains('dark');
+          } else {
+            // 2. Si no es un iframe o no tiene ventana padre, intentar leer de localStorage
+            const savedTheme = localStorage.getItem('theme');
+            isDark = savedTheme === 'dark';
+          }
+        } catch (e) {
+          // 3. Si hay error (CORS o restricciones de sandbox), fallback a localStorage
+          const savedTheme = localStorage.getItem('theme');
+          isDark = savedTheme === 'dark';
+        }
+        document.documentElement.classList.toggle('dark', isDark);
+      };
+
+      applyTheme();
+
+      // Escuchar cambios de tema reactivos (Storage Event y postMessage)
+      const handleStorageChange = (e: StorageEvent) => {
+        if (e.key === 'theme') {
+          document.documentElement.classList.toggle('dark', e.newValue === 'dark');
+        }
+      };
+
+      const handleParentMessage = (event: MessageEvent) => {
+        if (event.data && event.data.type === 'THEME_CHANGE') {
+          document.documentElement.classList.toggle('dark', event.data.theme === 'dark');
+        }
+      };
+
+      window.addEventListener('storage', handleStorageChange);
+      window.addEventListener('message', handleParentMessage);
+
+      // Intervalo de seguridad pasivo por si el padre cambia de tema pero no dispara eventos (CORS bypass fallback)
+      const interval = setInterval(applyTheme, 1000);
+
+      return () => {
+        window.removeEventListener('storage', handleStorageChange);
+        window.removeEventListener('message', handleParentMessage);
+        clearInterval(interval);
+      };
+    }
   }, []);
 
   // Efecto Dynamic Glass Dock (Scroll tracker)
@@ -479,11 +535,12 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     <GalenaProvider>
       <div className={layoutBgClass}>
       {/* Apple Glass Edge-to-Edge Header */}
-      <header 
-        className={`sticky top-0 z-[9999999] transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-          isScrolled ? 'pointer-events-none' : 'pointer-events-auto'
-        }`}
-      >
+      {!isEmbedded && (
+        <header 
+          className={`sticky top-0 z-[9999999] transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+            isScrolled ? 'pointer-events-none' : 'pointer-events-auto'
+          }`}
+        >
         {/* Capa de cristal independiente para prevenir bug de stacking context en Chrome */}
         <div className={`absolute inset-0 pointer-events-none rounded-b-[20px] sm:rounded-b-[24px] transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
           isScrolled 
@@ -497,6 +554,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             <div className={`flex items-center flex-shrink-0 min-w-0 pr-2 sm:pr-4 z-50 bg-transparent transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
               isScrolled ? 'opacity-0 -translate-x-8 pointer-events-none' : 'opacity-100 translate-x-0 pointer-events-auto'
             }`}>
+
               <Link href={getUserRole() === 'modelo' ? '/admin/model/dashboard' : '/admin/dashboard'} className="flex items-center group">
                 {/* Logo Block (IMPOSING) Bimodal */}
                 <div className="flex-none w-7 h-7 sm:w-8 md:w-9 sm:h-8 md:h-9 bg-gradient-to-br from-gray-700 to-gray-800 dark:bg-gradient-to-b dark:from-[#ffffff] dark:to-[#e2e8f0] rounded-[8.5px] md:rounded-[10.5px] border border-gray-600/50 dark:border-[#ffffff] flex items-center justify-center shadow-lg dark:shadow-[0_0_8px_rgba(255,255,255,0.15),0_10px_20px_-5px_rgba(0,0,0,0.5),inset_0_2px_4px_rgba(255,255,255,1),inset_0_-4px_8px_rgba(148,163,184,0.2)] dark:ring-1 dark:ring-slate-900/5 group-hover:scale-105 transition-all duration-300 z-10 box-border">
@@ -717,15 +775,15 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
             {/* User Actions */}
             <div className={`flex items-center space-x-0.5 sm:space-x-1.5 md:space-x-3`}>
-              {/* Botón Sexshop (Escritorio) */}
+              {/* Botón Market (Escritorio) */}
               <Link
-                href={getUserRole() === 'modelo' ? '/admin/model/shop' : '/admin/shop/orders'}
+                href={getUserRole() === 'modelo' ? '/admin/model/shop' : '/admin/shop'}
                 className={`hidden md:flex relative p-2 md:p-2.5 rounded-full transition-all duration-300 group ${
                   pathname.startsWith('/admin/model/shop') || pathname.startsWith('/admin/shop')
                     ? 'font-bold text-pink-700 dark:text-pink-300 bg-pink-500/10 dark:bg-pink-500/20 shadow-inner border border-transparent dark:border-pink-500/30 backdrop-blur-md'
                     : 'text-gray-600 dark:text-gray-300 hover:text-pink-500 dark:hover:text-pink-400 hover:bg-black/5 dark:hover:bg-white/5 ' + (cartCount > 0 ? 'animate-subtle-bounce' : '')
                 }`}
-                title="Sexshop"
+                title="AIM Market"
               >
                 <div className="relative inline-flex items-center justify-center">
                   <svg className={`w-4 h-4 md:w-5 md:h-5 ${cartCount > 0 && !(pathname.startsWith('/admin/model/shop') || pathname.startsWith('/admin/shop')) ? 'text-fuchsia-500 drop-shadow-sm' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -741,7 +799,30 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                 </div>
               </Link>
 
-              
+              {/* Mobile Shopping Bag (Siempre al lado del Theme Toggle) */}
+              <Link
+                href={getUserRole() === 'modelo' ? '/admin/model/shop' : '/admin/shop'}
+                className={`flex md:hidden relative p-2 rounded-full transition-all duration-300 group ${
+                  pathname.startsWith('/admin/model/shop') || pathname.startsWith('/admin/shop')
+                    ? 'font-bold text-pink-700 dark:text-pink-300 bg-pink-500/10 dark:bg-pink-500/20 shadow-inner border border-transparent dark:border-pink-500/30 backdrop-blur-md'
+                    : 'text-gray-600 dark:text-gray-300 hover:text-pink-500 dark:hover:text-pink-400 hover:bg-black/5 dark:hover:bg-white/5 ' + (cartCount > 0 ? 'animate-subtle-bounce' : '')
+                }`}
+                title="Bolsa de Compras"
+              >
+                <div className="relative inline-flex items-center justify-center">
+                  <svg className={`w-5 h-5 ${cartCount > 0 && !(pathname.startsWith('/admin/model/shop') || pathname.startsWith('/admin/shop')) ? 'text-fuchsia-500 drop-shadow-sm' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                  </svg>
+                  {cartCount > 0 && !(pathname.startsWith('/admin/model/shop') || pathname.startsWith('/admin/shop')) && (
+                    <span className="absolute -top-1 -right-1 w-[8px] h-[8px] pointer-events-none">
+                      <svg className="w-full h-full animate-lucero text-fuchsia-400 drop-shadow-[0_0_3px_rgba(217,70,239,0.8)]" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 0C12 6.627 17.373 12 24 12C17.373 12 12 17.373 12 24C12 17.373 6.627 12 0 12C6.627 12 12 6.627 12 0Z" />
+                      </svg>
+                    </span>
+                  )}
+                </div>
+              </Link>
+
               {/* Theme Toggle */}
               <div className="scale-75 sm:scale-90 md:scale-100">
                 <ThemeToggle />
@@ -889,6 +970,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           </div>
         </div>
       </header>
+      )}
 
       {/* Estilos para animación de carrito pendiente */}
       <style dangerouslySetInnerHTML={{__html: `
@@ -902,7 +984,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       `}} />
 
       {/* Mobile Bottom Navigation Bar (Apple/Dynamic Pill Style) */}
-      <nav className="md:hidden fixed bottom-4 sm:bottom-6 left-4 right-4 sm:left-1/2 sm:-translate-x-1/2 sm:max-w-md z-[500] bg-white/80 dark:bg-[#0a0f1a]/60 dark:bg-gradient-to-t dark:from-[#0a0f1a]/80 dark:to-[#141226]/60 backdrop-blur-[40px] rounded-[32px] border border-black/5 dark:border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.05)] transition-transform duration-300 translate-y-0 group-[.keyboard-open]/body:translate-y-[150%]">
+      {!isEmbedded && (
+        <nav className="md:hidden fixed bottom-4 sm:bottom-6 left-4 right-4 sm:left-1/2 sm:-translate-x-1/2 sm:max-w-md z-[500] bg-white/80 dark:bg-[#0a0f1a]/60 dark:bg-gradient-to-t dark:from-[#0a0f1a]/80 dark:to-[#141226]/60 backdrop-blur-[40px] rounded-[32px] border border-black/5 dark:border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.05)] transition-transform duration-300 translate-y-0 group-[.keyboard-open]/body:translate-y-[150%]">
         <div className="flex items-center justify-between px-2 py-2 gap-1">
           
           {(!userInfo || userInfo?.role === 'modelo') ? (
@@ -960,7 +1043,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
               {/* Store (Market) */}
               <button 
-                onClick={() => router.push(getUserRole() === 'modelo' ? '/admin/model/shop' : '/admin/shop/orders')}
+                onClick={() => router.push(getUserRole() === 'modelo' ? '/admin/model/shop' : '/admin/shop')}
                 className={`relative flex flex-row items-center justify-center h-[44px] sm:h-[48px] rounded-full transition-all duration-300 active:scale-[0.95] overflow-hidden ${activeMobileTab === 'shop' ? 'w-auto px-4 bg-fuchsia-500/15 dark:bg-fuchsia-400/15 text-fuchsia-600 dark:text-fuchsia-400' : 'w-[44px] sm:w-[48px] px-0 bg-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
               >
                 <div className={`relative shrink-0 flex items-center justify-center ${cartCount > 0 && activeMobileTab !== 'shop' ? 'animate-subtle-bounce' : ''}`}>
@@ -1064,9 +1147,10 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           )}
         </div>
       </nav>
+      )}
 
       {/* Mobile Bottom Action Sheet (Apple iOS Style con Aurora) */}
-      {bottomSheetActive && (
+      {!isEmbedded && bottomSheetActive && (
         <div className="fixed inset-0 z-[9999999] md:hidden flex flex-col justify-end p-4 pb-8">
           <div 
             className={`absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm transition-opacity duration-[600ms] ease-out ${isClosingBottomSheet ? 'opacity-0' : 'animate-fade-in opacity-100'}`} 
@@ -1140,12 +1224,14 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       )}
 
       {/* Main Content */}
-      <main className="min-h-screen pb-[68px] md:pb-0 transition-[padding] duration-300 group-[.keyboard-open]/body:pb-[350px] md:group-[.keyboard-open]/body:pb-0">
+      <main className={isEmbedded ? "min-h-0 p-0" : "min-h-screen pb-[68px] md:pb-0 transition-[padding] duration-300 group-[.keyboard-open]/body:pb-[350px] md:group-[.keyboard-open]/body:pb-0"}>
         <div
           className={
-            isFullBleedHistorial
-              ? 'max-w-none mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8 w-full'
-              : 'max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8'
+            isEmbedded
+              ? 'max-w-none mx-auto p-0 w-full'
+              : isFullBleedHistorial
+                ? 'max-w-none mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8 w-full'
+                : 'max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8'
           }
         >
           {children}
@@ -1153,10 +1239,10 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       </main>
 
       {/* Galena Desktop Bottom Player (Spotify-Style) */}
-      <GalenaBottomPlayer />
+      {!isEmbedded && <GalenaBottomPlayer />}
 
       {/* ChatWidget para admin/super_admin/modelo/superadmin_aff — oculto en la sexshop */}
-      {!loadingUser && userInfo && isClient && (
+      {!loadingUser && userInfo && isClient && !isEmbedded && (
         <>
           <ChatWidget 
             userId={userInfo.id}
