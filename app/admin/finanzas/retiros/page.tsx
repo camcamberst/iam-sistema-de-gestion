@@ -607,7 +607,7 @@ export default function GestionRetirosPage() {
                           <span>Compromiso de Meta Activa</span>
                         </div>
                         <p className="text-gray-700 dark:text-gray-300 font-medium">
-                          Esta modelo tiene la meta activa <strong>"{withdrawal.meta_auditoria.nombre_meta}"</strong> ({withdrawal.meta_auditoria.porcentaje_progreso.toFixed(0)}% completado). 
+                          Esta modelo tiene la meta activa <strong>&quot;{withdrawal.meta_auditoria.nombre_meta}&quot;</strong> ({withdrawal.meta_auditoria.porcentaje_progreso.toFixed(0)}% completado). 
                           Saldo comprometido: <strong>{formatCurrency(withdrawal.meta_auditoria.saldo_comprometido)}</strong>.
                         </p>
                         {withdrawal.meta_auditoria.canibaliza && (
@@ -632,7 +632,7 @@ export default function GestionRetirosPage() {
                           <span>Alerta de Evasión Financiera</span>
                         </div>
                         <p className="text-gray-700 dark:text-gray-300 font-medium">
-                          La modelo canceló recientemente la meta <strong>"{withdrawal.cancelacion_auditoria.nombre_meta}"</strong> (de {formatCurrency(withdrawal.cancelacion_auditoria.monto_meta)}) el {new Date(withdrawal.cancelacion_auditoria.cancelada_el).toLocaleDateString('es-CO', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}.
+                          La modelo canceló recientemente la meta <strong>&quot;{withdrawal.cancelacion_auditoria.nombre_meta}&quot;</strong> (de {formatCurrency(withdrawal.cancelacion_auditoria.monto_meta)}) el {new Date(withdrawal.cancelacion_auditoria.cancelada_el).toLocaleDateString('es-CO', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}.
                         </p>
                         <div className="flex items-center gap-1.5 text-xs font-semibold bg-red-500/10 p-2 rounded-lg mt-0.5">
                           <span>🛑</span>
