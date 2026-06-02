@@ -502,17 +502,17 @@ export default function MiPortafolio() {
         {activeTab === 'platforms' && (
           <>
             {/* Título de sección Apple Style 2 */}
-            <div className="flex items-center justify-between px-1 mb-2 mt-2">
-              <div className="flex items-center space-x-1 sm:space-x-1.5">
+            <div className="flex items-center justify-between px-1 mb-3.5 mt-2">
+              <div className="flex items-center space-x-2">
                 <div className="flex items-center justify-center text-indigo-500 drop-shadow-[0_0_8px_rgba(99,102,241,0.6)]">
                   <Activity className="w-4 h-4 sm:w-[1.125rem] sm:h-[1.125rem]" strokeWidth={2.5} />
                 </div>
-                <h2 className="text-[14px] sm:text-[15px] font-bold text-gray-900 dark:text-white tracking-tight drop-shadow-[0_0_8px_rgba(0,0,0,0.15)] dark:drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">
+                <h2 className="text-[14px] sm:text-[15px] font-semibold text-gray-900 dark:text-white tracking-tight drop-shadow-sm">
                   Mis Plataformas
                 </h2>
               </div>
-              <div className="flex items-center space-x-1.5">
-                <span className="text-[12px] sm:text-[13px] font-medium text-gray-500 dark:text-gray-400 bg-black/5 dark:bg-white/10 px-2 py-0.5 rounded-full border border-black/5 dark:border-white/10">
+              <div className="flex items-center">
+                <span className="flex items-center justify-center h-6 px-2.5 text-[11px] sm:text-[12px] font-medium text-gray-500 dark:text-gray-400 bg-black/[0.04] dark:bg-white/10 rounded-full border border-black/[0.05] dark:border-white/10 leading-normal">
                   {portfolioData?.platforms.length || 0} en total
                 </span>
               </div>
@@ -530,25 +530,25 @@ export default function MiPortafolio() {
               ) : (
                 <>
                   {/* Lista Integrada (Estilo iOS) */}
-                  <div className="flex flex-col bg-white/40 dark:bg-black/20 rounded-xl sm:rounded-2xl border border-black/[0.05] dark:border-white/[0.05] overflow-y-auto mb-4 sm:mb-6 divide-y divide-black/5 dark:divide-white/5 max-h-[274px] sm:max-h-[284px] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-black/20 dark:[&::-webkit-scrollbar-thumb]:bg-white/20 hover:[&::-webkit-scrollbar-thumb]:bg-black/30 dark:hover:[&::-webkit-scrollbar-thumb]:bg-white/30 [&::-webkit-scrollbar-thumb]:rounded-full">
+                  <div className="flex flex-col bg-white/40 dark:bg-black/20 rounded-2xl border border-black/[0.05] dark:border-white/[0.05] overflow-y-auto mb-4 sm:mb-6 divide-y divide-black/5 dark:divide-white/5 max-h-[274px] sm:max-h-[284px] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-black/20 dark:[&::-webkit-scrollbar-thumb]:bg-white/20 hover:[&::-webkit-scrollbar-thumb]:bg-black/30 dark:hover:[&::-webkit-scrollbar-thumb]:bg-white/30 [&::-webkit-scrollbar-thumb]:rounded-full">
                     {portfolioData?.platforms.map((platform) => (
                       <button
                         key={platform.id}
                         type="button"
-                        className={`flex items-center justify-between w-full p-4 sm:px-5 sm:py-4 text-left transition-all duration-200 touch-manipulation group ${
+                        className={`flex items-center justify-between w-full p-4 sm:px-5 sm:py-4 text-left transition-all duration-300 touch-manipulation group ${
                           selectedPlatform?.id === platform.id
-                            ? 'bg-blue-50/60 dark:bg-blue-900/20 shadow-[inset_3px_0_0_0_rgba(59,130,246,1)] dark:shadow-[inset_3px_0_0_0_rgba(96,165,250,1)]'
+                            ? 'bg-blue-500/[0.08] dark:bg-blue-500/[0.12] backdrop-blur-md shadow-[inset_3.5px_0_0_0_rgba(59,130,246,0.85)]'
                             : 'hover:bg-black/[0.02] dark:hover:bg-white/[0.02] active:bg-black/[0.04] dark:active:bg-white/[0.04]'
                         }`}
                         onClick={() => handlePlatformClick(platform)}
                       >
                         <div className="flex items-center gap-3.5">
-                          {/* Indicador mágico multicapa (Basado en Divisas) */}
-                          <div className="relative flex items-center justify-center w-4 h-4 flex-shrink-0">
-                            <span className={`absolute inset-0 rounded-full ring-1 ${getCurrencyGlowColor(platform.calculator_platforms.currency)} ${selectedPlatform?.id === platform.id ? 'animate-ping opacity-50 duration-700' : 'animate-pulse'}`}></span>
-                            <span className={`relative w-2 h-2 rounded-full ${getCurrencyDotColor(platform.calculator_platforms.currency)} z-10`}></span>
+                          {/* Indicador de divisa / estado limpio */}
+                          <div className="relative flex items-center justify-center w-2.5 h-2.5 flex-shrink-0">
+                             <span className={`absolute w-2.5 h-2.5 rounded-full ${getCurrencyDotColor(platform.calculator_platforms.currency)} animate-ping opacity-30 duration-1000`}></span>
+                             <span className={`relative w-2 h-2 rounded-full ${getCurrencyDotColor(platform.calculator_platforms.currency)}`}></span>
                           </div>
-                          <span className={`text-[14px] sm:text-[15px] font-semibold tracking-tight ${selectedPlatform?.id === platform.id ? 'text-blue-700 dark:text-blue-300' : 'text-gray-800 dark:text-gray-200'}`}>
+                          <span className={`text-[14px] sm:text-[15px] font-semibold tracking-tight ${selectedPlatform?.id === platform.id ? 'text-blue-600 dark:text-blue-400' : 'text-gray-800 dark:text-gray-200'}`}>
                             {platform.calculator_platforms.name}
                           </span>
                         </div>
@@ -574,7 +574,7 @@ export default function MiPortafolio() {
                       : 'max-h-0 opacity-0 translate-y-0 scale-100 overflow-hidden'
                   }`}>
                     {selectedPlatform && (
-                      <div className="mt-2 sm:mt-4 rounded-2xl sm:rounded-3xl p-5 sm:p-6 bg-white/40 dark:bg-black/20 backdrop-blur-3xl border border-black/[0.05] dark:border-white/[0.05] shadow-lg dark:shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all duration-300 relative overflow-hidden">
+                      <div className="mt-2 sm:mt-4 rounded-2xl sm:rounded-3xl p-5 sm:p-6 bg-white/50 dark:bg-black/40 border border-white/20 dark:border-white/[0.08] backdrop-blur-3xl shadow-xl shadow-black/[0.04] dark:shadow-[0_12px_40px_rgba(0,0,0,0.3)] transition-all duration-300 relative overflow-hidden">
                         {/* Botón cerrar solo en móvil */}
                         <div className="flex justify-end mb-2 sm:hidden">
                           <button
@@ -593,7 +593,7 @@ export default function MiPortafolio() {
                             <div className="min-w-0 flex-1">
                               <div className="flex flex-row items-center gap-2 sm:gap-3">
                                 {selectedPlatform.calculator_platforms.currency && (
-                                  <span className={`px-2.5 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wider flex-shrink-0 ${getCurrencyBadgeColor(selectedPlatform.calculator_platforms.currency)}`}>
+                                  <span className={`flex items-center justify-center h-5.5 px-2 rounded-md text-[10px] font-bold uppercase tracking-wider flex-shrink-0 leading-normal ${getCurrencyBadgeColor(selectedPlatform.calculator_platforms.currency)}`}>
                                     {selectedPlatform.calculator_platforms.currency}
                                   </span>
                                 )}
@@ -608,16 +608,16 @@ export default function MiPortafolio() {
                               <button
                                 onClick={() => confirmPlatform(selectedPlatform.platform_id)}
                                 disabled={confirmingPlatform === selectedPlatform.platform_id}
-                                className="w-full sm:w-auto px-5 py-3 sm:px-4 sm:py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center space-x-2 text-base sm:text-sm font-medium shadow-md hover:shadow-lg active:scale-95 touch-manipulation min-h-[48px] sm:min-h-0"
+                                className="w-full sm:w-auto px-5 py-2.5 sm:px-4 bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-500/50 text-white rounded-xl transition-all duration-200 flex items-center justify-center space-x-2 text-sm font-semibold shadow-[0_4px_14px_rgba(16,185,129,0.3)] hover:shadow-[0_6px_20px_rgba(16,185,129,0.4)] active:scale-[0.98] touch-manipulation"
                               >
                                 {confirmingPlatform === selectedPlatform.platform_id ? (
                                   <>
-                                    <div className="animate-spin rounded-full h-5 w-5 sm:h-4 sm:w-4 border-b-2 border-white"></div>
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                                     <span>Confirmando...</span>
                                   </>
                                 ) : (
                                   <>
-                                    <CheckCircle className="w-5 h-5 sm:w-4 sm:h-4" />
+                                    <CheckCircle className="w-4 h-4" />
                                     <span>Confirmar Recepción</span>
                                   </>
                                 )}
@@ -638,15 +638,15 @@ export default function MiPortafolio() {
                                   }, 150);
                                 }
                               }}
-                              className={`pb-3 text-[14px] sm:text-[15px] font-semibold transition-all duration-200 active:scale-95 touch-manipulation relative ${
+                              className={`pb-2.5 text-[14px] sm:text-[15px] font-semibold transition-all duration-200 active:scale-95 touch-manipulation relative ${
                                 platformTab === 'details'
                                   ? 'text-gray-900 dark:text-white'
-                                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                                  : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400'
                               }`}
                             >
                               Detalles
                               {platformTab === 'details' && (
-                                <span className="absolute bottom-0 left-0 w-full h-[2px] bg-gray-900 dark:bg-white rounded-t-full"></span>
+                                <span className="absolute bottom-0 left-0 w-full h-[2px] bg-blue-500 dark:bg-blue-400 rounded-full"></span>
                               )}
                             </button>
                             <button
@@ -658,15 +658,15 @@ export default function MiPortafolio() {
                                   }, 150);
                                 }
                               }}
-                              className={`pb-3 text-[14px] sm:text-[15px] font-semibold transition-all duration-200 active:scale-95 touch-manipulation relative ${
+                              className={`pb-2.5 text-[14px] sm:text-[15px] font-semibold transition-all duration-200 active:scale-95 touch-manipulation relative ${
                                 platformTab === 'metrics'
                                   ? 'text-gray-900 dark:text-white'
-                                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                                  : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400'
                               }`}
                             >
                               Métricas
                               {platformTab === 'metrics' && (
-                                <span className="absolute bottom-0 left-0 w-full h-[2px] bg-gray-900 dark:bg-white rounded-t-full"></span>
+                                <span className="absolute bottom-0 left-0 w-full h-[2px] bg-blue-500 dark:bg-blue-400 rounded-full"></span>
                               )}
                             </button>
                           </div>
@@ -684,17 +684,17 @@ export default function MiPortafolio() {
                                     <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">Cargando credenciales...</span>
                                   </div>
                                 ) : credentials?.hasCredentials ? (
-                                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl sm:rounded-lg p-5 sm:p-4 space-y-4 sm:space-y-3 border-2 sm:border border-blue-200 dark:border-blue-800">
+                                  <div className="bg-blue-500/[0.03] dark:bg-blue-500/[0.05] backdrop-blur-md rounded-2xl p-5 sm:p-4 space-y-4 sm:space-y-3.5 border border-blue-500/10 dark:border-blue-500/20">
                                     <div className="flex items-center space-x-2 mb-4 sm:mb-3">
-                                      <Lock className="w-5 h-5 sm:w-4 sm:h-4 text-blue-600 dark:text-blue-400" />
-                                      <h4 className="text-base sm:text-sm font-bold sm:font-semibold text-gray-900 dark:text-gray-100">Credenciales de Acceso</h4>
+                                      <Lock className="w-4 h-4 text-blue-500" />
+                                      <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Credenciales de Acceso</h4>
                                     </div>
                                     
                                     {/* Usuario */}
                                     {credentials.login_username && (
-                                      <div className="space-y-2 sm:space-y-1">
-                                        <label className="text-sm sm:text-xs font-semibold sm:font-medium text-gray-700 dark:text-gray-300 flex items-center space-x-2">
-                                          <User className="w-4 h-4 sm:w-3 sm:h-3" />
+                                      <div className="space-y-1.5">
+                                        <label className="text-[12px] sm:text-[11px] font-semibold text-gray-500 dark:text-gray-400 flex items-center space-x-1.5 uppercase tracking-wider">
+                                          <User className="w-3.5 h-3.5" />
                                           <span>Usuario</span>
                                         </label>
                                         <div className="flex items-center space-x-2">
@@ -702,14 +702,14 @@ export default function MiPortafolio() {
                                             type="text"
                                             value={credentials.login_username}
                                             readOnly
-                                            className="flex-1 px-3 sm:px-3 py-2.5 sm:py-2 h-12 sm:h-auto bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 touch-manipulation"
+                                            className="flex-1 px-3.5 py-2.5 bg-white/40 dark:bg-black/20 backdrop-blur-sm border border-black/10 dark:border-white/10 rounded-xl text-[14px] text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500/30 transition-all duration-200 select-all touch-manipulation"
                                           />
                                           <button
                                             onClick={() => copyToClipboard(credentials.login_username!)}
-                                            className="p-2.5 sm:p-2 min-h-[48px] sm:min-h-0 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 active:scale-95 transition-all touch-manipulation"
+                                            className="flex items-center justify-center p-2.5 sm:p-2 w-10 h-10 bg-white/50 dark:bg-white/5 text-gray-600 dark:text-gray-300 border border-black/10 dark:border-white/10 rounded-xl hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-500/10 dark:hover:text-blue-400 hover:border-blue-500/20 dark:hover:border-blue-500/30 active:scale-95 transition-all duration-200 touch-manipulation"
                                             title="Copiar usuario"
                                           >
-                                            <Copy className="w-4 h-4 sm:w-4 sm:h-4" />
+                                            <Copy className="w-4 h-4" />
                                           </button>
                                         </div>
                                       </div>
@@ -717,9 +717,9 @@ export default function MiPortafolio() {
 
                                     {/* Contraseña */}
                                     {credentials.login_password && (
-                                      <div className="space-y-2 sm:space-y-1">
-                                        <label className="text-sm sm:text-xs font-semibold sm:font-medium text-gray-700 dark:text-gray-300 flex items-center space-x-2">
-                                          <Lock className="w-4 h-4 sm:w-3 sm:h-3" />
+                                      <div className="space-y-1.5">
+                                        <label className="text-[12px] sm:text-[11px] font-semibold text-gray-500 dark:text-gray-400 flex items-center space-x-1.5 uppercase tracking-wider">
+                                          <Lock className="w-3.5 h-3.5" />
                                           <span>Contraseña</span>
                                         </label>
                                         <div className="flex items-center space-x-2">
@@ -727,18 +727,18 @@ export default function MiPortafolio() {
                                             type={showPassword ? 'text' : 'password'}
                                             value={credentials.login_password}
                                             readOnly
-                                            className="flex-1 px-3 sm:px-3 py-2.5 sm:py-2 h-12 sm:h-auto bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono touch-manipulation"
+                                            className="flex-1 px-3.5 py-2.5 bg-white/40 dark:bg-black/20 backdrop-blur-sm border border-black/10 dark:border-white/10 rounded-xl text-[14px] text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500/30 transition-all duration-200 font-mono touch-manipulation"
                                           />
                                           <button
                                             onClick={() => setShowPassword(!showPassword)}
-                                            className="p-2.5 sm:p-2 min-h-[48px] sm:min-h-0 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 active:scale-95 transition-all touch-manipulation"
+                                            className="flex items-center justify-center p-2.5 sm:p-2 w-10 h-10 bg-white/50 dark:bg-white/5 text-gray-600 dark:text-gray-300 border border-black/10 dark:border-white/10 rounded-xl hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-500/10 dark:hover:text-blue-400 hover:border-blue-500/20 dark:hover:border-blue-500/30 active:scale-95 transition-all duration-200 touch-manipulation"
                                             title={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                                           >
                                             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                           </button>
                                           <button
                                             onClick={() => copyToClipboard(credentials.login_password!)}
-                                            className="p-2.5 sm:p-2 min-h-[48px] sm:min-h-0 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 active:scale-95 transition-all touch-manipulation"
+                                            className="flex items-center justify-center p-2.5 sm:p-2 w-10 h-10 bg-white/50 dark:bg-white/5 text-gray-600 dark:text-gray-300 border border-black/10 dark:border-white/10 rounded-xl hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-500/10 dark:hover:text-blue-400 hover:border-blue-500/20 dark:hover:border-blue-500/30 active:scale-95 transition-all duration-200 touch-manipulation"
                                             title="Copiar contraseña"
                                           >
                                             <Copy className="w-4 h-4" />
@@ -749,14 +749,14 @@ export default function MiPortafolio() {
 
                                     {/* Enlace de login - Siempre visible al final */}
                                     {(credentials.login_url || selectedPlatform.calculator_platforms.login_url) && (
-                                      <div className="pt-4 sm:pt-3 mt-4 sm:mt-3 border-t-2 sm:border-t border-blue-100 dark:border-blue-900/30 flex justify-center">
+                                      <div className="pt-4 sm:pt-3 mt-4 sm:mt-3 border-t border-blue-500/10 dark:border-blue-500/20 flex justify-center">
                                         <a
                                           href={credentials.login_url || selectedPlatform.calculator_platforms.login_url || '#'}
                                           target="_blank"
                                           rel="noopener noreferrer"
-                                          className="inline-flex items-center justify-center space-x-1.5 px-6 py-2.5 min-h-[40px] bg-gradient-to-r from-cyan-600 to-fuchsia-600 hover:from-cyan-500 hover:to-fuchsia-500 text-white rounded-full active:scale-95 transition-all duration-200 shadow-md shadow-cyan-500/30 dark:shadow-[0_0_15px_rgba(34,211,238,0.5)] hover:shadow-lg hover:shadow-fuchsia-500/40 dark:hover:shadow-[0_0_20px_rgba(232,121,249,0.7)] text-[12px] font-bold tracking-widest uppercase touch-manipulation"
+                                          className="inline-flex items-center justify-center space-x-2 px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl active:scale-[0.98] transition-all duration-300 shadow-[0_4px_14px_rgba(59,130,246,0.3)] hover:shadow-[0_6px_20px_rgba(59,130,246,0.4)] text-[12px] font-semibold tracking-wider uppercase touch-manipulation"
                                         >
-                                          <span>ABRIR PLATAFORMA</span>
+                                          <span>Abrir Plataforma</span>
                                           <ExternalLink className="w-3.5 h-3.5" />
                                         </a>
                                       </div>
@@ -766,14 +766,14 @@ export default function MiPortafolio() {
                                   <div className="pt-2">
                                     {/* Enlace de login (siempre mostrar si existe, incluso sin credenciales) */}
                                     {(credentials?.login_url || selectedPlatform.calculator_platforms.login_url) && (
-                                      <div className="border-t border-gray-100 dark:border-white/5 pt-5 mt-2 flex justify-center">
+                                      <div className="border-t border-black/5 dark:border-white/5 pt-5 mt-2 flex justify-center">
                                         <a
                                           href={credentials?.login_url || selectedPlatform.calculator_platforms.login_url || '#'}
                                           target="_blank"
                                           rel="noopener noreferrer"
-                                          className="inline-flex items-center justify-center space-x-1.5 px-6 py-2.5 min-h-[40px] bg-gradient-to-r from-cyan-600 to-fuchsia-600 hover:from-cyan-500 hover:to-fuchsia-500 text-white rounded-full active:scale-95 transition-all duration-200 shadow-md shadow-cyan-500/30 dark:shadow-[0_0_15px_rgba(34,211,238,0.5)] hover:shadow-lg hover:shadow-fuchsia-500/40 dark:hover:shadow-[0_0_20px_rgba(232,121,249,0.7)] text-[12px] font-bold tracking-widest uppercase touch-manipulation"
+                                          className="inline-flex items-center justify-center space-x-2 px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl active:scale-[0.98] transition-all duration-300 shadow-[0_4px_14px_rgba(59,130,246,0.3)] hover:shadow-[0_6px_20px_rgba(59,130,246,0.4)] text-[12px] font-semibold tracking-wider uppercase touch-manipulation"
                                         >
-                                          <span>ABRIR PLATAFORMA</span>
+                                          <span>Abrir Plataforma</span>
                                           <ExternalLink className="w-3.5 h-3.5" />
                                         </a>
                                       </div>
@@ -783,35 +783,35 @@ export default function MiPortafolio() {
 
                                 {/* Enlace especial solo para Superfoon */}
                                 {isSelectedPlatformSuperfoon && (
-                                  <div className="pt-5 sm:pt-4 mt-5 sm:mt-4 border-t-2 sm:border-t border-dashed border-gray-300 dark:border-gray-600">
+                                  <div className="pt-5 sm:pt-4 mt-5 sm:mt-4 border-t border-dashed border-gray-300 dark:border-gray-600">
                                     <div className="flex items-center space-x-2 mb-4 sm:mb-3">
                                       <div className="relative">
-                                        <div className="w-2.5 h-2.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full animate-ping absolute"></div>
-                                        <div className="w-2.5 h-2.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full relative"></div>
+                                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-ping absolute"></div>
+                                        <div className="w-2 h-2 bg-blue-500 rounded-full relative"></div>
                                       </div>
-                                      <p className="text-base sm:text-sm font-bold sm:font-semibold text-gray-700 dark:text-gray-300">
+                                      <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                                         App de llamadas 3CX
                                       </p>
                                     </div>
 
                                     {/* Credenciales 3CX - Solo lectura para modelos */}
-                                    <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl sm:rounded-lg p-3.5 sm:p-3 space-y-3 border-2 sm:border border-purple-200 dark:border-purple-800 mb-4 sm:mb-3">
+                                    <div className="bg-purple-500/[0.03] dark:bg-purple-500/[0.05] backdrop-blur-md rounded-2xl p-4 sm:p-3.5 space-y-3.5 border border-purple-500/10 dark:border-purple-500/20 mb-4">
                                       <div className={`flex items-center space-x-2 ${(credentials3CX.hasCredentials || loading3CX) ? 'mb-3' : ''}`}>
-                                        <Lock className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                                        <h4 className="text-sm font-bold sm:font-semibold text-gray-900 dark:text-gray-100">Credenciales App 3CX</h4>
+                                        <Lock className="w-4 h-4 text-purple-500 dark:text-purple-400" />
+                                        <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Credenciales App 3CX</h4>
                                       </div>
 
                                       {loading3CX ? (
                                         <div className="flex items-center justify-center py-4">
-                                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600"></div>
+                                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-600"></div>
                                           <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">Cargando...</span>
                                         </div>
                                       ) : credentials3CX.hasCredentials ? (
                                         <>
                                           {/* Usuario 3CX - Solo lectura */}
-                                          <div className="space-y-2 sm:space-y-1">
-                                            <label className="text-sm sm:text-xs font-semibold sm:font-medium text-gray-700 dark:text-gray-300 flex items-center space-x-2">
-                                              <User className="w-4 h-4 sm:w-3 sm:h-3" />
+                                          <div className="space-y-1.5">
+                                            <label className="text-[12px] sm:text-[11px] font-semibold text-gray-500 dark:text-gray-400 flex items-center space-x-1.5 uppercase tracking-wider">
+                                              <User className="w-3.5 h-3.5" />
                                               <span>Usuario 3CX</span>
                                             </label>
                                             <div className="flex items-center space-x-2">
@@ -819,11 +819,11 @@ export default function MiPortafolio() {
                                                 type="text"
                                                 value={credentials3CX.app_3cx_username || ''}
                                                 readOnly
-                                                className="flex-1 px-3 sm:px-3 py-2.5 sm:py-2 h-12 sm:h-auto bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none touch-manipulation"
+                                                className="flex-1 px-3.5 py-2.5 bg-white/40 dark:bg-black/20 backdrop-blur-sm border border-black/10 dark:border-white/10 rounded-xl text-[14px] text-gray-800 dark:text-gray-200 focus:outline-none transition-all duration-200 select-all touch-manipulation"
                                               />
                                               <button
                                                 onClick={() => copyToClipboard(credentials3CX.app_3cx_username || '')}
-                                                className="p-2.5 sm:p-2 min-h-[48px] sm:min-h-0 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-lg hover:bg-purple-200 dark:hover:bg-purple-900/50 active:scale-95 transition-all touch-manipulation"
+                                                className="flex items-center justify-center p-2.5 sm:p-2 w-10 h-10 bg-white/50 dark:bg-white/5 text-gray-600 dark:text-gray-300 border border-black/10 dark:border-white/10 rounded-xl hover:bg-purple-50 hover:text-purple-600 dark:hover:bg-purple-500/10 dark:hover:text-purple-400 hover:border-purple-500/20 dark:hover:border-purple-500/30 active:scale-95 transition-all duration-200 touch-manipulation"
                                                 title="Copiar usuario"
                                               >
                                                 <Copy className="w-4 h-4" />
@@ -832,9 +832,9 @@ export default function MiPortafolio() {
                                           </div>
 
                                           {/* Contraseña 3CX - Solo lectura */}
-                                          <div className="space-y-2 sm:space-y-1">
-                                            <label className="text-sm sm:text-xs font-semibold sm:font-medium text-gray-700 dark:text-gray-300 flex items-center space-x-2">
-                                              <Lock className="w-4 h-4 sm:w-3 sm:h-3" />
+                                          <div className="space-y-1.5">
+                                            <label className="text-[12px] sm:text-[11px] font-semibold text-gray-500 dark:text-gray-400 flex items-center space-x-1.5 uppercase tracking-wider">
+                                              <Lock className="w-3.5 h-3.5" />
                                               <span>Contraseña 3CX</span>
                                             </label>
                                             <div className="flex items-center space-x-2">
@@ -842,18 +842,18 @@ export default function MiPortafolio() {
                                                 type={showPassword3CX ? 'text' : 'password'}
                                                 value={credentials3CX.app_3cx_password || ''}
                                                 readOnly
-                                                className="flex-1 px-3 sm:px-3 py-2.5 sm:py-2 h-12 sm:h-auto bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none font-mono touch-manipulation"
+                                                className="flex-1 px-3.5 py-2.5 bg-white/40 dark:bg-black/20 backdrop-blur-sm border border-black/10 dark:border-white/10 rounded-xl text-[14px] text-gray-800 dark:text-gray-200 focus:outline-none font-mono touch-manipulation"
                                               />
                                               <button
                                                 onClick={() => setShowPassword3CX(!showPassword3CX)}
-                                                className="p-2.5 sm:p-2 min-h-[48px] sm:min-h-0 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-lg hover:bg-purple-200 dark:hover:bg-purple-900/50 active:scale-95 transition-all touch-manipulation"
+                                                className="flex items-center justify-center p-2.5 sm:p-2 w-10 h-10 bg-white/50 dark:bg-white/5 text-gray-600 dark:text-gray-300 border border-black/10 dark:border-white/10 rounded-xl hover:bg-purple-50 hover:text-purple-600 dark:hover:bg-purple-500/10 dark:hover:text-purple-400 hover:border-purple-500/20 dark:hover:border-purple-500/30 active:scale-95 transition-all duration-200 touch-manipulation"
                                                 title={showPassword3CX ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                                               >
                                                 {showPassword3CX ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                               </button>
                                               <button
                                                 onClick={() => copyToClipboard(credentials3CX.app_3cx_password || '')}
-                                                className="p-2.5 sm:p-2 min-h-[48px] sm:min-h-0 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-lg hover:bg-purple-200 dark:hover:bg-purple-900/50 active:scale-95 transition-all touch-manipulation"
+                                                className="flex items-center justify-center p-2.5 sm:p-2 w-10 h-10 bg-white/50 dark:bg-white/5 text-gray-600 dark:text-gray-300 border border-black/10 dark:border-white/10 rounded-xl hover:bg-purple-50 hover:text-purple-600 dark:hover:bg-purple-500/10 dark:hover:text-purple-400 hover:border-purple-500/20 dark:hover:border-purple-500/30 active:scale-95 transition-all duration-200 touch-manipulation"
                                                 title="Copiar contraseña"
                                               >
                                                 <Copy className="w-4 h-4" />
@@ -870,9 +870,9 @@ export default function MiPortafolio() {
                                         href="https://superfoon.synergy4.com/#/login"
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="inline-flex items-center justify-center space-x-1.5 px-6 py-2.5 min-h-[40px] bg-gradient-to-r from-cyan-600 to-fuchsia-600 hover:from-cyan-500 hover:to-fuchsia-500 text-white rounded-full active:scale-95 transition-all duration-200 shadow-md shadow-cyan-500/30 dark:shadow-[0_0_15px_rgba(34,211,238,0.5)] hover:shadow-lg hover:shadow-fuchsia-500/40 dark:hover:shadow-[0_0_20px_rgba(232,121,249,0.7)] text-[12px] font-bold tracking-widest uppercase touch-manipulation"
+                                        className="inline-flex items-center justify-center space-x-2 px-6 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white rounded-xl active:scale-[0.98] transition-all duration-300 shadow-[0_4px_14px_rgba(168,85,247,0.3)] hover:shadow-[0_6px_20px_rgba(168,85,247,0.4)] text-[12px] font-semibold tracking-wider uppercase touch-manipulation"
                                       >
-                                        <span>ABRIR APP</span>
+                                        <span>Abrir App 3CX</span>
                                         <ExternalLink className="w-3.5 h-3.5" />
                                       </a>
                                     </div>
@@ -890,104 +890,84 @@ export default function MiPortafolio() {
 
                         {/* Contenido de pestaña: Métricas */}
                         {platformTab === 'metrics' && (
-                          <div className="space-y-3">
-                            <div className="flex items-center space-x-1 sm:space-x-1.5 min-w-0 mb-3 px-1">
+                          <div className="space-y-4">
+                            <div className="flex items-center space-x-2 min-w-0 px-1 mb-3">
                               <div className="flex items-center justify-center text-sky-500 drop-shadow-[0_0_8px_rgba(14,165,233,0.6)]">
                                 <svg className="w-4 h-4 sm:w-[1.125rem] sm:h-[1.125rem]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M18 20V10M12 20V4M6 20v-6" />
                                 </svg>
                               </div>
                               <div className="relative flex items-center">
-                                <h2 className="text-[14px] sm:text-[15px] font-bold text-gray-900 dark:text-white tracking-tight drop-shadow-sm dark:drop-shadow-[0_0_5px_rgba(255,255,255,0.2)]">
+                                <h2 className="text-[14px] sm:text-[15px] font-semibold text-gray-900 dark:text-white tracking-tight drop-shadow-sm">
                                   Estadísticas de Rendimiento
                                 </h2>
                               </div>
                             </div>
-                            <div className="bg-black/[0.08] dark:bg-white/[0.06] backdrop-blur-3xl border border-white/40 dark:border-white/[0.08] max-sm:p-1.5 sm:p-2.5 rounded-[1.25rem] sm:rounded-2xl shadow-sm shadow-black/5 dark:shadow-[0_1px_0_0_rgba(255,255,255,0.02)_inset,0_4px_20px_rgba(0,0,0,0.4)] flex flex-col overflow-hidden">
-                              <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                              {/* Tarjeta 1: Promedio Conexión */}
-                              <div className="bg-white/40 dark:bg-[#1A1A1A] rounded-[16px] p-4 flex flex-col items-center justify-center border border-black/5 dark:border-transparent">
-                                <span className="text-[20px] font-bold text-blue-500 dark:text-blue-400 drop-shadow-[0_0_8px_rgba(59,130,246,0.3)] dark:drop-shadow-[0_0_8px_rgba(96,165,250,0.5)] tracking-tight">
-                                  {selectedPlatform.stats.connectionPercentage}%
-                                </span>
-                                <div className="mt-3 bg-blue-500/10 rounded-full px-3 py-1 text-[10px] sm:text-[11px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wide truncate max-w-full">
-                                  Promedio Conexión
-                                </div>
-                              </div>
-                              
-                              {/* Tarjeta 2: Promedio Quincenal */}
-                              <div className="bg-white/40 dark:bg-[#1A1A1A] rounded-[16px] p-4 flex flex-col items-center justify-center border border-black/5 dark:border-transparent relative">
-                                <div className="flex items-center justify-center gap-1">
-                                  <span className="text-[20px] font-bold text-emerald-500 dark:text-emerald-400 drop-shadow-[0_0_8px_rgba(16,185,129,0.3)] dark:drop-shadow-[0_0_8px_rgba(52,211,153,0.5)] tracking-tight">
-                                    ${selectedPlatform.stats.avgUsdModelo.toFixed(2)}
-                                  </span>
-                                  {selectedPlatform.stats.trend !== '=' && (
-                                    <span className={`text-[12px] font-bold ${selectedPlatform.stats.trend === '↑' ? 'text-emerald-500' : 'text-red-500'}`}>
-                                      {selectedPlatform.stats.trend}
-                                    </span>
-                                  )}
-                                </div>
-                                <div className="mt-3 bg-emerald-500/10 rounded-full px-3 py-1 text-[10px] sm:text-[11px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wide truncate max-w-full">
-                                  Promedio Quincenal
-                                </div>
-                              </div>
 
-                              {/* Tarjeta 3: Total 30 días */}
-                              <div className="bg-white/40 dark:bg-[#1A1A1A] rounded-[16px] p-4 flex flex-col items-center justify-center border border-black/5 dark:border-transparent">
-                                <span className="text-[20px] font-bold text-purple-500 dark:text-purple-400 drop-shadow-[0_0_8px_rgba(168,85,247,0.3)] dark:drop-shadow-[0_0_8px_rgba(192,132,252,0.5)] tracking-tight">
-                                  ${selectedPlatform.stats.totalUsdModelo.toFixed(2)}
-                                </span>
-                                <div className="mt-3 bg-purple-500/10 rounded-full px-3 py-1 text-[10px] sm:text-[11px] font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wide truncate max-w-full">
-                                  Total (30 días)
-                                </div>
-                              </div>
-
-                              {/* Tarjeta 4: Última Actividad */}
-                              <div className="bg-white/40 dark:bg-[#1A1A1A] rounded-[16px] p-4 flex flex-col items-center justify-center border border-black/5 dark:border-transparent">
-                                <span className="text-[16px] sm:text-[18px] font-bold text-slate-600 dark:text-slate-300 drop-shadow-[0_0_8px_rgba(148,163,184,0.3)] tracking-tight">
-                                  {selectedPlatform.stats.lastActivity ? 
+                            <InfoCardGrid
+                              compactContainer={true}
+                              columns={4}
+                              cards={[
+                                {
+                                  value: `${selectedPlatform.stats.connectionPercentage}%`,
+                                  label: "Promedio Conexión",
+                                  color: "blue",
+                                  size: "sm"
+                                },
+                                {
+                                  value: `$${selectedPlatform.stats.avgUsdModelo.toFixed(2)}${selectedPlatform.stats.trend !== '=' ? ` ${selectedPlatform.stats.trend}` : ''}`,
+                                  label: "Promedio Quincenal",
+                                  color: "green",
+                                  size: "sm"
+                                },
+                                {
+                                  value: `$${selectedPlatform.stats.totalUsdModelo.toFixed(2)}`,
+                                  label: "Total (30 días)",
+                                  color: "purple",
+                                  size: "sm"
+                                },
+                                {
+                                  value: selectedPlatform.stats.lastActivity ? 
                                     new Date(selectedPlatform.stats.lastActivity).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }) : 
-                                    'N/A'
-                                  }
-                                </span>
-                                <div className="mt-3 bg-slate-500/10 rounded-full px-3 py-1 text-[10px] sm:text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wide truncate max-w-full">
-                                  Última Actividad
-                                </div>
-                              </div>
-                              </div>
-                            </div>
+                                    'N/A',
+                                  label: "Última Actividad",
+                                  color: "yellow",
+                                  size: "sm"
+                                }
+                              ]}
+                            />
                           </div>
                         )}
 
                         {/* Información de estado y fechas */}
-                        <div className="flex flex-row items-center justify-between mt-6 sm:mt-8 pt-4 sm:pt-4 border-t border-black/10 dark:border-white/10 overflow-hidden">
-                          <div className="flex flex-row items-center gap-4 sm:gap-8 shrink-0">
+                        <div className="flex flex-row items-center justify-between mt-6 sm:mt-8 pt-4 border-t border-black/5 dark:border-white/5 overflow-hidden">
+                          <div className="flex flex-row items-center gap-4 sm:gap-6 shrink-0">
                             {selectedPlatform.delivered_at && (
-                              <div className="flex items-center space-x-1.5 sm:space-x-2">
+                              <div className="flex items-center space-x-1.5">
                                 <Calendar className="w-4 h-4 text-gray-400 dark:text-gray-500" />
-                                <div className="flex items-center gap-1.5">
-                                  <p className="text-[11px] sm:text-[12px] text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wide">Entregada:</p>
-                                  <p className="text-[12px] sm:text-[13px] text-gray-700 dark:text-gray-300 font-semibold">
+                                <div className="flex items-center gap-1">
+                                  <p className="text-[11px] sm:text-[12px] text-gray-400 dark:text-gray-500 font-medium uppercase tracking-wide">Entregada:</p>
+                                  <p className="text-[12px] sm:text-[13px] text-gray-800 dark:text-gray-200 font-semibold">
                                     {new Date(selectedPlatform.delivered_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}
                                   </p>
                                 </div>
                               </div>
                             )}
                             {selectedPlatform.confirmed_at && (
-                              <div className="flex items-center space-x-1.5 sm:space-x-2">
+                              <div className="flex items-center space-x-1.5">
                                 <CheckCircle className="w-4 h-4 text-gray-400 dark:text-gray-500" />
-                                <div className="flex items-center gap-1.5">
-                                  <p className="text-[11px] sm:text-[12px] text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wide">Confirmada:</p>
-                                  <p className="text-[12px] sm:text-[13px] text-gray-700 dark:text-gray-300 font-semibold">
+                                <div className="flex items-center gap-1">
+                                  <p className="text-[11px] sm:text-[12px] text-gray-400 dark:text-gray-500 font-medium uppercase tracking-wide">Confirmada:</p>
+                                  <p className="text-[12px] sm:text-[13px] text-gray-800 dark:text-gray-200 font-semibold">
                                     {new Date(selectedPlatform.confirmed_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}
                                   </p>
                                 </div>
                               </div>
                             )}
                           </div>
-                          <div className="flex items-center space-x-2">
-                            <Target className="w-4 h-4 sm:w-3 sm:h-3 text-gray-400 dark:text-gray-500" />
-                            <span className="text-xs sm:text-xs text-gray-500 dark:text-gray-400 font-medium">Plataforma activa</span>
+                          <div className="flex items-center space-x-1.5">
+                            <Target className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
+                            <span className="text-xs text-gray-400 dark:text-gray-500 font-medium">Plataforma activa</span>
                           </div>
                         </div>
                       </div>
@@ -1003,37 +983,36 @@ export default function MiPortafolio() {
           <div className="space-y-6">
             {/* Resumen - Tarjetas Estadísticas */}
             {portfolioData && (
-              <div className="max-sm:bg-black/[0.04] max-sm:dark:bg-white/[0.04] max-sm:backdrop-blur-xl max-sm:ring-1 max-sm:ring-black/[0.05] max-sm:dark:ring-white/[0.1] max-sm:rounded-[1.25rem] max-sm:p-2.5 max-sm:shadow-sm">
-                <InfoCardGrid
-                  columns={4}
-                  cards={[
-                    {
-                      value: portfolioData.summary.totalPlatforms.toString(),
-                      label: "Total Plataformas",
-                      color: "blue",
-                      size: "md"
-                    },
-                    {
-                      value: portfolioData.summary.activePlatforms.toString(),
-                      label: "Activas",
-                      color: "green",
-                      size: "md"
-                    },
-                    {
-                      value: portfolioData.summary.pendingConfirmation.toString(),
-                      label: "Pendientes",
-                      color: "yellow",
-                      size: "md"
-                    },
-                    {
-                      value: `$${(portfolioData.summary.totalCopModelo || 0).toLocaleString('es-CO')}`,
-                      label: "Ganancias (30 días)",
-                      color: "purple",
-                      size: "md"
-                    }
-                  ]}
-                />
-              </div>
+              <InfoCardGrid
+                compactContainer={true}
+                columns={4}
+                cards={[
+                  {
+                    value: portfolioData.summary.totalPlatforms.toString(),
+                    label: "Total Plataformas",
+                    color: "blue",
+                    size: "sm"
+                  },
+                  {
+                    value: portfolioData.summary.activePlatforms.toString(),
+                    label: "Activas",
+                    color: "green",
+                    size: "sm"
+                  },
+                  {
+                    value: portfolioData.summary.pendingConfirmation.toString(),
+                    label: "Pendientes",
+                    color: "yellow",
+                    size: "sm"
+                  },
+                  {
+                    value: `$${(portfolioData.summary.totalCopModelo || 0).toLocaleString('es-CO')}`,
+                    label: "Ganancias (30 días)",
+                    color: "purple",
+                    size: "sm"
+                  }
+                ]}
+              />
             )}
 
             {/* Análisis Detallado */}

@@ -175,7 +175,7 @@ export function buildMenuItems(userRole: UserRole): MenuItem[] {
       label: 'Gestión Usuarios',
       href: '#',
       subItems: [
-        { label: 'Crear Usuario', href: '/admin/users/create', icon: icons.add, description: 'Registra nuevos usuarios en el sistema' },
+        { label: 'Crear Usuario', href: '/admin/users/create', icon: icons.add, description: 'Registra nuevos usuarios' },
         { label: 'Consultar Usuarios', href: '/admin/users', icon: icons.users, description: 'Administra usuarios existentes' }
       ]
     });
@@ -186,16 +186,16 @@ export function buildMenuItems(userRole: UserRole): MenuItem[] {
       label: 'Gestión Finanzas',
       href: '#',
       subItems: [
-        { label: 'Solicitudes Pendientes', href: '/admin/anticipos/pending', icon: icons.clock, description: 'Revisa solicitudes de anticipos por aprobar' },
-        { label: 'Gestión Ahorros', href: '/admin/finanzas/ahorros', icon: icons.money, description: 'Gestiona solicitudes de ahorro y retiros' }
+        { label: 'Solicitudes Pendientes', href: '/admin/anticipos/pending', icon: icons.clock, description: 'Anticipos por aprobar' },
+        { label: 'Gestión Ahorros', href: '/admin/finanzas/ahorros', icon: icons.money, description: 'Ahorros y retiros de modelos' }
       ]
     });
 
     // Gestión Agencia / Sedes
     const sedesSubItems: SubMenuItem[] = [
-      { label: 'Gestionar Sedes', href: '/admin/sedes/gestionar', icon: icons.building, description: 'Administra sedes y ubicaciones' },
-      { label: 'Portafolio Modelos', href: '/admin/sedes/portafolio', icon: icons.person, description: 'Gestiona portafolios por sede' },
-      { label: 'Dashboard Sedes', href: '/admin/sedes/dashboard', icon: icons.chart, description: 'Vista general de todas las sedes' }
+      { label: 'Gestionar Sedes', href: '/admin/sedes/gestionar', icon: icons.building, description: 'Administra sedes de la agencia' },
+      { label: 'Portafolio Modelos', href: '/admin/sedes/portafolio', icon: icons.person, description: 'Portafolios por sede' },
+      { label: 'Dashboard Sedes', href: '/admin/sedes/dashboard', icon: icons.chart, description: 'Vista general de sedes' }
     ];
 
     if (userRole === 'super_admin') {
@@ -208,15 +208,15 @@ export function buildMenuItems(userRole: UserRole): MenuItem[] {
     const calculatorIndex = baseItems.findIndex(item => item.id === 'calculator');
     if (calculatorIndex !== -1) {
       const calcSubItems: SubMenuItem[] = [
-        { label: 'Rates (Presente)', href: '/admin/rates', icon: icons.calculator, description: 'Actualiza las tasas' }
+        { label: 'Rates (Presente)', href: '/admin/rates', icon: icons.calculator, description: 'Actualiza las tasas del día' }
       ];
       if (userRole === 'super_admin') {
-        calcSubItems.push({ label: 'Gestionar Plataformas', href: '/admin/calculator/platforms', icon: icons.box, description: 'Ingresa, edita, elimina.' });
+        calcSubItems.push({ label: 'Gestionar Plataformas', href: '/admin/calculator/platforms', icon: icons.box, description: 'Administra divisa y porcentaje' });
       }
       calcSubItems.push(
-        { label: 'Configurar Calculadora', href: '/admin/calculator/config', icon: icons.settings, description: 'Configura parámetros del sistema' },
-        { label: 'Ver Calculadora Modelo', href: '/admin/calculator/view-model', icon: icons.eye, description: 'Vista de la calculadora para modelos' },
-        { label: 'Ver Historial Modelo', href: '/admin/calculator/historial-modelo', icon: icons.history, description: 'Historial de facturación por modelo' }
+        { label: 'Setup Modelos', href: '/admin/calculator/config', icon: icons.settings, description: 'Parámetros del sistema' },
+        { label: 'Consultar Calculadora', href: '/admin/calculator/view-model', icon: icons.eye, description: 'Calculadora en vivo' },
+        { label: 'Histórico Modelos', href: '/admin/calculator/historial-modelo', icon: icons.history, description: 'Historial de facturación' }
       );
       baseItems[calculatorIndex].subItems = calcSubItems;
     }
@@ -230,7 +230,7 @@ export function buildMenuItems(userRole: UserRole): MenuItem[] {
       label: 'Gestión Usuarios',
       href: '#',
       subItems: [
-        { label: 'Crear Usuario', href: '/admin/users/create', icon: icons.add, description: 'Registra nuevos usuarios en tu estudio' },
+        { label: 'Crear Usuario', href: '/admin/users/create', icon: icons.add, description: 'Registra nuevos usuarios' },
         { label: 'Consultar Usuarios', href: '/admin/users', icon: icons.users, description: 'Administra usuarios de tu estudio' }
       ]
     });
@@ -242,7 +242,7 @@ export function buildMenuItems(userRole: UserRole): MenuItem[] {
       href: '#',
       subItems: [
         { label: 'Solicitudes Pendientes', href: '/admin/anticipos/pending', icon: icons.clock, description: 'Revisa solicitudes de anticipos' },
-        { label: 'Gestión Ahorros', href: '/admin/finanzas/ahorros', icon: icons.money, description: 'Gestiona solicitudes de ahorro y retiros' }
+        { label: 'Gestión Ahorros', href: '/admin/finanzas/ahorros', icon: icons.money, description: 'Ahorros y retiros de tu estudio' }
       ]
     });
 
@@ -254,7 +254,7 @@ export function buildMenuItems(userRole: UserRole): MenuItem[] {
       subItems: [
         { label: 'Gestionar Sedes', href: '/admin/sedes/gestionar', icon: icons.building, description: 'Administra sedes de tu estudio' },
         { label: 'Portafolio Modelos', href: '/admin/sedes/portafolio', icon: icons.person, description: 'Gestiona portafolios de tu estudio' },
-        { label: 'Dashboard Sedes', href: '/admin/sedes/dashboard', icon: icons.chart, description: 'Vista general de las sedes de tu estudio' }
+        { label: 'Dashboard Sedes', href: '/admin/sedes/dashboard', icon: icons.chart, description: 'Vista general de tus sedes' }
       ]
     });
 
@@ -263,9 +263,9 @@ export function buildMenuItems(userRole: UserRole): MenuItem[] {
     if (calculatorIndex !== -1) {
       baseItems[calculatorIndex].label = 'Gestión Calculadora';
       baseItems[calculatorIndex].subItems = [
-        { label: 'Configurar Calculadora', href: '/admin/calculator/config', icon: icons.settings, description: 'Configura parámetros de tu estudio' },
-        { label: 'Ver Calculadora Modelo', href: '/admin/calculator/view-model', icon: icons.eye, description: 'Vista de la calculadora para modelos' },
-        { label: 'Ver Historial Modelo', href: '/admin/calculator/historial-modelo', icon: icons.history, description: 'Historial de facturación por modelo' }
+        { label: 'Setup Modelos', href: '/admin/calculator/config', icon: icons.settings, description: 'Parámetros de tu estudio' },
+        { label: 'Consultar Calculadora', href: '/admin/calculator/view-model', icon: icons.eye, description: 'Calculadora en vivo' },
+        { label: 'Histórico Modelos', href: '/admin/calculator/historial-modelo', icon: icons.history, description: 'Historial de facturación' }
       ];
     }
   }

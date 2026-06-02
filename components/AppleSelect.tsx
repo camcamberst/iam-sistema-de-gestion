@@ -242,7 +242,7 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
     >
       {label && <div className="text-gray-500 dark:text-gray-400 text-xs font-medium mb-1">{label}</div>}
       <div
-        className="apple-input cursor-pointer flex items-center justify-between touch-manipulation active:scale-[0.98]"
+        className="apple-input cursor-pointer flex items-center justify-between touch-manipulation active:scale-[0.98] group/select"
         onFocus={handleFocus}
         onBlur={handleBlur}
         onMouseDown={(e) => {
@@ -291,19 +291,39 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
           setTouchHandled(false);
         }}
       >
-        <span className="truncate text-[0.9rem]">
-          {selected ? selected.label : (value === '' ? 'Todos' : placeholder)}
+        <span className="truncate text-[0.9rem] flex-1 text-left text-gray-800 dark:text-gray-200">
+          {selected ? selected.label : placeholder}
         </span>
-        <svg 
-          className={`w-4 h-4 text-gray-400 dark:text-gray-500 transition-transform duration-200 ${
-            open ? 'rotate-180' : ''
-          }`}
-          fill="none" 
-          stroke="currentColor" 
-          viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
+        <div className="flex items-center space-x-1.5 flex-shrink-0 ml-2">
+          {value !== '' && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                onChange('');
+                setOpen(false);
+              }}
+              className="p-1 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-black/5 dark:hover:bg-white/10 active:scale-90 transition-all duration-200"
+              title="Limpiar"
+              aria-label="Limpiar"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
+          <svg 
+            className={`w-4 h-4 text-gray-400 dark:text-gray-500 transition-transform duration-200 ${
+              open ? 'rotate-180' : ''
+            }`}
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
       </div>
       {open && (
         <div 

@@ -14,7 +14,7 @@ interface BoostPagesModalProps {
   userId: string; // ID del usuario autenticado (admin)
 }
 
-type PlatformKey = 'mondo' | 'big7' | 'vxmodels' | 'd2pass' | 'modelka' | 'universal';
+type PlatformKey = 'mondo' | 'big7' | 'vxmodels' | 'd2pass' | 'modelka' | 'livecreator' | 'universal';
 
 interface AutoUploadModel {
   id: string;
@@ -174,11 +174,9 @@ export default function BoostPagesModal({
             setError(`Se encontró "${username}" en AutoUpload pero no tiene Google Drive Folder ID configurado.`);
           } else {
             setFolderId(null);
-            setError(
-              list.length === 0
-                ? 'AutoUpload no devolvió modelos. Verifica que el servicio esté activo.'
-                : `No se encontró "${username}" en AutoUpload (${list.length} modelos disponibles). Verifica que el username coincida.`
-            );
+            if (list.length === 0) {
+              setError('AutoUpload no devolvió modelos. Verifica que el servicio esté activo.');
+            }
           }
         }
       } catch (e: any) {
@@ -388,56 +386,64 @@ export default function BoostPagesModal({
       maxWidthClass="max-w-3xl"
       paddingClass="p-6"
     >
-      <div className="space-y-4">
+      <div className="space-y-5">
         {/* Información del modelo */}
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <h3 className="font-semibold text-gray-900 dark:text-gray-100">{modelName}</h3>
-              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">{modelEmail}</p>
-              <p className="mt-1 text-[11px] sm:text-xs text-gray-600 dark:text-gray-300">
+        <div className="relative overflow-hidden bg-white/5 dark:bg-white/[0.02] backdrop-blur-md rounded-2xl p-5 border border-white/10 dark:border-white/[0.05] shadow-[0_8px_32px_rgba(0,0,0,0.12)]">
+          {/* Sutil glow de fondo de tarjeta */}
+          <div className="absolute -top-10 -right-10 w-24 h-24 bg-gradient-to-br from-cyan-500/10 to-fuchsia-500/10 rounded-full blur-2xl pointer-events-none" />
+          
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <h3 className="text-base font-bold text-gray-900 dark:text-white tracking-wide">{modelName}</h3>
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                  Modelo activa
+                </span>
+              </div>
+              <p className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">{modelEmail}</p>
+              <p className="text-[11px] sm:text-xs text-gray-400/90 dark:text-gray-400 leading-relaxed pt-1">
                 Las fotos se enviarán al sistema de AutoUpload usando la carpeta Drive configurada para esta modelo.
               </p>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center shadow-md">
-                <Upload className="w-4 h-4 sm:w-5 h-5 text-white" />
-              </div>
-              <div className="hidden sm:flex flex-col text-right">
-                <span className="text-[11px] text-gray-500 dark:text-gray-400">Integración</span>
-                <span className="text-xs font-semibold text-gray-800 dark:text-gray-100 flex items-center justify-end gap-1">
-                  <Globe2 className="w-3 h-3" /> AutoUpload
-                </span>
+            
+            <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-2 pt-3 sm:pt-0 border-t border-white/5 sm:border-0">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] uppercase tracking-wider text-gray-400 dark:text-gray-500 font-semibold hidden sm:inline">Integración</span>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white/5 dark:bg-white/[0.04] text-gray-200 border border-white/10">
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                  <Globe2 className="w-3.5 h-3.5 text-cyan-400" /> 
+                  AutoUpload
+                </div>
               </div>
             </div>
           </div>
         </div>
 
         {/* Estado de carpeta / modelo en AutoUpload */}
-        <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3 text-xs sm:text-sm">
+        <div className="rounded-2xl border border-white/10 dark:border-white/[0.05] bg-white/5 dark:bg-white/[0.02] p-4 text-xs sm:text-sm backdrop-blur-md shadow-sm">
           {loadingModels ? (
-            <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
-              <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Conectando con AutoUpload y buscando la modelo...</span>
+            <div className="flex items-center gap-3 text-gray-400 dark:text-gray-300">
+              <Loader2 className="w-4 h-4 animate-spin text-cyan-400" />
+              <span className="font-medium tracking-wide">Conectando con AutoUpload y buscando la modelo...</span>
             </div>
           ) : folderId ? (
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-300">
-                <CheckCircle className="w-4 h-4" />
-                <span>
-                  Carpeta de AutoUpload encontrada para <strong>{modelName}</strong>.
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2.5 text-emerald-400">
+                <CheckCircle className="w-4 h-4 shrink-0 text-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.2)]" />
+                <span className="font-medium">
+                  Carpeta de AutoUpload encontrada para <strong className="text-white font-semibold">{modelName}</strong>.
                 </span>
               </div>
-              <span className="hidden sm:inline text-[11px] text-gray-500 dark:text-gray-400 truncate max-w-xs">
-                Folder ID: {folderId}
+              <span className="hidden md:inline-block text-[10px] tracking-wider text-gray-500 font-mono bg-black/25 px-2 py-0.5 rounded border border-white/5 max-w-xs truncate">
+                ID: {folderId}
               </span>
             </div>
           ) : (
             <div className="space-y-3">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300">
-                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                  <span>
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5 text-rose-400">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0 text-rose-400" />
+                  <span className="font-medium">
                     No se encontró &quot;{modelEmail.split('@')[0]}&quot; en AutoUpload.
                   </span>
                 </div>
@@ -445,9 +451,9 @@ export default function BoostPagesModal({
                   <button
                     type="button"
                     onClick={() => setShowCreateForm(true)}
-                    className="text-[11px] px-3 py-1 rounded-md bg-purple-600 text-white font-medium hover:bg-purple-700 transition-colors whitespace-nowrap"
+                    className="text-xs px-4 py-1.5 rounded-full bg-gradient-to-r from-purple-600 to-pink-500 text-white font-semibold hover:opacity-90 active:scale-95 transition-all shadow-md shadow-purple-500/20 whitespace-nowrap"
                   >
-                    + Crear en AutoUpload
+                    Crear en AutoUpload
                   </button>
                 )}
               </div>
@@ -469,15 +475,16 @@ export default function BoostPagesModal({
           )}
         </div>
 
-        {/* Selección de plataformas (multi-select) */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
+        {/* Selección de plataformas (multi-select en chips de píldora) */}
+        <div className="flex flex-wrap gap-2 text-xs py-1 justify-center sm:justify-start">
           {[
             { key: 'universal' as PlatformKey, label: 'Todas (universal)' },
             { key: 'mondo' as PlatformKey, label: 'Mondo' },
             { key: 'big7' as PlatformKey, label: 'Big7' },
             { key: 'vxmodels' as PlatformKey, label: 'VXModels' },
-            { key: 'd2pass' as PlatformKey, label: 'D2Pass/DXLive' },
-            { key: 'modelka' as PlatformKey, label: 'Modelka' }
+            { key: 'd2pass' as PlatformKey, label: 'D2Pass / DXLive' },
+            { key: 'modelka' as PlatformKey, label: 'Modelka' },
+            { key: 'livecreator' as PlatformKey, label: 'LiveCreator' }
           ].map((p) => {
             const isSelected = selectedPlatforms.has(p.key);
             return (
@@ -501,19 +508,15 @@ export default function BoostPagesModal({
                     return next;
                   });
                 }}
-                className={`px-2 py-1.5 rounded-md border text-xs flex items-center justify-center gap-1.5 transition-colors ${
+                className={`px-4 py-1.5 rounded-full border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all duration-300 active:scale-95 ${
                   isSelected
-                    ? 'border-purple-500 bg-purple-50 text-purple-700 dark:border-purple-400 dark:bg-purple-900/30 dark:text-purple-100'
-                    : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200'
+                    ? 'bg-gradient-to-r from-cyan-500/20 to-fuchsia-500/20 border-cyan-500/40 text-white shadow-[0_0_15px_rgba(34,211,238,0.15)] scale-102'
+                    : 'bg-white/5 dark:bg-white/[0.02] border-white/10 dark:border-white/[0.05] text-gray-400 hover:bg-white/10 hover:text-gray-200'
                 }`}
               >
-                <span className={`w-3.5 h-3.5 rounded border flex items-center justify-center flex-shrink-0 ${
-                  isSelected
-                    ? 'bg-purple-500 border-purple-500 text-white'
-                    : 'border-gray-400 dark:border-gray-500'
-                }`}>
-                  {isSelected && <span className="text-[9px] leading-none">✓</span>}
-                </span>
+                {isSelected && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shrink-0" />
+                )}
                 <span className="truncate">{p.label}</span>
               </button>
             );
@@ -522,10 +525,10 @@ export default function BoostPagesModal({
 
         {/* Zona de selección / drag & drop */}
         <div
-          className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+          className={`border-2 border-dashed rounded-2xl p-8 text-center transition-all duration-300 ${
             dragging
-              ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
-              : 'border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/60'
+              ? 'border-cyan-500 bg-cyan-500/5 dark:bg-cyan-950/20 shadow-[0_0_20px_rgba(6,182,212,0.1)]'
+              : 'border-white/10 dark:border-white/[0.05] bg-white/[0.01] hover:bg-white/[0.02]'
           }`}
           onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setDragging(true); }}
           onDragEnter={(e) => { e.preventDefault(); e.stopPropagation(); setDragging(true); }}
@@ -554,11 +557,16 @@ export default function BoostPagesModal({
               uploading ? 'opacity-50 pointer-events-none' : ''
             }`}
           >
-            <Upload className={`w-10 h-10 mb-3 transition-colors ${dragging ? 'text-purple-500' : 'text-gray-400'}`} />
-            <span className="text-sm font-medium text-gray-800 dark:text-gray-100">
+            <div className="relative mb-4">
+              <div className={`absolute inset-0 bg-gradient-to-tr from-cyan-500 to-fuchsia-500 rounded-full blur-md opacity-25 transition-all duration-500 scale-110 ${dragging ? 'opacity-50 scale-125' : ''}`} />
+              <div className="w-12 h-12 bg-white/5 dark:bg-white/[0.03] border border-white/10 rounded-2xl flex items-center justify-center shadow-lg relative z-10">
+                <Upload className={`w-5 h-5 transition-colors duration-300 ${dragging ? 'text-cyan-400' : 'text-gray-400'}`} />
+              </div>
+            </div>
+            <span className="text-sm font-semibold tracking-wide text-gray-800 dark:text-gray-100">
               {uploading ? 'Subiendo archivos...' : dragging ? 'Suelta las imágenes aquí' : 'Arrastra imágenes aquí o haz clic para seleccionar'}
             </span>
-            <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            <span className="text-xs text-gray-500 dark:text-gray-400 mt-1.5 max-w-md mx-auto leading-relaxed">
               Formatos soportados: JPG, PNG, GIF, WebP (máx. 8MB por archivo)
             </span>
           </label>
@@ -566,41 +574,43 @@ export default function BoostPagesModal({
 
         {/* Lista de archivos seleccionados */}
         {selectedFiles.length > 0 && (
-          <div className="space-y-2 max-h-48 overflow-y-auto">
-            <h4 className="text-xs sm:text-sm font-medium text-gray-800 dark:text-gray-100">
+          <div className="space-y-2.5 max-h-48 overflow-y-auto pr-1">
+            <h4 className="text-xs sm:text-sm font-semibold text-gray-800 dark:text-gray-200 tracking-wide pl-1">
               Archivos seleccionados ({selectedFiles.length})
             </h4>
-            {selectedFiles.map((file) => (
-              <div
-                key={file.name}
-                className="flex items-center justify-between p-2 rounded-lg bg-gray-50 dark:bg-gray-800 text-xs"
-              >
-                <div className="flex items-center gap-2 flex-1 min-w-0">
-                  {uploadStatus[file.name] === 'success' ? (
-                    <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
-                  ) : uploadStatus[file.name] === 'error' ? (
-                    <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
-                  ) : uploadStatus[file.name] === 'uploading' ? (
-                    <Loader2 className="w-4 h-4 animate-spin text-blue-500 flex-shrink-0" />
-                  ) : (
-                    <Image className="w-4 h-4 text-gray-400 flex-shrink-0" />
+            <div className="space-y-1.5">
+              {selectedFiles.map((file) => (
+                <div
+                  key={file.name}
+                  className="flex items-center justify-between p-2.5 rounded-xl bg-white/5 dark:bg-white/[0.02] border border-white/5 text-xs transition-colors hover:bg-white/10"
+                >
+                  <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                    {uploadStatus[file.name] === 'success' ? (
+                      <CheckCircle className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                    ) : uploadStatus[file.name] === 'error' ? (
+                      <AlertCircle className="w-4 h-4 text-rose-500 flex-shrink-0" />
+                    ) : uploadStatus[file.name] === 'uploading' ? (
+                      <Loader2 className="w-4 h-4 animate-spin text-cyan-400 flex-shrink-0" />
+                    ) : (
+                      <Image className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                    )}
+                    <span className="truncate font-medium text-gray-800 dark:text-gray-200">{file.name}</span>
+                    <span className="ml-2 text-[10px] text-gray-500 font-mono">
+                      {(file.size / 1024 / 1024).toFixed(2)} MB
+                    </span>
+                  </div>
+                  {uploadStatus[file.name] !== 'uploading' && (
+                    <button
+                      type="button"
+                      onClick={() => removeFile(file.name)}
+                      className="ml-2 text-gray-400 hover:text-rose-500 text-lg leading-none transition-colors px-1"
+                    >
+                      ×
+                    </button>
                   )}
-                  <span className="truncate text-gray-800 dark:text-gray-100">{file.name}</span>
-                  <span className="ml-2 text-[11px] text-gray-500 dark:text-gray-400">
-                    {(file.size / 1024 / 1024).toFixed(2)} MB
-                  </span>
                 </div>
-                {uploadStatus[file.name] !== 'uploading' && (
-                  <button
-                    type="button"
-                    onClick={() => removeFile(file.name)}
-                    className="ml-2 text-gray-400 hover:text-red-500"
-                  >
-                    ×
-                  </button>
-                )}
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         )}
 
@@ -610,7 +620,7 @@ export default function BoostPagesModal({
             type="button"
             onClick={uploadFiles}
             disabled={uploading || !folderId || selectedPlatforms.size === 0}
-            className="w-full px-4 py-2.5 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-semibold flex items-center justify-center gap-2 shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-full h-9 rounded-full bg-gradient-to-r from-cyan-600 to-fuchsia-600 hover:from-cyan-500 hover:to-fuchsia-500 text-white text-xs font-bold flex items-center justify-center gap-2 shadow-md shadow-cyan-500/20 dark:shadow-[0_0_15px_rgba(34,211,238,0.3)] hover:shadow-lg hover:shadow-fuchsia-500/30 transition-all active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:from-cyan-600 disabled:hover:to-fuchsia-600 disabled:shadow-none"
           >
             {uploading ? (
               <>
@@ -619,8 +629,8 @@ export default function BoostPagesModal({
               </>
             ) : (
               <>
-                <Upload className="w-4 h-4" />
-                Enviar {selectedFiles.length} archivo(s) a {selectedPlatforms.has('universal') ? 'todas las plataformas' : `${selectedPlatforms.size} plataforma(s)`}
+                <Upload className="w-3.5 h-3.5" />
+                Enviar {selectedFiles.length} {selectedFiles.length === 1 ? 'archivo' : 'archivos'} a {selectedPlatforms.has('universal') ? 'todas las plataformas' : `${selectedPlatforms.size} ${selectedPlatforms.size === 1 ? 'plataforma' : 'plataformas'}`}
               </>
             )}
           </button>
@@ -628,22 +638,18 @@ export default function BoostPagesModal({
 
         {/* Mensajes de estado */}
         {error && (
-          <div className="flex items-center gap-2 rounded-md border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 px-3 py-2 text-xs text-red-700 dark:text-red-300">
-            <AlertCircle className="w-4 h-4" />
-            <span>{error}</span>
+          <div className="flex items-center gap-2 rounded-xl border border-red-200/30 dark:border-red-800/30 bg-red-50/5 dark:bg-red-950/20 px-3 py-2.5 text-xs text-red-700 dark:text-red-300">
+            <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
+            <span className="font-medium">{error}</span>
           </div>
         )}
 
-        {debugInfo && (
-          <div className="rounded-md border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 px-3 py-2 text-[10px] font-mono text-gray-600 dark:text-gray-400 break-all">
-            🔍 {debugInfo}
-          </div>
-        )}
+
 
         {success && (
-          <div className="flex items-center gap-2 rounded-md border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-2 text-xs text-emerald-700 dark:text-emerald-300">
-            <CheckCircle className="w-4 h-4" />
-            <span>{success}</span>
+          <div className="flex items-center gap-2 rounded-xl border border-emerald-200/30 dark:border-emerald-800/30 bg-emerald-50/5 dark:bg-emerald-950/20 px-3 py-2.5 text-xs text-emerald-700 dark:text-emerald-300">
+            <CheckCircle className="w-4 h-4 shrink-0 text-emerald-400" />
+            <span className="font-medium">{success}</span>
           </div>
         )}
       </div>
@@ -656,7 +662,8 @@ const PLATFORM_LABELS: Record<string, string> = {
   big7: 'Big7',
   vxmodels: 'VXModels',
   d2pass: 'D2Pass / DXLive',
-  modelka: 'Modelka'
+  modelka: 'Modelka',
+  livecreator: 'LiveCreator'
 };
 
 function CreateModelForm({
@@ -680,7 +687,7 @@ function CreateModelForm({
   onCreate: () => void;
   error: string;
 }) {
-  const platforms = ['mondo', 'big7', 'vxmodels', 'd2pass', 'modelka'] as const;
+  const platforms = ['mondo', 'big7', 'vxmodels', 'd2pass', 'modelka', 'livecreator'] as const;
   const filledCount = platforms.filter(p => {
     const a = platformAccounts[p];
     return a?.nickname?.trim() && a?.password?.trim();
@@ -688,7 +695,7 @@ function CreateModelForm({
 
   return (
     <div
-      className="mt-2 rounded-xl border border-purple-400/50 dark:border-purple-600/50 bg-gradient-to-b from-purple-50 to-white dark:from-purple-950/30 dark:to-gray-900 p-5 space-y-4"
+      className="mt-2 rounded-2xl border border-white/10 dark:border-white/[0.05] bg-white/5 dark:bg-white/[0.01] backdrop-blur-md p-5 space-y-4 shadow-lg relative overflow-hidden"
       onKeyDown={(e) => {
         if (e.key === 'Backspace' || e.key === 'Delete') {
           e.stopPropagation();
@@ -697,7 +704,7 @@ function CreateModelForm({
     >
       <div className="flex items-center justify-between">
         <div>
-          <h4 className="text-sm font-bold text-purple-800 dark:text-purple-200">
+          <h4 className="text-sm font-bold text-purple-400 dark:text-purple-300">
             Registrar &quot;{username}&quot; en AutoUpload
           </h4>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
@@ -707,7 +714,7 @@ function CreateModelForm({
         <button
           type="button"
           onClick={onCancel}
-          className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 transition-colors"
         >
           Cancelar
         </button>
@@ -718,49 +725,51 @@ function CreateModelForm({
         <table className="w-full text-sm">
           <thead>
             <tr className="text-left">
-              <th className="text-xs font-semibold text-gray-500 dark:text-gray-400 pb-2 pr-3 w-28">Plataforma</th>
-              <th className="text-xs font-semibold text-gray-500 dark:text-gray-400 pb-2 px-2">Usuario</th>
-              <th className="text-xs font-semibold text-gray-500 dark:text-gray-400 pb-2 pl-2">Contraseña</th>
+              <th className="text-xs font-semibold text-gray-400 pb-2 pr-3 w-28">Plataforma</th>
+              <th className="text-xs font-semibold text-gray-400 pb-2 px-2">Usuario / Email</th>
+              <th className="text-xs font-semibold text-gray-400 pb-2 pl-2">Contraseña</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+          <tbody className="divide-y divide-white/5">
             {platforms.map((p) => {
               const acc = platformAccounts[p] || { nickname: '', password: '' };
               const isActive = !!(acc.nickname || acc.password);
               const pwVisible = showPasswords[p] ?? false;
 
               return (
-                <tr key={p} className={`transition-colors ${isActive ? 'bg-purple-50/50 dark:bg-purple-900/10' : ''}`}>
+                <tr key={p} className={`transition-colors ${isActive ? 'bg-purple-500/5' : ''}`}>
                   <td className="py-2.5 pr-3">
-                    <span className={`text-xs font-semibold ${isActive ? 'text-purple-700 dark:text-purple-300' : 'text-gray-500 dark:text-gray-400'}`}>
+                    <span className={`text-xs font-semibold ${isActive ? 'text-purple-400' : 'text-gray-400'}`}>
                       {PLATFORM_LABELS[p]}
                     </span>
                   </td>
                   <td className="py-2.5 px-2">
                     <input
-                      type="text"
-                      placeholder="usuario"
+                      type={p === 'livecreator' ? "email" : "text"}
+                      placeholder={p === 'livecreator' ? "Email" : "Usuario"}
                       value={acc.nickname}
                       onChange={(e) => setPlatformAccounts((prev) => ({ ...prev, [p]: { ...acc, nickname: e.target.value } }))}
-                      className="w-full text-sm px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-purple-400 focus:border-transparent outline-none transition-shadow"
+                      autoComplete="new-password"
+                      className="w-full text-xs px-3 h-8 rounded-xl border border-white/10 dark:border-white/5 bg-white/5 dark:bg-black/25 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:border-purple-500/40 focus:ring-1 focus:ring-purple-500/30 outline-none transition-all"
                     />
                   </td>
                   <td className="py-2.5 pl-2">
                     <div className="relative">
                       <input
                         type={pwVisible ? 'text' : 'password'}
-                        placeholder="contraseña"
+                        placeholder="Contraseña"
                         value={acc.password}
                         onChange={(e) => setPlatformAccounts((prev) => ({ ...prev, [p]: { ...acc, password: e.target.value } }))}
-                        className="w-full text-sm px-3 py-2 pr-9 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-purple-400 focus:border-transparent outline-none transition-shadow"
+                        autoComplete="new-password"
+                        className="w-full text-xs px-3 h-8 pr-9 rounded-xl border border-white/10 dark:border-white/5 bg-white/5 dark:bg-black/25 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:border-purple-500/40 focus:ring-1 focus:ring-purple-500/30 outline-none transition-all"
                       />
                       <button
                         type="button"
                         tabIndex={-1}
                         onClick={() => setShowPasswords((prev) => ({ ...prev, [p]: !pwVisible }))}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200"
                       >
-                        {pwVisible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        {pwVisible ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                       </button>
                     </div>
                   </td>
@@ -772,24 +781,24 @@ function CreateModelForm({
       </div>
 
       {error && (
-        <div className="flex items-center gap-2 text-xs text-red-600 dark:text-red-400">
-          <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+        <div className="flex items-center gap-2 text-xs text-red-400">
+          <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 text-red-400" />
           <span>{error}</span>
         </div>
       )}
 
       <div className="flex items-center justify-between pt-1">
-        <span className="text-xs text-gray-500 dark:text-gray-400">
+        <span className="text-xs text-gray-400">
           {filledCount === 0 ? 'Sin plataformas configuradas' : `${filledCount} plataforma(s) lista(s)`}
         </span>
         <button
           type="button"
           onClick={onCreate}
           disabled={creating || filledCount === 0}
-          className="px-5 py-2.5 rounded-lg bg-gradient-to-r from-purple-600 to-pink-500 text-white text-sm font-semibold flex items-center gap-2 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          className="h-9 px-5 rounded-full bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-500 hover:to-pink-400 text-white text-xs font-bold flex items-center gap-2 shadow-md shadow-purple-500/20 hover:shadow-lg transition-all active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {creating ? (
-            <><Loader2 className="w-4 h-4 animate-spin" /> Creando...</>
+            <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Creando...</>
           ) : (
             <>Crear modelo en AutoUpload</>
           )}

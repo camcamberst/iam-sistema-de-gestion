@@ -84,13 +84,13 @@ html.dark {
     @apply w-full px-3 py-2 text-sm text-left border border-black/[0.06] dark:border-white/[0.08] rounded-xl bg-black/[0.04] dark:bg-white/[0.06] backdrop-blur-xl text-gray-900 dark:text-gray-100 hover:border-black/10 dark:hover:border-white/[0.15] hover:bg-black/[0.06] dark:hover:bg-white/[0.08] focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 focus:bg-white dark:focus:bg-[#1a1a1c] shadow-[0_4px_12px_rgba(0,0,0,0.02)] transition-all duration-200 focus:outline-none;
   }
 
-  /* Ocultar flechas nativas en inputs numéricos */
-  .apple-input[type="number"]::-webkit-inner-spin-button,
-  .apple-input[type="number"]::-webkit-outer-spin-button {
+  /* Ocultar flechas nativas en inputs numéricos de forma global */
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
     -webkit-appearance: none;
     margin: 0;
   }
-  .apple-input[type="number"] {
+  input[type="number"] {
     -moz-appearance: textfield;
   }
 
@@ -174,6 +174,26 @@ html.dark {
   }
   
   .btn-apple-primary:hover::before {
+    content: '';
+    position: absolute;
+    inset: -50%;
+    background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 60%);
+    animation: aurora-flow 1.5s ease-in-out infinite alternate;
+    pointer-events: none;
+  }
+
+  /* 🍏 Botón Primario Apple Style 2 Emerald (Glow Animado) */
+  .btn-apple-emerald {
+    @apply relative overflow-hidden bg-emerald-500 text-white
+           py-2 px-5 rounded-full font-bold text-sm tracking-wide
+           hover:bg-emerald-600
+           transition-all duration-300
+           focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900
+           shadow-md shadow-emerald-500/30 dark:shadow-[0_0_15px_rgba(16,185,129,0.5)]
+           hover:shadow-lg hover:shadow-emerald-500/40 transform hover:-translate-y-0.5 active:scale-[0.98];
+  }
+  
+  .btn-apple-emerald:hover::before {
     content: '';
     position: absolute;
     inset: -50%;
@@ -518,12 +538,233 @@ html.dark {
   animation: blip-out 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
+/* =====================================================
+   📝 PREMIUM GLASSMORPHIC RICH TEXT EDITOR (QUILL) OVERRIDES
+   ===================================================== */
+.rich-text-editor {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
 
+/* 1. Solución definitiva de fuga en esquinas mediante redondeado explícito del hijo */
+.rich-text-editor .ql-toolbar.ql-snow {
+  border: none !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important;
+  background-color: rgba(249, 250, 251, 0.75) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  border-top-left-radius: 0.95rem !important;
+  border-top-right-radius: 0.95rem !important;
+  padding: 10px 14px !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
 
+.dark .rich-text-editor .ql-toolbar.ql-snow {
+  border-bottom-color: rgba(255, 255, 255, 0.06) !important;
+  background-color: rgba(26, 26, 28, 0.75) !important;
+}
 
+.rich-text-editor .ql-container.ql-snow {
+  border: none !important;
+  background-color: #ffffff !important;
+  border-bottom-left-radius: 0.95rem !important;
+  border-bottom-right-radius: 0.95rem !important;
+  font-family: inherit !important;
+  font-size: 14px !important;
+  color: #1f2937 !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
 
+.dark .rich-text-editor .ql-container.ql-snow {
+  background-color: rgba(20, 20, 22, 0.7) !important;
+  color: #f3f4f6 !important;
+}
 
+/* 2. Área de escritura interna y espaciados */
+.rich-text-editor .ql-editor {
+  min-height: 300px !important;
+  padding: 16px 20px !important;
+  line-height: 1.6 !important;
+}
 
+.rich-text-editor .ql-editor.ql-blank::before {
+  color: #9ca3af !important;
+  font-style: normal !important;
+  left: 20px !important;
+}
 
+.dark .rich-text-editor .ql-editor.ql-blank::before {
+  color: #52525b !important;
+}
 
+/* 3. Estilización de los Iconos de Formato (Glow e Interacción Esmeralda) */
+.rich-text-editor .ql-stroke {
+  stroke: #4b5563 !important;
+  stroke-width: 2px !important;
+  transition: stroke 0.2s ease, filter 0.2s ease !important;
+}
 
+.dark .rich-text-editor .ql-stroke {
+  stroke: #a1a1aa !important;
+}
+
+.rich-text-editor .ql-fill {
+  fill: #4b5563 !important;
+  transition: fill 0.2s ease, filter 0.2s ease !important;
+}
+
+.dark .rich-text-editor .ql-fill {
+  fill: #a1a1aa !important;
+}
+
+/* Hover e interacciones en botones individuales de la barra */
+.rich-text-editor .ql-snow.ql-toolbar button:hover .ql-stroke,
+.rich-text-editor .ql-snow.ql-toolbar button.ql-active .ql-stroke {
+  stroke: #10b981 !important;
+  filter: drop-shadow(0 0 4px rgba(16, 185, 129, 0.6)) !important;
+}
+
+.dark .rich-text-editor .ql-snow.ql-toolbar button:hover .ql-stroke,
+.dark .rich-text-editor .ql-snow.ql-toolbar button.ql-active .ql-stroke {
+  stroke: #34d399 !important;
+  filter: drop-shadow(0 0 6px rgba(52, 211, 153, 0.8)) !important;
+}
+
+.rich-text-editor .ql-snow.ql-toolbar button:hover .ql-fill,
+.rich-text-editor .ql-snow.ql-toolbar button.ql-active .ql-fill {
+  fill: #10b981 !important;
+  filter: drop-shadow(0 0 4px rgba(16, 185, 129, 0.6)) !important;
+}
+
+.dark .rich-text-editor .ql-snow.ql-toolbar button:hover .ql-fill,
+.dark .rich-text-editor .ql-snow.ql-toolbar button.ql-active .ql-fill {
+  fill: #34d399 !important;
+  filter: drop-shadow(0 0 6px rgba(52, 211, 153, 0.8)) !important;
+}
+
+/* Botón activo/hover scale y sombra */
+.rich-text-editor .ql-snow.ql-toolbar button {
+  transition: transform 0.2s ease !important;
+  border-radius: 6px !important;
+}
+
+.rich-text-editor .ql-snow.ql-toolbar button:hover {
+  background-color: rgba(16, 185, 129, 0.08) !important;
+  transform: scale(1.1) !important;
+}
+
+.dark .rich-text-editor .ql-snow.ql-toolbar button:hover {
+  background-color: rgba(52, 211, 153, 0.08) !important;
+}
+
+/* 4. Dropdowns Premium estilo Apple (Pickers) */
+.rich-text-editor .ql-picker-label {
+  color: #4b5563 !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  border-radius: 6px !important;
+  transition: all 0.2s ease !important;
+  border: 1px solid transparent !important;
+}
+
+.dark .rich-text-editor .ql-picker-label {
+  color: #d1d5db !important;
+}
+
+.rich-text-editor .ql-picker-label:hover,
+.rich-text-editor .ql-picker.ql-expanded .ql-picker-label {
+  color: #10b981 !important;
+  background-color: rgba(16, 185, 129, 0.08) !important;
+  border-color: rgba(16, 185, 129, 0.15) !important;
+}
+
+.dark .rich-text-editor .ql-picker-label:hover,
+.dark .rich-text-editor .ql-picker.ql-expanded .ql-picker-label {
+  color: #34d399 !important;
+  background-color: rgba(52, 211, 153, 0.08) !important;
+  border-color: rgba(52, 211, 153, 0.15) !important;
+}
+
+.rich-text-editor .ql-picker-label .ql-stroke {
+  stroke: #4b5563 !important;
+}
+
+.dark .rich-text-editor .ql-picker-label .ql-stroke {
+  stroke: #a1a1aa !important;
+}
+
+.rich-text-editor .ql-picker-label:hover .ql-stroke,
+.rich-text-editor .ql-picker.ql-expanded .ql-picker-label .ql-stroke {
+  stroke: #10b981 !important;
+}
+
+.dark .rich-text-editor .ql-picker-label:hover .ql-stroke,
+.dark .rich-text-editor .ql-picker.ql-expanded .ql-picker-label .ql-stroke {
+  stroke: #34d399 !important;
+}
+
+/* 5. Apple Style Popover para las Opciones de los Pickers */
+.rich-text-editor .ql-picker-options {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05) !important;
+  padding: 6px !important;
+  animation: scale-up 0.15s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+.dark .rich-text-editor .ql-picker-options {
+  background-color: rgba(30, 30, 32, 0.95) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5) !important;
+}
+
+.rich-text-editor .ql-picker-item {
+  color: #4b5563 !important;
+  font-weight: 500 !important;
+  padding: 6px 10px !important;
+  border-radius: 8px !important;
+  transition: all 0.2s ease !important;
+}
+
+.dark .rich-text-editor .ql-picker-item {
+  color: #a1a1aa !important;
+}
+
+.rich-text-editor .ql-picker-item:hover,
+.rich-text-editor .ql-picker-item.ql-selected {
+  color: #10b981 !important;
+  background-color: rgba(16, 185, 129, 0.08) !important;
+}
+
+.dark .rich-text-editor .ql-picker-item:hover,
+.dark .rich-text-editor .ql-picker-item.ql-selected {
+  color: #34d399 !important;
+  background-color: rgba(52, 211, 153, 0.08) !important;
+}
+
+/* 6. Enfoque e imágenes */
+.rich-text-editor:focus-within {
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25) !important;
+  border-color: rgba(16, 185, 129, 0.4) !important;
+}
+
+.dark .rich-text-editor:focus-within {
+  box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.2) !important;
+  border-color: rgba(52, 211, 153, 0.4) !important;
+}
+
+.rich-text-editor .ql-editor img {
+  max-width: 100% !important;
+  height: auto !important;
+  border-radius: 12px !important;
+  margin: 16px 0 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+  border: 1px solid rgba(0, 0, 0, 0.05) !important;
+}
+
+.dark .rich-text-editor .ql-editor img {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3) !important;
+  border-color: rgba(255, 255, 255, 0.05) !important;
+}

@@ -76,6 +76,20 @@ export default function AppleSearchBar({
     return () => clearTimeout(t);
   }, [query, selectedFilters]);
 
+  // Sincronizar filtros externos con el estado interno
+  useEffect(() => {
+    const newFilters: Record<string, string> = {};
+    filters.forEach(f => {
+      newFilters[f.id] = f.value;
+    });
+    // Comparar para evitar actualizaciones de estado redundantes y bucles infinitos
+    const hasChanges = Object.keys(newFilters).some(key => newFilters[key] !== selectedFilters[key]) ||
+                        Object.keys(selectedFilters).some(key => newFilters[key] !== selectedFilters[key]);
+    if (hasChanges) {
+      setSelectedFilters(newFilters);
+    }
+  }, [filters]);
+
   // Atajos: Enter (buscar), Esc (cerrar panel)
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -310,17 +324,11 @@ export default function AppleSearchBar({
               {hasActiveFilters && (
                 <button
                   onClick={clearFilters}
-                  className="px-3 py-1 text-xs font-medium text-gray-500 hover:text-red-500 transition-colors"
+                  className="btn-apple-primary h-[34px] px-5 py-0 text-sm flex items-center justify-center"
                 >
-                  Limpiar todo
+                  Limpiar
                 </button>
               )}
-              <button
-                onClick={() => setIsExpanded(false)}
-                className="btn-apple-primary h-[34px] px-5 py-0 text-sm flex items-center justify-center"
-              >
-                Aplicar
-              </button>
             </div>
           </div>
         </div>

@@ -1,9 +1,14 @@
 {
-  "/api/chat/users/route": "app/api/chat/users/route.js",
+  "/(auth)/login/page": "app/(auth)/login/page.js",
+  "/api/shop/orders/route": "app/api/shop/orders/route.js",
+  "/api/shop/products/route": "app/api/shop/products/route.js",
+  "/api/shop/categories/route": "app/api/shop/categories/route.js",
+  "/api/shop/promotions/route": "app/api/shop/promotions/route.js",
+  "/api/shop/inventory/route": "app/api/shop/inventory/route.js",
   "/api/chat/conversations/route": "app/api/chat/conversations/route.js",
-  "/admin/calculator/platforms/page": "app/admin/calculator/platforms/page.js",
-  "/admin/calculator/create-platform/page": "app/admin/calculator/create-platform/page.js",
-  "/admin/calculator/config/page": "app/admin/calculator/config/page.js",
-  "/admin/users/create/page": "app/admin/users/create/page.js",
-  "/admin/rates/page": "app/admin/rates/page.js"
+  "/api/chat/users/route": "app/api/chat/users/route.js",
+  "/admin/sedes/dashboard/page": "app/admin/sedes/dashboard/page.js",
+  "/admin/shop/page": "app/admin/shop/page.js",
+  "/admin/affiliates/gestionar/page": "app/admin/affiliates/gestionar/page.js",
+  "/admin/dashboard/page": "app/admin/dashboard/page.js"
 }

@@ -48,16 +48,16 @@ const fmt  = (n: number) => n.toLocaleString('en-US', { maximumFractionDigits: 0
 const fmtD = (n: number) => n.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 
 function pctColor(p: number) {
-  if (p >= 150) return 'text-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]';
+  if (p >= 150) return 'text-purple-500 drop-shadow-[0_0_8px_rgba(168,85,247,0.6)]';
   if (p >= 100) return 'text-emerald-500';
-  if (p >= 70) return 'text-purple-500';
-  return 'text-blue-500';
+  if (p >= 70) return 'text-blue-500';
+  return 'text-orange-500';
 }
 function barCls(p: number) {
-  if (p >= 150) return 'bg-gradient-to-r from-orange-500 to-red-500 shadow-[0_0_10px_rgba(249,115,22,0.8)]';
+  if (p >= 150) return 'bg-gradient-to-r from-purple-500 to-indigo-500 shadow-[0_0_10px_rgba(168,85,247,0.8)]';
   if (p >= 100) return 'bg-emerald-500';
-  if (p >= 70) return 'bg-purple-500';
-  return 'bg-blue-500';
+  if (p >= 70) return 'bg-blue-500';
+  return 'bg-orange-500';
 }
 function timeAgoLabel(iso: string | null): string {
   if (!iso) return '—';
@@ -267,31 +267,30 @@ export default function ProductivityWidget({ userId, userRole, forceSlide }: Pro
           >
             {/* Top Card: Summary cards (Ajustadas según Regla Cards) */}
             {summary && !loading0 && (
-              <div className="glass-card bg-black/[0.08] dark:bg-white/[0.08] backdrop-blur-3xl border border-white/40 dark:border-white/[0.08] max-sm:dark:border-white/8 max-sm:p-1.5 sm:p-2 !rounded-[1.25rem] sm:!rounded-2xl shadow-sm shadow-black/5 dark:shadow-[0_1px_0_0_rgba(255,255,255,0.02)_inset,0_4px_20px_rgba(0,0,0,0.4)] relative flex-none">
-                <InfoCardGrid
-                  columns={3}
-                  cards={[
-                    {
-                      value: summary.totalModels.toString(),
-                      label: 'Total',
-                      color: 'blue',
-                      size: 'sm'
-                    },
-                    {
-                      value: summary.modelsPorEncima.toString(),
-                      label: 'Sobre obj.',
-                      color: 'green',
-                      size: 'sm'
-                    },
-                    {
-                      value: summary.modelsPorDebajo.toString(),
-                      label: 'Por debajo',
-                      color: 'blue',
-                      size: 'sm'
-                    }
-                  ]}
-                />
-              </div>
+              <InfoCardGrid
+                columns={3}
+                compactContainer={true}
+                cards={[
+                  {
+                    value: summary.totalModels.toString(),
+                    label: 'Total',
+                    color: 'blue',
+                    size: 'sm'
+                  },
+                  {
+                    value: summary.modelsPorEncima.toString(),
+                    label: 'Sobre obj.',
+                    color: 'green',
+                    size: 'sm'
+                  },
+                  {
+                    value: summary.modelsPorDebajo.toString(),
+                    label: 'Por debajo',
+                    color: 'blue',
+                    size: 'sm'
+                  }
+                ]}
+              />
             )}
 
             {/* Bottom Card: Lista y Footer */}

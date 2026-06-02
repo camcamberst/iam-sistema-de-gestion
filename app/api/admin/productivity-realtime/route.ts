@@ -23,6 +23,8 @@ export interface ProductivityModel {
   usdSede: number;
   copModelo: number;
   copSede: number;
+  affiliateStudioId?: string | null;
+  affiliateStudioName?: string | null;
 }
 
 export async function GET(request: NextRequest) {
@@ -64,7 +66,14 @@ export async function GET(request: NextRequest) {
     // 2. Obtener modelos según jerarquía
     let modelsQuery = supabase
       .from('users')
-      .select('id, email, name, affiliate_studio_id, avatar_url')
+      .select(`
+        id, 
+        email, 
+        name, 
+        affiliate_studio_id, 
+        avatar_url,
+        affiliate_studios(id, name)
+      `)
       .eq('role', 'modelo')
       .eq('is_active', true)
       .neq('id', AIM_BOTTY_ID)
@@ -192,7 +201,9 @@ export async function GET(request: NextRequest) {
         usdModelo,
         usdSede,
         copModelo,
-        copSede
+        copSede,
+        affiliateStudioId: model.affiliate_studio_id || null,
+        affiliateStudioName: (model.affiliate_studios as any)?.name || null
       };
     });
 

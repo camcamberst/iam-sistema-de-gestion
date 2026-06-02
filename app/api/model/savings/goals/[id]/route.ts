@@ -68,7 +68,12 @@ export async function PUT(
       updates.monto_meta = monto;
     }
     if (fecha_limite !== undefined) updates.fecha_limite = fecha_limite || null;
+    
     if (estado !== undefined) {
+      // Bloquear cancelación de ahorros activos por parte de la modelo
+      if (estado === 'cancelada' && existingGoal.estado === 'activa') {
+        return NextResponse.json({ success: false, error: 'Solo un administrador puede cancelar un ahorro programado activo en caso de emergencia' }, { status: 403 });
+      }
       updates.estado = estado;
       if (estado === 'completada' && existingGoal.estado !== 'completada') {
         updates.completed_at = new Date().toISOString();
@@ -125,7 +130,7 @@ export async function PUT(
 }
 
 /**
- * DELETE: Eliminar/cancelar meta de ahorro
+ * DELETE: Eliminar/cancelar meta de ahorro (solo permitida por la modelo si no está activa)
  */
 export async function DELETE(
   request: NextRequest,
@@ -160,22 +165,9 @@ export async function DELETE(
       return NextResponse.json({ success: false, error: 'No autorizado' }, { status: 403 });
     }
 
-    // Si está activa, cancelarla en lugar de eliminar
+    // Si está activa, bloquear de forma absoluta la eliminación/cancelación por parte de la modelo
     if (existingGoal.estado === 'activa') {
-      const { error: updateError } = await supabase
-        .from('savings_goals')
-        .update({
-          estado: 'cancelada',
-          cancelled_at: new Date().toISOString()
-        })
-        .eq('id', params.id);
-
-      if (updateError) {
-        console.error('❌ [GOALS] Error cancelando meta:', updateError);
-        return NextResponse.json({ success: false, error: updateError.message }, { status: 500 });
-      }
-
-      return NextResponse.json({ success: true, message: 'Meta cancelada exitosamente' });
+      return NextResponse.json({ success: false, error: 'Solo un administrador puede cancelar un ahorro programado activo en caso de emergencia' }, { status: 403 });
     }
 
     // Si ya está completada o cancelada, eliminar físicamente

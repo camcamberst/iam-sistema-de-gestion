@@ -845,7 +845,7 @@ export default function HistorialAnticiposPage() {
                     <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-2">
                       <div className="text-left sm:text-right">
                         <div className="text-sm sm:text-base font-bold text-gray-900 dark:text-gray-100">
-                          ${anticipo.monto_solicitado.toLocaleString('es-CO')} COP
+                          ${anticipo.monto_solicitado.toLocaleString('es-CO')}
                         </div>
                       </div>
                       <span className={`px-2 py-1 rounded-full text-[10px] sm:text-xs font-medium flex-shrink-0 ${getEstadoColor(anticipo.estado)}`}>

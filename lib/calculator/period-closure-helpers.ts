@@ -333,14 +333,11 @@ export const atomicArchiveAndReset = async (
       archived_at: new Date().toISOString()
     }));
 
-    // Insertar en calculator_history (upsert para evitar duplicados)
+    // Insertar en calculator_history (insert estándar, ya que controlamos los duplicados manualmente)
     if (historyInserts.length > 0) {
       const { error: historyError } = await supabase
         .from('calculator_history')
-        .upsert(historyInserts, { 
-          onConflict: 'model_id,platform_id,period_date,period_type',
-          ignoreDuplicates: false 
-        });
+        .insert(historyInserts);
 
       if (historyError) {
         console.error(`❌ [ATOMIC-CLOSE] Error archivando en history:`, historyError);

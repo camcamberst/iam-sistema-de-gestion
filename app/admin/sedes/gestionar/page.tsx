@@ -1,9 +1,31 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import AppleDropdown from '@/components/ui/AppleDropdown';
 import StandardModal from '@/components/ui/StandardModal';
+import PageHeader from "@/components/ui/PageHeader";
+import GlassCard from "@/components/ui/GlassCard";
+import { 
+  Building2, 
+  Building,
+  MapPin,
+  Video,
+  Plus, 
+  Info, 
+  AlertTriangle, 
+  Users, 
+  History, 
+  SlidersHorizontal, 
+  Settings, 
+  Key, 
+  Trash2, 
+  Edit, 
+  X, 
+  XCircle, 
+  Check 
+} from 'lucide-react';
 import { getModelDisplayName } from '@/utils/model-display';
 import { supabase } from '@/lib/supabase';
 
@@ -72,6 +94,8 @@ export default function GestionarSedesPage() {
   const [editSedeDescription, setEditSedeDescription] = useState('');
   const [editSedeActive, setEditSedeActive] = useState(true);
   const [userAffiliateStudioId, setUserAffiliateStudioId] = useState<string | null>(null);
+  const [zoomedImage, setZoomedImage] = useState<string | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
   
   const router = useRouter();
 
@@ -83,6 +107,7 @@ export default function GestionarSedesPage() {
 
   // Cargar datos iniciales
   useEffect(() => {
+    setIsMounted(true);
     // Scroll automático al top cuando se carga la página
     window.scrollTo(0, 0);
     
@@ -670,20 +695,30 @@ export default function GestionarSedesPage() {
       const data = await response.json();
       
       if (data.success && data.assignments.length > 0) {
-        // Hay conflictos, mostrar modal de confirmación
-        setConflictInfo({
-          model: model,
-          existingAssignments: data.assignments,
-          newAssignment: {
-            room_id: selectedRoom?.id,
-            room_name: selectedRoom?.room_name,
-            jornada: selectedJornada
-          }
-        });
-        setShowConflictModal(true);
-        setShowModelSelector(false);
+        // Filtrar asignaciones que coinciden exactamente con la jornada seleccionada
+        const conflictoJornada = data.assignments.filter(
+          (a: any) => a.jornada.toUpperCase() === selectedJornada.toUpperCase()
+        );
+
+        if (conflictoJornada.length > 0) {
+          // Hay conflicto real de jornada (físicamente no puede estar en dos rooms al mismo tiempo)
+          setConflictInfo({
+            model: model,
+            existingAssignments: conflictoJornada,
+            newAssignment: {
+              room_id: selectedRoom?.id,
+              room_name: selectedRoom?.room_name,
+              jornada: selectedJornada
+            }
+          });
+          setShowConflictModal(true);
+          setShowModelSelector(false);
+        } else {
+          // No hay conflicto de jornada (está asignada en otra jornada diferente), asignar directamente
+          await assignModel(model, 'assign');
+        }
       } else {
-        // No hay conflictos, asignar directamente
+        // No tiene asignaciones previas, asignar directamente
         await assignModel(model, 'assign');
       }
     } catch (error) {
@@ -913,9 +948,30 @@ export default function GestionarSedesPage() {
     }
   };
 
+  const headerActions = (
+    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+      {(userRole === 'super_admin' || userRole === 'superadmin_aff') && (
+        <button
+          onClick={() => setShowCreateGroup(true)}
+          className="btn-apple-primary flex items-center justify-center h-[34px] px-6 text-sm font-semibold whitespace-nowrap active:scale-[0.98] transition-all"
+        >
+          <span>Crear Sede</span>
+        </button>
+      )}
+      {selectedSede && (
+        <button
+          onClick={() => setShowCreateRoom(true)}
+          className="bg-white/10 dark:bg-white/5 hover:bg-white/20 dark:hover:bg-white/10 border border-white/20 dark:border-white/10 text-gray-800 dark:text-gray-200 flex items-center justify-center h-[34px] px-6 text-sm font-semibold rounded-full active:scale-[0.98] transition-all"
+        >
+          <span>Crear Room</span>
+        </button>
+      )}
+    </div>
+  );
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center pt-16">
+      <div className="min-h-screen bg-transparent flex items-center justify-center pt-16">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-600 dark:text-gray-300">Cargando datos...</p>
@@ -925,31 +981,16 @@ export default function GestionarSedesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className="min-h-screen bg-transparent">
       <div className="max-w-7xl mx-auto px-0 sm:px-4 md:px-6 lg:px-8 py-8 pt-16">
         {/* Header */}
-        <div className="mb-8 sm:mb-12">
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-xl blur-xl"></div>
-            <div className="relative bg-white/80 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
-              <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-3">
-                <div className="flex items-center space-x-3 min-w-0 flex-1">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
-                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h1 className="text-base sm:text-lg md:text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent leading-tight whitespace-nowrap overflow-hidden text-ellipsis">
-                      Gestión de Sedes
-                    </h1>
-                    <p className="mt-1 text-xs sm:text-sm text-gray-600 dark:text-gray-300 hidden sm:block">Administra las sedes, rooms y configuraciones del sistema</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <PageHeader 
+          title="Gestión de Sedes"
+          subtitle="Administra las sedes, rooms y asignaciones del sistema en tiempo real"
+          icon={<Building2 className="w-5 h-5 sm:w-6 sm:h-6 text-white" />}
+          glow="admin"
+          actions={headerActions}
+        />
 
         {/* Mensaje de alerta para admins sin sedes asignadas */}
         {userRole === 'admin' && availableSedes.length === 0 && (
@@ -973,93 +1014,41 @@ export default function GestionarSedesPage() {
         )}
 
 
-        {/* Acciones principales */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-          {/* Columna Izquierda: Selector de Sedes */}
-          <div className="flex flex-col h-full">
-            <div className="relative flex-1 z-10">
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/5 rounded-2xl blur-sm"></div>
-              <div className="relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 h-full flex flex-col dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
-                <div className="flex items-center gap-2 mb-4">
-                  <svg className="w-[18px] h-[18px] text-gray-400 dark:text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                  </svg>
-                  <h2 className="text-[15px] sm:text-base font-semibold tracking-tight text-gray-900 dark:text-gray-100">Seleccionar Sede</h2>
-                </div>
-              <AppleDropdown
-                options={availableSedes.map(sede => ({
-                  value: sede.id,
-                  label: sede.name
-                }))}
-                value={selectedSede}
-                onChange={(value) => {
-                  setSelectedSede(value);
-                  setSelectedGroup(value);
-                  if (value) {
-                    loadSedeInfo(value);
-                  } else {
-                    setSelectedSedeInfo(null);
-                    setSedeAdminInfo(null);
-                  }
-                }}
-                placeholder="Selecciona una sede para gestionar"
-                className="text-sm"
-              />
-              {availableSedes.length === 0 && (
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                  No hay sedes disponibles para gestionar
-                </p>
-              )}
-              </div>
-            </div>
+        {/* Caja de Selección Unificada (Regla 17) */}
+        <div className="mb-8 relative z-20 max-w-[360px]">
+          {/* Cabecera del panel de selección (Fuera de la caja con tamaño estándar) */}
+          <div className="flex items-center space-x-2 min-w-0 mb-4 px-1">
+            <MapPin className="w-[22px] h-[22px] text-cyan-500 dark:text-cyan-400 drop-shadow-[0_0_6px_rgba(34,211,238,0.4)] shrink-0" />
+            <h2 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">
+              Seleccionar Sede
+            </h2>
           </div>
 
-          {/* Columna Derecha: Crear Sede y Crear Room */}
-          <div className="flex flex-col space-y-6 h-full">
-            {/* Crear Nueva Sede - Para Super Admin y Superadmin AFF */}
-            {(userRole === 'super_admin' || userRole === 'superadmin_aff') && (
-              <div className="relative flex-1">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/5 rounded-2xl blur-sm"></div>
-                <div className="relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 h-full flex flex-col dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
-                  <div className="flex items-center justify-between h-full">
-                    <div className="flex items-center gap-2">
-                      <svg className="w-[18px] h-[18px] text-gray-400 dark:text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                      </svg>
-                      <h2 className="text-[15px] sm:text-base font-semibold tracking-tight text-gray-900 dark:text-gray-100">Crear Nueva Sede</h2>
-                    </div>
-                    <button
-                      onClick={() => setShowCreateGroup(true)}
-                      className="w-32 px-4 py-2 text-sm font-medium bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
-                    >
-                      + Crear Sede
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Crear Room */}
-            {selectedSede && (
-              <div className="relative flex-1">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/5 rounded-2xl blur-sm"></div>
-                <div className="relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 h-full flex flex-col dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
-                  <div className="flex items-center justify-between h-full">
-                    <div className="flex items-center gap-2">
-                      <svg className="w-[18px] h-[18px] text-gray-400 dark:text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                      </svg>
-                      <h2 className="text-[15px] sm:text-base font-semibold tracking-tight text-gray-900 dark:text-gray-100">Crear Room</h2>
-                    </div>
-                    <button
-                      onClick={() => setShowCreateRoom(true)}
-                      className="w-32 px-4 py-2 text-sm font-medium bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
-                    >
-                      + Crear Room
-                    </button>
-                  </div>
-                </div>
-              </div>
+          <div className="bg-black/[0.02] dark:bg-white/[0.02] border border-black/[0.05] dark:border-white/[0.05] rounded-2xl p-4 sm:p-5 backdrop-blur-3xl shadow-sm">
+            <AppleDropdown
+              options={availableSedes.map(sede => ({
+                value: sede.id,
+                label: sede.name
+              }))}
+              value={selectedSede}
+              onChange={(value) => {
+                setSelectedSede(value);
+                setSelectedGroup(value);
+                if (value) {
+                  loadSedeInfo(value);
+                } else {
+                  setSelectedSedeInfo(null);
+                  setSedeAdminInfo(null);
+                }
+              }}
+              placeholder="Selecciona una sede de la lista..."
+              className="text-sm"
+            />
+            {availableSedes.length === 0 && (
+              <p className="text-xs text-red-500 dark:text-red-400 font-semibold mt-2 flex items-center gap-1">
+                <AlertTriangle className="w-3.5 h-3.5" />
+                No tienes sedes asignadas ni disponibles para gestionar
+              </p>
             )}
           </div>
         </div>
@@ -1067,135 +1056,139 @@ export default function GestionarSedesPage() {
         {/* Información de la Sede Seleccionada */}
         {/* Información de la Sede Seleccionada */}
         {selectedSedeInfo && (
-          <div className="flex flex-col gap-1.5 sm:gap-2 mb-10">
-            {/* TÍTULO MINIMALISTA POR FUERA DE LA CAJA */}
-            <div className="flex items-center justify-between px-1">
-              <div className="flex items-center space-x-1 sm:space-x-1.5 min-w-0">
-                <div className="flex items-center justify-center text-blue-500 drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
-                  <svg className="w-4 h-4 sm:w-[1.125rem] sm:h-[1.125rem]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                  </svg>
-                </div>
-                <div className="relative flex items-center">
-                  <h2 className="text-[14px] sm:text-[15px] font-bold text-gray-900 dark:text-white tracking-tight drop-shadow-sm dark:drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">
+          <>
+            {/* Cabecera del panel de sede (Fuera de la caja y sin subtítulo) */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 px-1">
+              <div className="flex items-center space-x-2 min-w-0">
+                <Building className="w-[22px] h-[22px] text-purple-500 dark:text-purple-400 drop-shadow-[0_0_6px_rgba(168,85,247,0.4)] shrink-0" />
+                <div className="min-w-0 flex items-center gap-2">
+                  <h2 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white truncate">
                     {selectedSedeInfo.name}
                   </h2>
-                  <span className="ml-2 text-[10px] sm:text-[11px] text-gray-500 dark:text-gray-400 font-medium tracking-wide hidden sm:block">
-                    {selectedSedeInfo.rooms?.length || 0} rooms configurados
+                  <span className="relative flex h-2 w-2 shrink-0">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                   </span>
                 </div>
               </div>
-              <div className="flex items-center justify-between sm:justify-end space-x-2">
-                <div className="flex items-center space-x-1.5 bg-blue-100 dark:bg-blue-900/30 px-2 py-1 rounded-full">
-                  <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></div>
-                  <span className="text-[10px] sm:text-xs text-blue-700 dark:text-blue-300 font-medium">Activa</span>
+
+              {(userRole === 'super_admin' || userRole === 'superadmin_aff') && (
+                <div className="flex items-center gap-1 bg-black/5 dark:bg-white/5 p-1 rounded-full border border-black/5 dark:border-white/5 shrink-0 self-end sm:self-auto">
+                  <button
+                    onClick={() => {
+                      setSedeToEdit(selectedSedeInfo);
+                      setEditSedeName(selectedSedeInfo.name);
+                      setEditSedeDescription(selectedSedeInfo.description || '');
+                      setEditSedeActive(selectedSedeInfo.is_active !== false);
+                      setShowEditSedeModal(true);
+                    }}
+                    className="px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-cyan-600 to-fuchsia-600 text-white shadow-md shadow-cyan-500/30 dark:shadow-[0_0_15px_rgba(34,211,238,0.5)] active:scale-95 transition-all"
+                    title="Editar sede"
+                  >
+                    Editar
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSedeToDelete(selectedSedeInfo);
+                      setShowDeleteSedeModal(true);
+                    }}
+                    className="px-3 py-1 rounded-full text-xs font-bold text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-500/10 active:scale-95 transition-all"
+                    title="Eliminar Sede"
+                  >
+                    Eliminar
+                  </button>
                 </div>
-                {/* Botones de editar y eliminar para superadmin */}
-                {(userRole === 'super_admin' || userRole === 'superadmin_aff') && (
-                  <div className="flex items-center space-x-1">
-                    <button
-                      onClick={() => {
-                        setSedeToEdit(selectedSedeInfo);
-                        setEditSedeName(selectedSedeInfo.name);
-                        setEditSedeDescription(selectedSedeInfo.description || '');
-                        setEditSedeActive(selectedSedeInfo.is_active !== false);
-                        setShowEditSedeModal(true);
-                      }}
-                      className="px-2 py-1 text-xs font-medium text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition-colors"
-                      title="Editar sede"
-                    >
-                      Editar
-                    </button>
-                    <button
-                      onClick={() => {
-                        setSedeToDelete(selectedSedeInfo);
-                        setShowDeleteSedeModal(true);
-                      }}
-                      className="px-2 py-1 text-xs font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors"
-                      title="Eliminar sede"
-                    >
-                      Eliminar
-                    </button>
-                  </div>
-                )}
-              </div>
+              )}
             </div>
 
-            <div className="relative bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-lg shadow-md border border-white/20 dark:border-gray-600/20 p-4 sm:p-5 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
-
-            {/* Información del Admin Asignado */}
+            <GlassCard
+              padding="lg"
+              className="mb-10 border border-white/20 dark:border-white/10 shadow-sm relative overflow-hidden"
+              auroraEffect={true}
+            >
+              {/* Contenedor concéntrico: Información del Admin Asignado */}
             {sedeAdminInfo ? (
-              <div className="bg-gradient-to-r from-blue-50/80 to-indigo-50/80 dark:from-blue-900/20 dark:to-indigo-900/20 backdrop-blur-sm rounded-lg p-4 mb-4 border border-blue-200/30 dark:border-blue-700/30">
-                <div className="mb-3">
-                  <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Admin Asignado</h3>
+              <div className="bg-white/40 dark:bg-white/[0.03] border border-white/50 dark:border-white/[0.08] rounded-2xl p-4 mb-6 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full blur-xl"></div>
+                <div className="flex items-center gap-2 mb-3 relative z-10">
+                  <Users className="w-4 h-4 text-blue-500 dark:text-blue-400" />
+                  <h3 className="text-xs font-bold tracking-wider text-gray-800 dark:text-gray-200">
+                    Administrador Asignado
+                  </h3>
                 </div>
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
-                    <span className="text-white font-semibold text-sm">
-                      {sedeAdminInfo.name?.charAt(0) || 'A'}
-                    </span>
+                <div className="flex items-center gap-3 relative z-10">
+                  <div 
+                    className="w-10 h-10 rounded-xl overflow-hidden shadow-md shrink-0 relative cursor-pointer hover:opacity-90 active:scale-95 transition-all"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setZoomedImage(sedeAdminInfo.avatar_url || sedeAdminInfo.photo_url || '/favicon.png');
+                    }}
+                  >
+                    <img 
+                      src={sedeAdminInfo.avatar_url || sedeAdminInfo.photo_url || '/favicon.png'} 
+                      alt={sedeAdminInfo.name || 'Admin'}
+                      className="absolute inset-0 w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = '/favicon.png';
+                      }}
+                    />
                   </div>
-                  <div>
-                    <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{sedeAdminInfo.name}</p>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">{sedeAdminInfo.email}</p>
-                    <p className="text-xs text-blue-600 dark:text-blue-400 font-medium">
-                      {sedeAdminInfo.user_groups?.length || 0} sede{(sedeAdminInfo.user_groups?.length || 0) !== 1 ? 's' : ''} asignada{(sedeAdminInfo.user_groups?.length || 0) !== 1 ? 's' : ''}
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-gray-900 dark:text-white truncate">{sedeAdminInfo.name}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{sedeAdminInfo.email}</p>
+                    <p className="text-[10px] text-blue-600 dark:text-blue-400 font-bold tracking-wide mt-0.5">
+                      {sedeAdminInfo.user_groups?.length || 0} Sede{(sedeAdminInfo.user_groups?.length || 0) !== 1 ? 's' : ''} bajo gestión
                     </p>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="bg-gradient-to-r from-yellow-50/80 to-orange-50/80 dark:from-yellow-900/20 dark:to-orange-900/20 backdrop-blur-sm rounded-xl p-5 mb-6 border border-yellow-200/30 dark:border-yellow-700/30">
-                <div className="flex items-center space-x-3">
-                  <div className="w-6 h-6 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-lg flex items-center justify-center">
-                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
-                    </svg>
-                  </div>
-                  <p className="text-sm font-medium text-yellow-800 dark:text-yellow-300">No hay admin asignado a esta sede</p>
+              <div className="bg-amber-500/[0.03] border border-amber-500/10 rounded-2xl p-4 mb-6 flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center shrink-0">
+                  <AlertTriangle className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold tracking-wider text-amber-600 dark:text-amber-400">Sin administrador</h4>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">No hay un administrador asignado formalmente a esta sede.</p>
                 </div>
               </div>
             )}
 
-            {/* Rooms de la Sede */}
+            {/* Rooms de la Sede en cápsulas concéntricas */}
             <div>
-              <div className="flex items-center gap-2 mb-3">
-                <svg className="w-[18px] h-[18px] text-gray-400 dark:text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-                <h3 className="text-[15px] sm:text-base font-semibold tracking-tight text-gray-900 dark:text-gray-100">Rooms Disponibles</h3>
+              <div className="flex items-center gap-2 mb-4">
+                <Video className="w-[18px] h-[18px] text-fuchsia-500 dark:text-fuchsia-400 drop-shadow-[0_0_6px_rgba(236,72,153,0.4)] flex-shrink-0" />
+                <h3 className="text-[12px] sm:text-[13px] font-bold tracking-wider text-gray-900 dark:text-gray-100">
+                  Rooms Habilitados
+                </h3>
               </div>
+              
               {selectedSedeInfo.rooms && selectedSedeInfo.rooms.length > 0 ? (
-                <div className="flex flex-wrap gap-1.5">
+                <div className="flex flex-wrap gap-2.5">
                   {selectedSedeInfo.rooms.map((room: any) => (
-                    <div key={room.id} className="inline-flex items-center">
-                      <button
-                        onClick={() => handleRoomClick(room)}
-                        className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-gradient-to-r from-gray-100 to-slate-100 dark:from-gray-600 dark:to-slate-600 text-gray-800 dark:text-gray-200 hover:from-gray-200 hover:to-slate-200 dark:hover:from-gray-500 dark:hover:to-slate-500 hover:text-gray-900 dark:hover:text-gray-100 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-sm hover:shadow-md transform hover:-translate-y-0.5 border border-gray-200/50 dark:border-gray-500/50"
-                      >
-                        <svg className="w-3 h-3 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                        </svg>
-                        {room.room_name}
-                      </button>
-                    </div>
+                    <button
+                      key={room.id}
+                      onClick={() => handleRoomClick(room)}
+                      className="inline-flex items-center px-[18px] py-1.5 bg-purple-500/[0.03] dark:bg-purple-950/[0.15] hover:bg-purple-500/[0.08] dark:hover:bg-purple-900/[0.25] border border-purple-500/10 dark:border-purple-500/20 hover:border-fuchsia-500/40 dark:hover:border-fuchsia-500/50 rounded-full text-xs font-medium tracking-wide text-gray-700 dark:text-purple-200 hover:text-fuchsia-600 dark:hover:text-fuchsia-300 active:scale-95 hover:scale-[1.02] transition-all shadow-[0_2px_8px_rgba(168,85,247,0.04)] hover:shadow-[0_0_12px_rgba(232,121,249,0.2)] gap-2.5 cursor-pointer"
+                    >
+                      <div className="w-2 h-2 rounded-full bg-cyan-400 dark:bg-cyan-300 shrink-0 shadow-[0_0_8px_rgba(34,211,238,0.8)]"></div>
+                      <span>{room.room_name}</span>
+                    </button>
                   ))}
                 </div>
               ) : (
-                <div className="bg-gradient-to-r from-gray-50/80 to-slate-50/80 dark:from-gray-600/80 dark:to-slate-600/80 backdrop-blur-sm rounded-xl p-6 text-center border border-gray-200/30 dark:border-gray-500/30">
-                  <div className="w-12 h-12 bg-gray-100 dark:bg-gray-600 rounded-xl flex items-center justify-center mx-auto mb-3">
-                    <svg className="w-6 h-6 text-gray-400 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
+                <div className="bg-black/[0.02] dark:bg-white/[0.02] border border-black/[0.05] dark:border-white/[0.05] rounded-2xl p-6 text-center">
+                  <div className="w-12 h-12 bg-black/[0.03] dark:bg-white/[0.03] border border-black/5 dark:border-white/5 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <Building2 className="w-6 h-6 text-gray-400 dark:text-gray-500" />
                   </div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-300">No hay rooms configurados en esta sede</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Usa el botón &quot;Crear Room&quot; para agregar rooms</p>
+                  <p className="text-sm font-bold text-gray-600 dark:text-gray-400">No hay rooms creados</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Utiliza la acción principal en la cabecera para agregar un room.</p>
                 </div>
               )}
             </div>
-            </div>
-          </div>
-        )}
+          </GlassCard>
+        </>
+      )}
 
         {/* Lista de Sedes - OCULTA: La información está en el dropdown "Tus Sedes" */}
         {/* 
@@ -1264,75 +1257,60 @@ export default function GestionarSedesPage() {
             formSpaceYClass="space-y-5"
           >
             <div className="flex items-center space-x-3 mb-5">
-                  <div className="w-10 h-10 bg-gradient-to-br from-gray-600 to-slate-700 rounded-xl flex items-center justify-center">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                  </div>
-                </div>
+              <div className="w-10 h-10 bg-gradient-to-br from-gray-600 to-slate-700 rounded-xl flex items-center justify-center shadow-md">
+                <Building2 className="w-5 h-5 text-white" />
+              </div>
+            </div>
               
-              <form onSubmit={handleCreateGroup} className="space-y-5">
-                {/* Mensajes de estado dentro del modal */}
-                {error && (
-                  <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0">
-                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </div>
-                      <p className="text-sm text-red-700 font-medium">{error}</p>
-                    </div>
-                  </div>
-                )}
-                
-                {success && (
-                  <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
-                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                      </div>
-                      <p className="text-sm text-green-700 font-medium">{success}</p>
-                    </div>
-                  </div>
-                )}
-              
-                <div>
-                  <label className="block text-gray-700 dark:text-gray-200 text-sm font-semibold mb-2">
-                    Nombre de la Sede
-                  </label>
-                  <input
-                    type="text"
-                    value={newGroupName}
-                    onChange={(e) => setNewGroupName(e.target.value)}
-                    className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm transition-all duration-200"
-                    placeholder="Ej: Sede Norte"
-                    required
-                  />
+            <form onSubmit={handleCreateGroup} className="space-y-5">
+              {/* Mensajes de estado dentro del modal */}
+              {error && (
+                <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
+                  <p className="text-sm text-red-700 dark:text-red-400 font-medium">{error}</p>
                 </div>
+              )}
+              
+              {success && (
+                <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4">
+                  <p className="text-sm text-emerald-700 dark:text-emerald-400 font-medium">{success}</p>
+                </div>
+              )}
+            
+              <div>
+                <label className="block text-gray-700 dark:text-gray-200 text-sm font-semibold mb-2">
+                  Nombre de la Sede
+                </label>
+                <input
+                  type="text"
+                  value={newGroupName}
+                  onChange={(e) => setNewGroupName(e.target.value)}
+                  className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm transition-all duration-200"
+                  placeholder="Ej: Sede Norte"
+                  required
+                />
+              </div>
 
-                <div className="flex space-x-3 pt-2 flex-nowrap">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowCreateGroup(false);
-                      setNewGroupName('');
-                    }}
-                    className="flex-1 bg-gray-100/80 dark:bg-gray-600/80 backdrop-blur-sm text-gray-700 dark:text-gray-200 py-2 px-4 rounded-xl hover:bg-gray-200/80 dark:hover:bg-gray-500/80 transition-all duration-200 font-medium border border-gray-200/50 dark:border-gray-500/50 text-sm whitespace-nowrap"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={submitting}
-                    className="flex-1 bg-gradient-to-r from-gray-700 to-slate-800 text-white py-2 px-4 rounded-xl hover:from-gray-800 hover:to-slate-900 transition-all duration-200 disabled:opacity-50 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-sm whitespace-nowrap"
-                  >
-                    {submitting ? 'Creando...' : 'Crear Sede'}
-                  </button>
-                </div>
-              </form>
+              {/* Botonera agrupada en píldora (Regla 16) */}
+              <div className="flex items-center gap-1.5 p-1.5 bg-black/[0.03] dark:bg-white/[0.03] border border-black/[0.05] dark:border-white/[0.05] rounded-[2rem] backdrop-blur-xl shadow-sm w-full mt-5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCreateGroup(false);
+                    setNewGroupName('');
+                  }}
+                  className="flex-1 h-9 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-gray-700 dark:text-gray-300 rounded-full active:scale-95 transition-all duration-200 text-xs font-semibold"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="flex-1 h-9 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full active:scale-95 transition-all duration-200 font-bold shadow-[0_0_15px_rgba(59,130,246,0.3)] text-xs disabled:opacity-50"
+                >
+                  {submitting ? 'Creando...' : 'Crear Sede'}
+                </button>
+              </div>
+            </form>
           </StandardModal>
         )}
 
@@ -1348,85 +1326,70 @@ export default function GestionarSedesPage() {
             formSpaceYClass="space-y-5"
           >
             <div className="flex items-center space-x-3 mb-5">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
-                  </div>
-                </div>
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
+                <Building2 className="w-5 h-5 text-white" />
+              </div>
+            </div>
               
-              <form onSubmit={handleCreateRoom} className="space-y-5">
-                {/* Mensajes de estado dentro del modal */}
-                {error && (
-                  <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0">
-                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </div>
-                      <p className="text-sm text-red-700 font-medium">{error}</p>
-                    </div>
-                  </div>
-                )}
-                
-                {success && (
-                  <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
-                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                      </div>
-                      <p className="text-sm text-green-700 font-medium">{success}</p>
-                    </div>
-                  </div>
-                )}
+            <form onSubmit={handleCreateRoom} className="space-y-5">
+              {/* Mensajes de estado dentro del modal */}
+              {error && (
+                <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
+                  <p className="text-sm text-red-700 dark:text-red-400 font-medium">{error}</p>
+                </div>
+              )}
               
-                <div>
-                  <label className="block text-gray-700 dark:text-gray-200 text-sm font-semibold mb-2">
-                    Sede Seleccionada
-                  </label>
-                  <div className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2.5 text-gray-900 dark:text-gray-100 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm">
-                    {groups.find(g => g.id === selectedGroup)?.name || 'Ninguna sede seleccionada'}
-                  </div>
+              {success && (
+                <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4">
+                  <p className="text-sm text-emerald-700 dark:text-emerald-400 font-medium">{success}</p>
                 </div>
+              )}
+            
+              <div>
+                <label className="block text-gray-700 dark:text-gray-200 text-sm font-semibold mb-2">
+                  Sede Seleccionada
+                </label>
+                <div className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2.5 text-gray-900 dark:text-gray-100 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm">
+                  {groups.find(g => g.id === selectedGroup)?.name || 'Ninguna sede seleccionada'}
+                </div>
+              </div>
 
-                <div>
-                  <label className="block text-gray-700 dark:text-gray-200 text-sm font-semibold mb-2">
-                    Nombre del Room
-                  </label>
-                  <input
-                    type="text"
-                    value={newRoomName}
-                    onChange={(e) => setNewRoomName(e.target.value)}
-                    className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm transition-all duration-200"
-                    placeholder="Ej: ROOM01"
-                    required
-                  />
-                </div>
+              <div>
+                <label className="block text-gray-700 dark:text-gray-200 text-sm font-semibold mb-2">
+                  Nombre del Room
+                </label>
+                <input
+                  type="text"
+                  value={newRoomName}
+                  onChange={(e) => setNewRoomName(e.target.value)}
+                  className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm transition-all duration-200"
+                  placeholder="Ej: ROOM01"
+                  required
+                />
+              </div>
 
-                <div className="flex space-x-3 pt-2 flex-nowrap">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowCreateRoom(false);
-                      setNewRoomName('');
-                      setSelectedGroup('');
-                    }}
-                    className="flex-1 bg-gray-100/80 dark:bg-gray-600/80 backdrop-blur-sm text-gray-700 dark:text-gray-200 py-2 px-4 rounded-xl hover:bg-gray-200/80 dark:hover:bg-gray-500/80 transition-all duration-200 font-medium border border-gray-200/50 dark:border-gray-500/50 text-sm whitespace-nowrap"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={submitting || !selectedGroup}
-                    className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2 px-4 rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 disabled:opacity-50 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-sm whitespace-nowrap"
-                  >
-                    {submitting ? 'Creando...' : 'Crear Room'}
-                  </button>
-                </div>
-              </form>
+              {/* Botonera agrupada en píldora (Regla 16) */}
+              <div className="flex items-center gap-1.5 p-1.5 bg-black/[0.03] dark:bg-white/[0.03] border border-black/[0.05] dark:border-white/[0.05] rounded-[2rem] backdrop-blur-xl shadow-sm w-full mt-5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCreateRoom(false);
+                    setNewRoomName('');
+                    setSelectedGroup('');
+                  }}
+                  className="flex-1 h-9 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-gray-700 dark:text-gray-300 rounded-full active:scale-95 transition-all duration-200 text-xs font-semibold"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting || !selectedGroup}
+                  className="flex-1 h-9 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full active:scale-95 transition-all duration-200 font-bold shadow-[0_0_15px_rgba(59,130,246,0.3)] text-xs disabled:opacity-50"
+                >
+                  {submitting ? 'Creando...' : 'Crear Room'}
+                </button>
+              </div>
+            </form>
           </StandardModal>
         )}
 
@@ -1441,29 +1404,9 @@ export default function GestionarSedesPage() {
             headerMarginClass="mb-4"
             formSpaceYClass="space-y-4"
           >
-              <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => {
-                    setRoomToDelete(selectedRoom);
-                    setShowDeleteRoomModal(true);
-                  }}
-                  className="px-3 py-1.5 rounded-lg text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-800/50 transition-colors border border-red-200/60 dark:border-red-700/40"
-                  title="Eliminar room"
-                >
-                  <span className="inline-flex items-center">
-                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                    Eliminar
-                  </span>
-                </button>
-              </div>
-              </div>
-              
               {/* Mensajes de error y éxito del modal */}
               {roomConfigError && (
-                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <div className="mb-4 p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
                   <div className="flex">
                     <div className="flex-shrink-0">
                       <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
@@ -1471,22 +1414,22 @@ export default function GestionarSedesPage() {
                       </svg>
                     </div>
                     <div className="ml-3">
-                      <p className="text-sm text-red-800">{roomConfigError}</p>
+                      <p className="text-sm text-red-800 dark:text-red-400">{roomConfigError}</p>
                     </div>
                   </div>
                 </div>
               )}
 
               {roomConfigSuccess && (
-                <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                <div className="mb-4 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
                   <div className="flex">
                     <div className="flex-shrink-0">
-                      <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                      <svg className="h-5 w-5 text-emerald-400" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                       </svg>
                     </div>
                     <div className="ml-3">
-                      <p className="text-sm text-green-800">{roomConfigSuccess}</p>
+                      <p className="text-sm text-emerald-800 dark:text-emerald-400">{roomConfigSuccess}</p>
                     </div>
                   </div>
                 </div>
@@ -1494,14 +1437,14 @@ export default function GestionarSedesPage() {
               
               {/* Jornadas */}
               <div className="space-y-4">
-                {['MAÑANA', 'TARDE', 'NOCHE'].map((jornada) => {
+                {['Mañana', 'Tarde', 'Noche'].map((jornada) => {
                   const assignmentsForJornada = roomAssignments.filter(
-                    assignment => assignment.jornada === jornada
+                    assignment => assignment.jornada === jornada.toUpperCase()
                   );
                   
                   return (
-                    <div key={jornada} className="border border-gray-200 dark:border-gray-600 rounded-lg p-4 dark:bg-gray-700/50">
-                      <h3 className="text-md font-medium text-gray-900 dark:text-gray-100 mb-3 flex items-center">
+                    <div key={jornada} className="bg-white/40 dark:bg-white/[0.03] border border-white/50 dark:border-white/[0.08] rounded-2xl p-4 relative overflow-hidden">
+                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center">
                         <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
                         {jornada}
                       </h3>
@@ -1509,50 +1452,63 @@ export default function GestionarSedesPage() {
                       {assignmentsForJornada.length > 0 ? (
                         <div className="space-y-2">
                           {assignmentsForJornada.map((assignment) => (
-                            <div key={assignment.id} className="flex items-center justify-between bg-gray-50 dark:bg-gray-600 rounded-lg p-3 hover:bg-gray-100 dark:hover:bg-gray-500 transition-colors">
+                            <div key={assignment.id} className="flex items-center justify-between bg-white/20 dark:bg-white/[0.02] border border-black/[0.03] dark:border-white/[0.04] rounded-xl p-3 hover:bg-white/40 dark:hover:bg-white/[0.05] transition-all duration-200 relative">
                               <div className="flex items-center space-x-3">
-                                <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
-                                  <svg className="w-4 h-4 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                                  </svg>
+                                <div 
+                                  className="w-8 h-8 rounded-full overflow-hidden shrink-0 flex-shrink-0 cursor-pointer hover:opacity-90 active:scale-95 transition-all"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setZoomedImage(assignment.model_avatar || '/favicon.png');
+                                  }}
+                                >
+                                  <img 
+                                    src={assignment.model_avatar || '/favicon.png'} 
+                                    alt={assignment.model_name || 'Modelo'}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      (e.target as HTMLImageElement).src = '/favicon.png';
+                                    }}
+                                  />
                                 </div>
                                 <div 
-                                  className="cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg p-2 -m-2 transition-colors group"
+                                  className="cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg p-2 -m-2 transition-colors group min-w-0"
                                   onClick={() => handleModelClick(assignment.model_id, assignment.model_email)}
                                   title="Ver portafolio de la modelo"
                                 >
-                                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100 group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors">
+                                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100 group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors truncate">
                                     {getModelDisplayName(assignment.model_email) || assignment.model_name || 'Modelo no especificada'}
                                   </p>
-                                  <p className="text-xs text-gray-500 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                                  <p className="text-xs text-gray-500 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">
                                     {assignment.model_email || 'Email no disponible'}
                                   </p>
                                 </div>
                               </div>
-                              <div className="flex items-center space-x-2">
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
-                                  Asignada
-                                </span>
-                                <button
-                                  onClick={() => confirmDeleteAssignment(assignment)}
-                                  className="w-8 h-8 rounded-full flex items-center justify-center transition-colors group bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-800/50 cursor-pointer"
-                                  title="Eliminar modelo de esta jornada"
-                                >
-                                  <svg className="w-4 h-4 text-red-600 dark:text-red-400 group-hover:text-red-700 dark:group-hover:text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                  </svg>
-                                </button>
+                              
+                              {/* Punto indicador azul (Asignada) con margen para la X absoluta */}
+                              <div className="flex items-center shrink-0 mr-6">
+                                <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]" title="Asignada"></div>
                               </div>
+                              
+                              {/* Botón X absoluto en la esquina superior derecha */}
+                              <button
+                                onClick={() => confirmDeleteAssignment(assignment)}
+                                className="absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-500/10 dark:hover:bg-red-500/20 active:scale-90 transition-all cursor-pointer"
+                                title="Eliminar modelo de esta jornada"
+                              >
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </button>
                             </div>
                           ))}
                         </div>
                       ) : (
                         <div 
-                          className="flex items-center justify-between bg-gray-50 dark:bg-gray-600 rounded-lg p-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-500 transition-colors"
-                          onClick={() => handleJornadaClick(jornada)}
+                          className="flex items-center justify-between bg-white/20 dark:bg-white/[0.02] border border-black/[0.03] dark:border-white/[0.04] rounded-xl p-3 cursor-pointer hover:bg-white/40 dark:hover:bg-white/[0.05] active:scale-[0.99] transition-all duration-200"
+                          onClick={() => handleJornadaClick(jornada.toUpperCase())}
                         >
                           <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 bg-gray-100 dark:bg-gray-500 rounded-full flex items-center justify-center">
+                            <div className="w-8 h-8 bg-gray-100 dark:bg-gray-500 rounded-full flex items-center justify-center shrink-0">
                               <svg className="w-4 h-4 text-gray-400 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
                               </svg>
@@ -1562,10 +1518,10 @@ export default function GestionarSedesPage() {
                               <p className="text-xs text-gray-400 dark:text-gray-500">Haz clic para asignar</p>
                             </div>
                           </div>
-                          <div className="flex items-center space-x-2">
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-500 text-gray-600 dark:text-gray-300">
-                              Disponible
-                            </span>
+                          
+                          {/* Punto indicador verde (Disponible) */}
+                          <div className="flex items-center shrink-0 mr-6">
+                            <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)] animate-pulse" title="Disponible"></div>
                           </div>
                         </div>
                       )}
@@ -1574,16 +1530,26 @@ export default function GestionarSedesPage() {
                 })}
               </div>
               
-              <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
+              {/* Botonera agrupada en píldora translúcida (Regla 16) */}
+              <div className="flex items-center gap-1.5 p-1.5 bg-black/[0.03] dark:bg-white/[0.03] border border-black/[0.05] dark:border-white/[0.05] rounded-[2rem] backdrop-blur-xl shadow-sm w-full mt-6">
                 <button
                   onClick={() => {
                     setShowRoomConfig(false);
                     setSelectedRoom(null);
                     setRoomAssignments([]);
                   }}
-                  className="w-full bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-200 py-2 px-4 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors"
+                  className="flex-1 h-9 bg-gradient-to-r from-cyan-600 to-fuchsia-600 text-white rounded-full active:scale-95 transition-all duration-200 font-bold shadow-md shadow-cyan-500/30 dark:shadow-[0_0_15px_rgba(34,211,238,0.5)] text-xs"
                 >
                   Cerrar
+                </button>
+                <button
+                  onClick={() => {
+                    setRoomToDelete(selectedRoom);
+                    setShowDeleteRoomModal(true);
+                  }}
+                  className="flex-1 h-9 bg-black/5 dark:bg-white/5 hover:bg-red-500/10 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded-full active:scale-95 transition-all duration-200 text-xs font-semibold"
+                >
+                  Eliminar Room
                 </button>
               </div>
           </StandardModal>
@@ -1670,16 +1636,17 @@ export default function GestionarSedesPage() {
                 </p>
               </div>
               
-              <div className="flex space-x-3">
+              {/* Botonera agrupada en píldora (Regla 16) */}
+              <div className="flex items-center gap-1.5 p-1.5 bg-black/[0.03] dark:bg-white/[0.03] border border-black/[0.05] dark:border-white/[0.05] rounded-[2rem] backdrop-blur-xl shadow-sm w-full mt-5">
                 <button
                   onClick={() => assignModel(conflictInfo.model, 'move')}
-                  className="flex-1 bg-orange-600 text-white py-2 px-4 rounded-lg hover:bg-orange-700 transition-colors"
+                  className="flex-1 h-9 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-full active:scale-95 transition-all duration-200 font-bold shadow-[0_0_15px_rgba(249,115,22,0.3)] text-xs"
                 >
                   Mover
                 </button>
                 <button
                   onClick={() => assignModel(conflictInfo.model, 'assign')}
-                  className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+                  className="flex-1 h-9 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full active:scale-95 transition-all duration-200 font-bold shadow-[0_0_15px_rgba(59,130,246,0.3)] text-xs"
                 >
                   Doblar
                 </button>
@@ -1697,30 +1664,25 @@ export default function GestionarSedesPage() {
           <StandardModal
             isOpen={showDeleteConfirm}
             onClose={() => { setShowDeleteConfirm(false); setAssignmentToDelete(null); }}
-            title="Confirmar Eliminación"
+            title={
+              <span className="flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-red-500 drop-shadow-[0_0_4px_rgba(239,68,68,0.5)] flex-shrink-0" />
+                <span className="text-gray-900 dark:text-gray-100">Confirmar Eliminación</span>
+              </span>
+            }
             maxWidthClass="max-w-md"
             paddingClass="p-8"
             headerMarginClass="mb-6"
             formSpaceYClass="space-y-6"
           >
-                <div className="flex items-center space-x-3 mb-6">
-                  <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-orange-500 rounded-xl flex items-center justify-center">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
-                    </svg>
-                  </div>
-                </div>
-                
                 <div className="mb-6">
                   <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-                    ¿Estás seguro de que deseas eliminar a <strong>{assignmentToDelete.model_name}</strong> de la jornada <strong>{assignmentToDelete.jornada}</strong>?
+                    ¿Estás seguro de que deseas eliminar a <strong>{assignmentToDelete.model_name}</strong> de la jornada <strong>{assignmentToDelete.jornada.charAt(0) + assignmentToDelete.jornada.slice(1).toLowerCase()}</strong>?
                   </p>
-                  <div className="bg-gray-50 dark:bg-gray-600 rounded-lg p-4">
+                  <div className="bg-white/20 dark:bg-white/[0.02] border border-black/[0.03] dark:border-white/[0.04] rounded-2xl p-4">
                     <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
-                        <svg className="w-4 h-4 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                        </svg>
+                      <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center shrink-0">
+                        <Users className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                       </div>
                       <div>
                         <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{assignmentToDelete.model_name}</p>
@@ -1730,23 +1692,24 @@ export default function GestionarSedesPage() {
                   </div>
                 </div>
 
-                <div className="flex space-x-3">
+                {/* Botonera agrupada en píldora (Regla 16) */}
+                <div className="flex items-center gap-1.5 p-1.5 bg-black/[0.03] dark:bg-white/[0.03] border border-black/[0.05] dark:border-white/[0.05] rounded-[2rem] backdrop-blur-xl shadow-sm w-full mt-5">
                   <button
                     onClick={() => {
                       setShowDeleteConfirm(false);
                       setAssignmentToDelete(null);
                     }}
-                    className="flex-1 bg-gray-100/80 dark:bg-gray-600/80 backdrop-blur-sm text-gray-700 dark:text-gray-200 py-3 px-4 rounded-xl hover:bg-gray-200/80 dark:hover:bg-gray-500/80 transition-all duration-200 font-medium border border-gray-200/50 dark:border-gray-500/50"
+                    className="flex-1 h-9 bg-gradient-to-r from-cyan-600 to-fuchsia-600 text-white rounded-full active:scale-95 transition-all duration-200 font-bold shadow-md shadow-cyan-500/30 dark:shadow-[0_0_15px_rgba(34,211,238,0.5)] text-xs"
                   >
                     Cancelar
                   </button>
                   <button
                     onClick={deleteModelAssignment}
                     disabled={assignmentToDelete?.isDeleting}
-                    className={`flex-1 py-3 px-4 rounded-xl transition-all duration-200 font-medium shadow-lg ${
+                    className={`flex-1 h-9 rounded-full transition-all duration-200 font-bold text-xs ${
                       assignmentToDelete?.isDeleting
                         ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                        : 'bg-gradient-to-r from-red-600 to-orange-600 text-white hover:from-red-700 hover:to-orange-700 hover:shadow-xl transform hover:-translate-y-0.5'
+                        : 'bg-black/5 dark:bg-white/5 hover:bg-red-500/10 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 active:scale-95'
                     }`}
                   >
                     {assignmentToDelete?.isDeleting ? 'Eliminando...' : 'Eliminar'}
@@ -1760,31 +1723,24 @@ export default function GestionarSedesPage() {
           <StandardModal
             isOpen={showDeleteRoomModal}
             onClose={() => { setShowDeleteRoomModal(false); setRoomToDelete(null); }}
-            title="Confirmar Eliminación de Room"
+            title={
+              <span className="flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-red-500 drop-shadow-[0_0_4px_rgba(239,68,68,0.5)] flex-shrink-0" />
+                <span className="text-gray-900 dark:text-gray-100">Confirmar Eliminación de Room</span>
+              </span>
+            }
             maxWidthClass="max-w-md"
             paddingClass="p-8"
             headerMarginClass="mb-6"
             formSpaceYClass="space-y-6"
           >
-                <div className="flex items-center space-x-3 mb-6">
-                  <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-orange-500 rounded-xl flex items-center justify-center">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
-                    </svg>
-                  </div>
-                </div>
-                
                 <div className="mb-6">
                   <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
                     ¿Estás seguro de que deseas eliminar el room <strong>{roomToDelete.room_name}</strong>?
                   </p>
                   <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4 border border-yellow-200 dark:border-yellow-800">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center">
-                        <svg className="w-4 h-4 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
-                        </svg>
-                      </div>
+                    <div className="flex items-start space-x-3">
+                      <AlertTriangle className="w-5 h-5 text-yellow-500 drop-shadow-[0_0_4px_rgba(234,179,8,0.3)] flex-shrink-0 mt-0.5" />
                       <div>
                         <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">Advertencia</p>
                         <p className="text-xs text-yellow-700 dark:text-yellow-300">
@@ -1795,14 +1751,15 @@ export default function GestionarSedesPage() {
                   </div>
                 </div>
                 
-                <div className="flex space-x-3">
+                {/* Botonera agrupada en píldora (Regla 16) */}
+                <div className="flex items-center gap-1.5 p-1.5 bg-black/[0.03] dark:bg-white/[0.03] border border-black/[0.05] dark:border-white/[0.05] rounded-[2rem] backdrop-blur-xl shadow-sm w-full mt-6">
                   <button
                     onClick={() => {
                       console.log('🔍 [DELETE-ROOM] Cancelando eliminación');
                       setShowDeleteRoomModal(false);
                       setRoomToDelete(null);
                     }}
-                    className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500 rounded-lg transition-colors"
+                    className="flex-1 h-9 bg-gradient-to-r from-cyan-600 to-fuchsia-600 text-white rounded-full active:scale-95 transition-all duration-200 font-bold shadow-md shadow-cyan-500/30 dark:shadow-[0_0_15px_rgba(34,211,238,0.5)] text-xs"
                   >
                     Cancelar
                   </button>
@@ -1812,7 +1769,7 @@ export default function GestionarSedesPage() {
                       handleDeleteRoom();
                     }}
                     disabled={submitting}
-                    className="flex-1 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 h-9 bg-black/5 dark:bg-white/5 hover:bg-red-500/10 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded-full active:scale-95 transition-all duration-200 text-xs font-semibold disabled:opacity-50"
                   >
                     {submitting ? 'Eliminando...' : 'Eliminar Room'}
                   </button>
@@ -1835,51 +1792,59 @@ export default function GestionarSedesPage() {
           >
             <form onSubmit={handleEditSede} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1.5">
                   Nombre de la Sede *
                 </label>
                 <input
                   type="text"
                   value={editSedeName}
                   onChange={(e) => setEditSedeName(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm transition-all duration-200"
                   required
                   placeholder="Nombre de la sede"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1.5">
                   Descripción
                 </label>
                 <textarea
                   value={editSedeDescription}
                   onChange={(e) => setEditSedeDescription(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm transition-all duration-200 resize-none"
                   rows={3}
                   placeholder="Descripción de la sede (opcional)"
                 />
               </div>
 
-              <div className="flex items-center space-x-3">
-                <label className="flex items-center space-x-2">
+              <div className="flex items-center space-x-3 pt-1">
+                <label className="flex items-center space-x-2 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={editSedeActive}
                     onChange={(e) => setEditSedeActive(e.target.checked)}
-                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
                   />
-                  <span className="text-sm text-gray-700 dark:text-gray-200">Sede activa</span>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-200">Sede activa</span>
                 </label>
               </div>
 
               {error && (
-                <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700/50 rounded-lg">
-                  <p className="text-sm text-red-800 dark:text-red-300">{error}</p>
+                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
+                  <p className="text-sm text-red-800 dark:text-red-400">{error}</p>
                 </div>
               )}
 
-              <div className="flex space-x-3 pt-4">
+              {/* Botonera agrupada en píldora (Regla 16) */}
+              <div className="flex items-center gap-1.5 p-1.5 bg-black/[0.03] dark:bg-white/[0.03] border border-black/[0.05] dark:border-white/[0.05] rounded-[2rem] backdrop-blur-xl shadow-sm w-full mt-6">
+                <button
+                  type="submit"
+                  disabled={submitting || !editSedeName.trim()}
+                  className="flex-1 h-9 bg-gradient-to-r from-cyan-600 to-fuchsia-600 text-white rounded-full active:scale-95 transition-all duration-200 font-bold shadow-md shadow-cyan-500/30 dark:shadow-[0_0_15px_rgba(34,211,238,0.5)] text-xs disabled:opacity-50"
+                >
+                  {submitting ? 'Guardando...' : 'Guardar'}
+                </button>
                 <button
                   type="button"
                   onClick={() => {
@@ -1889,16 +1854,9 @@ export default function GestionarSedesPage() {
                     setEditSedeDescription('');
                     setError('');
                   }}
-                  className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500 rounded-lg transition-colors"
+                  className="flex-1 h-9 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-gray-700 dark:text-gray-300 rounded-full active:scale-95 transition-all duration-200 text-xs font-semibold"
                 >
                   Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting || !editSedeName.trim()}
-                  className="flex-1 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {submitting ? 'Guardando...' : 'Guardar Cambios'}
                 </button>
               </div>
             </form>
@@ -1913,17 +1871,18 @@ export default function GestionarSedesPage() {
               setShowDeleteSedeModal(false);
               setSedeToDelete(null);
             }}
-            title="Eliminar Sede"
+            title={
+              <span className="flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-red-500 drop-shadow-[0_0_4px_rgba(239,68,68,0.5)] flex-shrink-0" />
+                <span className="text-gray-900 dark:text-gray-100">Confirmar Eliminación de Sede</span>
+              </span>
+            }
             maxWidthClass="max-w-md"
           >
             <div className="space-y-4">
-              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700/50 rounded-lg p-4">
+              <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
                 <div className="flex items-start space-x-3">
-                  <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
-                    </svg>
-                  </div>
+                  <AlertTriangle className="w-5 h-5 text-red-500 drop-shadow-[0_0_4px_rgba(239,68,68,0.5)] flex-shrink-0 mt-0.5" />
                   <div>
                     <h3 className="text-sm font-semibold text-red-800 dark:text-red-300 mb-1">
                       ¿Estás seguro de eliminar esta sede?
@@ -1931,7 +1890,7 @@ export default function GestionarSedesPage() {
                     <p className="text-sm text-red-700 dark:text-red-400">
                       Esta acción no se puede deshacer. La sede <strong>{sedeToDelete.name}</strong> será eliminada permanentemente.
                     </p>
-                    <p className="text-xs text-red-600 dark:text-red-500 mt-2">
+                    <p className="text-xs text-red-600 dark:text-red-500 mt-2 font-medium">
                       ⚠️ Si la sede tiene usuarios o rooms asignados, no se podrá eliminar.
                     </p>
                   </div>
@@ -1939,12 +1898,13 @@ export default function GestionarSedesPage() {
               </div>
 
               {error && (
-                <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700/50 rounded-lg">
-                  <p className="text-sm text-red-800 dark:text-red-300">{error}</p>
+                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
+                  <p className="text-sm text-red-800 dark:text-red-400">{error}</p>
                 </div>
               )}
 
-              <div className="flex space-x-3 pt-4">
+              {/* Botonera agrupada en píldora (Regla 16) */}
+              <div className="flex items-center gap-1.5 p-1.5 bg-black/[0.03] dark:bg-white/[0.03] border border-black/[0.05] dark:border-white/[0.05] rounded-[2rem] backdrop-blur-xl shadow-sm w-full mt-6">
                 <button
                   type="button"
                   onClick={() => {
@@ -1952,7 +1912,7 @@ export default function GestionarSedesPage() {
                     setSedeToDelete(null);
                     setError('');
                   }}
-                  className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500 rounded-lg transition-colors"
+                  className="flex-1 h-9 bg-gradient-to-r from-cyan-600 to-fuchsia-600 text-white rounded-full active:scale-95 transition-all duration-200 font-bold shadow-md shadow-cyan-500/30 dark:shadow-[0_0_15px_rgba(34,211,238,0.5)] text-xs"
                 >
                   Cancelar
                 </button>
@@ -1960,13 +1920,37 @@ export default function GestionarSedesPage() {
                   type="button"
                   onClick={handleDeleteSede}
                   disabled={submitting}
-                  className="flex-1 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 h-9 bg-black/5 dark:bg-white/5 hover:bg-red-500/10 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded-full active:scale-95 transition-all duration-200 text-xs font-semibold disabled:opacity-50"
                 >
                   {submitting ? 'Eliminando...' : 'Eliminar Sede'}
                 </button>
               </div>
             </div>
           </StandardModal>
+        )}
+        {/* Zoomed Image Modal */}
+        {zoomedImage && isMounted && typeof document !== 'undefined' && createPortal(
+          <div 
+            className="fixed inset-0 flex items-center justify-center bg-black/75 backdrop-blur-md p-4 cursor-pointer animate-in fade-in duration-200"
+            onClick={() => setZoomedImage(null)}
+            style={{ zIndex: 100000 }}
+          >
+            <img 
+              src={zoomedImage} 
+              alt="Avatar Ampliado" 
+              className="w-full max-w-[360px] h-auto max-h-[360px] rounded-2xl shadow-2xl object-cover border border-white/10 cursor-default animate-in zoom-in-95 duration-200"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <button 
+              className="absolute top-6 right-6 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 backdrop-blur-md transition-colors cursor-pointer"
+              onClick={() => setZoomedImage(null)}
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>,
+          document.body
         )}
       </div>
     </div>

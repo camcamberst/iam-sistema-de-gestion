@@ -18,6 +18,12 @@ Los componentes base ("GlassCards") que albergan el contenido deben seguir una e
 *   **Prohibición de Esquinas Cuadradas:** El uso de clases como `rounded-none` está estrictamente **PROHIBIDO** en todo contenedor visible.
 *   **Radios Exigidos:** Usar siempre curvas generosas: `rounded-xl` o `rounded-2xl` como mínimo en versión móvil, escalando a `rounded-3xl` en escritorio.
 *   **Padding Interno:** Todo `GlassCard` debe tener padding interno constante (`p-3`, `p-4`, o `p-5`). El contenido interno jamás debe rozar o chocar contra el límite del cristal.
+*   **Aislamiento de GlassCards Móviles:** Los contenedores móviles no deben usar `GlassCards` perimetrales pesadas que limiten el espacio (No meter tarjetas dentro de tarjetas).
+*   **Estética de Objetivo Boreal:** Los elementos como *Objetivo* (ej. Barras de Objetivo Boreal) operarán bajo sombras neón de "Reactor Boreal" y fondos oscuros obsidianos (Dark Mode premium).
+*   **Regla de la Cápsula Concéntrica (Píldoras de Cards):** Cuando varias tarjetas estadísticas o de datos pequeños (como tasas de cambio, balances, totales, contadores) se presenten juntas en una misma fila, queda estrictamente prohibido dejarlas flotando sueltas o desordenadas en el fondo.
+    *   **Contenedor Padre Píldora:** Deben encapsularse nativamente dentro de una gran caja GlassCard unificada en forma de píldora compacta (`rounded-[1.75rem] sm:rounded-[2rem] p-1 sm:p-1.5 backdrop-blur-3xl bg-white/40 dark:bg-[#1a1a1c]/40 border border-white/50 dark:border-white/10 overflow-hidden shadow-sm`).
+    *   **Espaciado y Holgura Mínima (Ceñido):** El padding del contenedor padre debe ser mínimo (`p-1` a `p-1.5`) y la separación horizontal (gap) del grid interno debe ser ultra-estrecha (`gap-1` a `gap-1.5`). Esto ceñirá los bordes de la caja al máximo "como si pareciera que las cards internas están empacadas de forma ceñida dentro de una sola píldora", dejando un espacio de holgura mínimo y orgánico entre las tarjetas y la caja externa.
+    *   **InfoCards Translúcidas Concéntricas:** Las tarjetas internas (`InfoCard`) deben mantener una ligereza translúcida inmaculada (`bg-white/40 dark:bg-white/[0.03] border-white/50 dark:border-white/[0.08] rounded-2xl`), logrando un relieve de cristal concéntrico perfecto que flote de manera inmersiva sobre el fondo oscuro y desenfocado del contenedor de la píldora.
 
 ## 🏷️ 3. Regla de Títulos (Mobile Panel Headers)
 Para los títulos internos de widgets, tablas o sub-paneles, la estructura es rígida para garantizar simetría horizontal perfecta.
@@ -35,6 +41,32 @@ El botón de acción primaria (ej. "Guardar", "Confirmar Pedido") no debe ser un
 *   **Sombras Luminosas (Aura):** Las sombras deben heredar el color del botón (`shadow-md shadow-cyan-500/30`). En modo oscuro, usar resplandores precisos: `dark:shadow-[0_0_15px_rgba(34,211,238,0.5)]`.
 *   **Animación Activa:** En estado hover, aplicar una capa dinámica usando `animation: aurora-flow 1.5s ease-in-out infinite alternate`.
 *   **Tacto (Feedback):** Todos los botones y tarjetas clickeables deben incluir `active:scale-[0.98] transition-all` para brindar la sensación de peso físico.
+
+### 🔘 4.1. Botón de Acción Principal (Regla Guardar de "Mi Calculadora")
+Para cualquier acción que confirme un formulario, envíe datos críticos o guarde cambios significativos (equivalente al botón de "Guardar" en *Mi Calculadora*, "Nuevo producto" o "Confirmar traslado"):
+*   **Firma Cromática Suprema (Cian a Fucsia):** El botón DEBE usar el degradado cian-a-fucsia distintivo:
+    `bg-gradient-to-r from-cyan-600 to-fuchsia-600 hover:from-cyan-500 hover:to-fuchsia-500 text-white border-none shadow-md hover:shadow-lg`
+*   **Aura Lumínica de Enfoque:** Su sombra debe ser una sombra brillante de cian y fucsia:
+    `shadow-cyan-500/20 dark:shadow-[0_0_15px_rgba(34,211,238,0.3)] hover:shadow-fuchsia-500/30`
+*   **Simetría y Centrado en el Formulario (Ancho Compacto):** Queda prohibido forzar botones de acción principal a ocupar el ancho completo (`w-full`) de tarjetas de formulario densas, ya que esto resulta tosco. En su lugar, el botón debe ser de ancho auto-ajustable (`w-fit` / reducido) y posicionarse **perfectamente centrado horizontalmente** en la base del formulario, envolviéndolo en un contenedor de centrado flexible:
+    `<div className="flex justify-center w-full mt-4 relative z-10">`
+*   **Tacto Activo:** Incorporar obligatoriamente la clase de peso físico `active:scale-95 transition-all duration-300`.
+
+### 🔘 4.2. Botones de Acción Secundarios (Pill Capsule Layout / Zero-Bubble)
+Para acciones administrativas u operaciones secundarias asociadas a un elemento de lista o tarjeta (ej: "Editar", "Publicar/Despublicar", "Eliminar"), queda prohibido dejarlos dispersos, con tamaños desiguales o con fondos opacos individuales de base (Zero-Bubble Rule).
+
+*   **Contenedor Unificado (Cápsula de Vidrio):** Deben agruparse y protegerse juntos dentro de una pastilla unificada de vidrio translúcido:
+    `bg-black/[0.03] dark:bg-white/[0.04] backdrop-blur-md rounded-full border border-black/[0.05] dark:border-white/[0.06] p-0.5 sm:p-1 flex items-center gap-0.5 sm:gap-1 shadow-sm`
+    Esto consolida visualmente los controles secundarios, haciéndolos sentir como un widget de control unificado y sofisticado de macOS/iOS.
+*   **Simetría y Tamaños Idénticos (Bounding Box):** Cada botón interactivo individual dentro de la cápsula debe medir exactamente lo mismo para garantizar un centrado geométrico perfecto e idénticas áreas clicables:
+    `w-7.5 h-7.5 sm:w-8.5 sm:h-8.5 flex items-center justify-center rounded-full flex-shrink-0`
+*   **Iconografía Homogénea:** Los iconos vectoriales SVG internos deben tener dimensiones exactas (`w-[16px] h-[16px] sm:w-[18px] sm:h-[18px]` con `strokeWidth={2.2}`).
+*   **Tacto y Brillo de Neón (Feedback Activo):** Los botones no deben tener fondos de color por defecto (Zero-Bubble). Se activan al pasar el cursor aplicando:
+    *   **Escala Dinámica:** `hover:scale-115 active:scale-90 transition-all duration-200`
+    *   **Glow de Estado Neón:**
+        *   *Editar:* Verde esmeralda brillante (`hover:text-emerald-500 hover:drop-shadow-[0_0_8px_rgba(52,211,153,0.7)]`)
+        *   *Publicar/Despublicar:* Emerald/Teal para publicado, o Ámbar para despublicar (`hover:drop-shadow-[0_0_8px_rgba(245,158,11,0.7)]`)
+        *   *Eliminar:* Rojo neón intenso de advertencia (`hover:text-red-500 hover:drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]`)
 
 ## 📱 5. Regla de Modales Centrados
 El paradigma de "Bottom Sheets" (modales pegados a la parte inferior) ha sido reemplazado. Todo modal debe flotar como una isla en el centro de la pantalla.
@@ -123,3 +155,20 @@ Las interfaces de recolección de datos y tablas densas deben minimizar drástic
 *   **Píldoras Transparentes (Acciones de Formulario):** Los botones aglomerados (como "Guardar" y "Cancelar") al final de un formulario o panel NO deben dejarse sueltos. Deben agruparse dentro de un contenedor envolvente en forma de píldora translúcida (`flex items-center gap-1 p-1.5 bg-black/[0.03] dark:bg-white/[0.03] border border-black/[0.05] dark:border-white/[0.05] rounded-[2rem] backdrop-blur-xl shadow-sm`).
 *   **Botón Primario Resplandeciente:** Dentro de esa píldora, la acción primaria destacará radicalmente utilizando un fondo degradado (ej. `bg-gradient-to-r from-sky-500 to-fuchsia-500 rounded-full`) y un resplandor fuerte para denotar su importancia (`shadow-[0_0_15px...] hover:shadow-[0_0_25px...]`).
 *   **Inputs Numéricos Inmaculados (Cero Flechas):** Queda estrictamente prohibido el uso de los controles nativos (*spin buttons* / flechas arriba y abajo) que los navegadores añaden a los campos de tipo `number`. Todos los inputs deben llevar la clase global `.apple-input`, la cual erradica estos controles mediante CSS webkit para asegurar un entorno inmaculado.
+
+## 🔎 17. Regla de Cajas de Búsqueda y Filtrado (Search & Filter Unified Boxes)
+Los paneles de administración que requieran buscar, filtrar o seleccionar elementos deben presentar estas herramientas en bloques unificados y cohesivos, eliminando cajas flotantes aisladas que generen desorden visual.
+
+*   **Contenedor Unificado Translúcido:** Los inputs de texto (búsquedas) y los selectores (`AppleDropdown`) deben agruparse dentro de un contenedor padre con fondo sutil (`bg-black/[0.02] dark:bg-white/[0.02]`), bordes suaves (`border border-black/[0.05] dark:border-white/[0.05]`), y esquinas redondeadas (`rounded-xl` o superior).
+*   **Encabezados Interiores con Glow:** El título del bloque de búsqueda (ej. "Buscar o Seleccionar") debe acompañarse de un icono descriptivo acentuado con un resplandor tipo neón sutil (ej. `text-cyan-500 drop-shadow-[0_0_4px_rgba(6,182,212,0.5)]`).
+*   **Contador de Resultados Integrado:** Los indicadores de coincidencias ("3 resultados") no deben ser texto suelto; deben encapsularse en *badges* elegantes (ej. `bg-cyan-500/10 text-cyan-600 px-2 py-0.5 rounded-full border border-cyan-500/20`) ubicados en el mismo encabezado interior.
+*   **Estética Apple-Input:** Todos los campos de texto dentro del bloque deben usar obligatoriamente la clase global `.apple-input` combinada con su icono de lupa y un botón absoluto de limpieza ("x") para vaciar el input rápidamente.
+
+## 📜 18. Leyes de Oro Constitucionales de la Arquitectura (Consistencia & Aislamiento responsivo)
+Para garantizar la integridad a largo plazo, la robustez del código y evitar regresiones visuales o de negocio en Aurora, todo desarrollo debe someterse a estas leyes supremas:
+
+*   **Consistencia Global y Unificación de Elementos (Ley 1 de Arquitectura):** *“Los cambios que se hagan en un elemento deben ser aplicados a elementos similares en diferentes páginas.”* 
+    *   Toda modificación a un componente que exista en múltiples vistas (ej. `PageHeader`, `InfoCardGrid`, Barras de Objetivo Boreal) debe hacerse sobre una fuente o componente maestro central y propagarse a todo el sistema. Si se descubre código duplicado de UI compleja (copiar/pegar de JSX), es obligación unificarlo en un super-componente (`components/ui`) y referenciarlo.
+*   **Separación de Viewports y Aislamiento responsivo (Ley 2 de Arquitectura):** *“Los cambios que se especifiquen para una versión no pueden afectar a la otra.”* 
+    *   Al escribir clases de Tailwind, el estado por defecto o base aplicará estricto aislamiento responsivo. Si se cambian padding, borders o displays en pantallas pequeñas, se debe envolver en `max-sm:` o compensarlo explícitamente en `sm:` para mantener la versión de escritorio intacta.
+*   **Patrón de Bifurcación Visual (Responsive DOM Split):** Si una estructura difiere de forma irreconciliable en móvil y escritorio (ej: un grid multidimensional frente a un carrusel móvil deslizable de tarjetas independientes `snap-x`), se permite renderizar dos árboles DOM paralelos controlando su visibilidad con Tailwind (`md:hidden` / `hidden md:block`). En este caso, el estado reactivo debe ser el mismo y compartido (no duplicado), y se debe inyectar obligatoriamente un sufijo (como `-mobile`) en los IDs de HTML y `htmlFor` del árbol móvil para evitar colisiones de accesibilidad en el navegador.

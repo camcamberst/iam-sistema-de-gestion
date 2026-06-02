@@ -10,6 +10,8 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseServer, supabaseAuth } from '@/lib/supabase-server';
 import { addAffiliateFilter, type AuthUser } from '@/lib/affiliates/filters';
+import { atomicArchiveAndReset } from '@/lib/calculator/period-closure-helpers';
+import { getTotalSavingsBalance } from '@/lib/savings/savings-utils';
 
 // =====================================================
 // 📋 GET - Obtener usuarios (SOLO DATOS VITALES)
@@ -530,8 +532,8 @@ export async function PUT(request: NextRequest) {
     const body = await request.json();
     console.log('🔍 [DEBUG] Body completo recibido en PUT:', JSON.stringify(body, null, 2));
     
-    const { id, name, email, password, role, is_active, group_ids, jornada, room_id } = body;
-    console.log('🔍 [DEBUG] Datos extraídos en PUT:', { id, name, email, password: !!password, role, is_active, group_ids, jornada, room_id });
+    const { id, name, email, password, role, is_active, group_ids, jornada, room_id, liquidar } = body;
+    console.log('🔍 [DEBUG] Datos extraídos en PUT:', { id, name, email, password: !!password, role, is_active, group_ids, jornada, room_id, liquidar });
 
     if (!id || !name || !email || !role) {
       console.log('❌ [DEBUG] Datos faltantes en PUT:', { 
@@ -549,7 +551,7 @@ export async function PUT(request: NextRequest) {
     // Obtener información del usuario a editar
     const { data: targetUser, error: targetUserError } = await supabase
       .from('users')
-      .select('id, role, affiliate_studio_id')
+      .select('id, role, affiliate_studio_id, is_active, name, email')
       .eq('id', id)
       .single();
 
@@ -609,28 +611,503 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // ── Advertencia de deuda sexshop al desactivar/eliminar modelo ──────────
-    if (is_active === false && targetUser.role === 'modelo') {
-      const { data: pendingFinancings } = await supabase
-        .from('shop_financing')
-        .select('id, total_amount, installments, shop_financing_installments(amount, status)')
-        .eq('model_id', id)
-        .eq('status', 'aprobado');
+    // ── Proceso de Liquidación y Ctrl+Z de Modelos ──────────────────────────
+    if (targetUser.role === 'modelo') {
+      // 1. LIQUIDACIÓN COMPLETA AL DESACTIVAR
+      if (targetUser.is_active === true && is_active === false && liquidar === true) {
+        console.log(`💼 [LIQUIDAR] Iniciando liquidación para modelo ${name} (${email})`);
+        try {
+          // 🛡️ ESCUDO 1: Cascada Cronológica Inteligente
+          const { data: rawValues, error: mvError } = await supabase
+            .from('model_values')
+            .select('period_date, value')
+            .eq('model_id', id);
 
-      if (pendingFinancings && pendingFinancings.length > 0) {
-        const totalDebt = pendingFinancings.reduce((sum: number, fin: { shop_financing_installments?: Array<{ amount: number; status: string }> }) => {
-          const pendingInstallments = (fin.shop_financing_installments || []).filter((i: { status: string }) => i.status === 'pendiente');
-          return sum + pendingInstallments.reduce((s: number, i: { amount: number }) => s + i.amount, 0);
-        }, 0);
+          if (mvError) throw new Error(`Error consultando model_values: ${mvError.message}`);
 
-        if (totalDebt > 0) {
-          try {
-            const { sendBotNotification } = await import('@/lib/chat/bot-notifications');
-            const debtMsg = `⚠️ **Advertencia — Cuenta desactivada con deuda de Sexshop**\n\nEl usuario **${name}** (${email}) fue desactivado o eliminado, pero tiene **deuda pendiente de Sexshop por $${totalDebt.toLocaleString('es-CO')} COP** en ${pendingFinancings.length} financiación(es).\n\nSe recomienda gestionar el cobro pendiente antes de proceder. La desactivación fue ejecutada de todas formas.`;
-            await sendBotNotification(currentUser.id, 'custom_message' as never, debtMsg);
-          } catch (e) {
-            console.error('Error enviando alerta sexshop deuda:', e);
+          const openPeriodsMap = new Map<string, { periodDate: string; periodType: '1-15' | '16-31' }>();
+          for (const val of rawValues || []) {
+            const valNum = Number(val.value || 0);
+            if (valNum <= 0) continue;
+
+            const dateStr = val.period_date;
+            const [year, month, day] = dateStr.split('-').map(Number);
+            let periodDate: string;
+            let periodType: '1-15' | '16-31';
+
+            if (day >= 1 && day <= 15) {
+              periodDate = `${year}-${String(month).padStart(2, '0')}-01`;
+              periodType = '1-15';
+            } else {
+              periodDate = `${year}-${String(month).padStart(2, '0')}-16`;
+              periodType = '16-31';
+            }
+
+            const key = `${periodDate}_${periodType}`;
+            if (!openPeriodsMap.has(key)) {
+              openPeriodsMap.set(key, { periodDate, periodType });
+            }
           }
+
+          const { data: rawTotals } = await supabase
+            .from('calculator_totals')
+            .select('period_date, total_cop_modelo')
+            .eq('model_id', id);
+
+          for (const tot of rawTotals || []) {
+            const totNum = Number(tot.total_cop_modelo || 0);
+            if (totNum <= 0) continue;
+
+            const dateStr = tot.period_date;
+            const [year, month, day] = dateStr.split('-').map(Number);
+            let periodDate: string;
+            let periodType: '1-15' | '16-31';
+
+            if (day >= 1 && day <= 15) {
+              periodDate = `${year}-${String(month).padStart(2, '0')}-01`;
+              periodType = '1-15';
+            } else {
+              periodDate = `${year}-${String(month).padStart(2, '0')}-16`;
+              periodType = '16-31';
+            }
+
+            const key = `${periodDate}_${periodType}`;
+            if (!openPeriodsMap.has(key)) {
+              openPeriodsMap.set(key, { periodDate, periodType });
+            }
+          }
+
+          // Filtrar períodos que ya estén en history
+          const openPeriods: Array<{ periodDate: string; periodType: '1-15' | '16-31' }> = [];
+          for (const entry of Array.from(openPeriodsMap.values())) {
+            const { data: historyExists } = await supabase
+              .from('calculator_history')
+              .select('id')
+              .eq('model_id', id)
+              .eq('period_date', entry.periodDate)
+              .eq('period_type', entry.periodType)
+              .limit(1);
+
+            if (!historyExists || historyExists.length === 0) {
+              openPeriods.push(entry);
+            }
+          }
+
+          // Ordenar cronológicamente
+          openPeriods.sort((a, b) => {
+            const timeA = new Date(a.periodDate).getTime();
+            const timeB = new Date(b.periodDate).getTime();
+            if (timeA !== timeB) return timeA - timeB;
+            return a.periodType === '1-15' ? -1 : 1;
+          });
+
+          // Fallback para período actual del sistema
+          const colombiaDate = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Bogota' });
+          const [year, month, day] = colombiaDate.split('-').map(Number);
+          const currentSysPeriodType = day >= 1 && day <= 15 ? '1-15' : '16-31';
+          const currentSysPeriodDate = currentSysPeriodType === '1-15'
+            ? `${year}-${String(month).padStart(2, '0')}-01`
+            : `${year}-${String(month).padStart(2, '0')}-16`;
+
+          const latestPeriod = openPeriods[openPeriods.length - 1] || { periodDate: currentSysPeriodDate, periodType: currentSysPeriodType };
+
+          // A. Cerrar y archivar cada período atómicamente
+          let totalEarningsCOP = 0;
+          for (const p of openPeriods) {
+            const closeResult = await atomicArchiveAndReset(id, p.periodDate, p.periodType);
+            if (!closeResult.success) {
+              throw new Error(`Fallo en el cierre atómico del período ${p.periodDate} (${p.periodType}): ${closeResult.error}`);
+            }
+
+            const { data: histRows } = await supabase
+              .from('calculator_history')
+              .select('value_cop_modelo')
+              .eq('model_id', id)
+              .eq('period_date', p.periodDate)
+              .eq('period_type', p.periodType)
+              .neq('platform_id', '__CONSOLIDATED_TOTAL__');
+
+            const periodEarnings = (histRows || []).reduce((sum, r) => sum + Number(r.value_cop_modelo || 0), 0);
+            totalEarningsCOP += periodEarnings;
+          }
+
+          // B. 🛡️ ESCUDO 5: Exclusión de Ahorro Circular y Reembolso de Ahorros
+          const targetPeriodDates = openPeriods.length > 0 ? openPeriods.map(p => p.periodDate) : [latestPeriod.periodDate];
+          await supabase
+            .from('model_savings')
+            .update({
+              estado: 'cancelado',
+              cancelled_at: new Date().toISOString(),
+              cancelled_by: currentUser.id,
+              comentarios_admin: 'Ahorro cancelado por liquidación y retiro de modelo'
+            })
+            .eq('model_id', id)
+            .in('period_date', targetPeriodDates);
+
+          const balanceResult = await getTotalSavingsBalance(id);
+          const saldo_actual = balanceResult.success ? balanceResult.saldo_actual : 0;
+
+          if (saldo_actual > 0) {
+            // Reembolso con saldo negativo en deductions
+            const { error: refundDedError } = await supabase
+              .from('calculator_deductions')
+              .insert({
+                model_id: id,
+                period_date: latestPeriod.periodDate,
+                period_type: latestPeriod.periodType,
+                concept: 'Reembolso Total de Ahorros por Liquidación',
+                amount: -saldo_actual,
+                created_by: currentUser.id
+              });
+
+            if (refundDedError) throw new Error(`Error registrando reembolso: ${refundDedError.message}`);
+
+            // Registrar retiro realizado en withdrawals
+            const { error: withdrawalError } = await supabase
+              .from('savings_withdrawals')
+              .insert({
+                model_id: id,
+                monto_solicitado: saldo_actual,
+                porcentaje_retiro: 100.00,
+                medio_pago: 'cuenta_bancaria',
+                estado: 'realizado',
+                comentarios_admin: 'Reembolso automático por liquidación y retiro de modelo',
+                realized_at: new Date().toISOString(),
+                realized_by: currentUser.id
+              });
+
+            if (withdrawalError) throw new Error(`Error registrando retiro de ahorros: ${withdrawalError.message}`);
+          }
+
+          // C. Calcular activos disponibles
+          let totalAnticipos = 0;
+          if (openPeriods.length > 0) {
+            const { data: periodsData } = await supabase
+              .from('periods')
+              .select('id')
+              .in('start_date', openPeriods.map(p => p.periodDate));
+            const periodIds = periodsData?.map(p => p.id) || [];
+
+            if (periodIds.length > 0) {
+              const { data: anticiposData } = await supabase
+                .from('anticipos')
+                .select('monto_solicitado')
+                .eq('model_id', id)
+                .in('period_id', periodIds)
+                .in('estado', ['aprobado', 'realizado', 'confirmado']);
+              totalAnticipos = (anticiposData || []).reduce((sum, a) => sum + Number(a.monto_solicitado || 0), 0);
+            }
+          }
+
+          const { data: deductionsData } = await supabase
+            .from('calculator_deductions')
+            .select('amount, concept')
+            .eq('model_id', id)
+            .in('period_date', targetPeriodDates);
+
+          const totalOtherDeductions = (deductionsData || [])
+            .filter(d => d.concept !== 'Reembolso Total de Ahorros por Liquidación')
+            .reduce((sum, d) => sum + Number(d.amount || 0), 0);
+
+          const availableAssets = Math.max(0, totalEarningsCOP + saldo_actual - totalAnticipos - totalOtherDeductions);
+
+          // D. 🛡️ ESCUDO 2: Deducción Secuencial con Tope de Deudas (Sexshop)
+          const { data: pendingInstallments } = await supabase
+            .from('shop_financing_installments')
+            .select('id, financing_id, installment_no, amount, status')
+            .eq('status', 'pendiente')
+            .order('created_at', { ascending: true })
+            .order('installment_no', { ascending: true });
+
+          const { data: modelFinancings } = await supabase
+            .from('shop_financing')
+            .select('id')
+            .eq('model_id', id)
+            .eq('status', 'aprobado');
+
+          const modelFinancingIds = new Set((modelFinancings || []).map(f => f.id));
+          const modelPendingInstallments = (pendingInstallments || []).filter(inst => modelFinancingIds.has(inst.financing_id));
+
+          let remainingAssets = availableAssets;
+          let totalUnpaidDebt = 0;
+
+          for (const inst of modelPendingInstallments) {
+            const instAmount = Number(inst.amount);
+            if (remainingAssets >= instAmount) {
+              // Cobro completo
+              await supabase
+                .from('shop_financing_installments')
+                .update({
+                  status: 'cobrada',
+                  deducted_at: new Date().toISOString(),
+                  deducted_by: currentUser.id
+                })
+                .eq('id', inst.id);
+
+              await supabase
+                .from('calculator_deductions')
+                .insert({
+                  model_id: id,
+                  period_date: latestPeriod.periodDate,
+                  period_type: latestPeriod.periodType,
+                  concept: `Deducción Sexshop - Cuota ${inst.installment_no} (Finan. ID: ${inst.financing_id.substring(0, 8)})`,
+                  amount: instAmount,
+                  created_by: currentUser.id
+                });
+
+              remainingAssets -= instAmount;
+
+              // Comprobar si se completó el financiamiento
+              const { data: otherInst } = await supabase
+                .from('shop_financing_installments')
+                .select('id, status')
+                .eq('financing_id', inst.financing_id);
+
+              const allPaid = (otherInst || []).every(i => i.status === 'cobrada' || i.id === inst.id);
+              if (allPaid) {
+                await supabase
+                  .from('shop_financing')
+                  .update({ status: 'completado' })
+                  .eq('id', inst.financing_id);
+              }
+            } else if (remainingAssets > 0) {
+              // Cobro parcial
+              const partialAmount = remainingAssets;
+              await supabase
+                .from('calculator_deductions')
+                .insert({
+                  model_id: id,
+                  period_date: latestPeriod.periodDate,
+                  period_type: latestPeriod.periodType,
+                  concept: `Deducción Parcial Sexshop - Saldo Incompleto (Finan. ID: ${inst.financing_id.substring(0, 8)})`,
+                  amount: partialAmount,
+                  created_by: currentUser.id
+                });
+
+              totalUnpaidDebt += (instAmount - partialAmount);
+              remainingAssets = 0;
+            } else {
+              totalUnpaidDebt += instAmount;
+            }
+          }
+
+          // Enviar alerta de deuda pendiente
+          if (totalUnpaidDebt > 0) {
+            const { sendBotNotification } = await import('@/lib/chat/bot-notifications');
+            const debtMsg = `⚠️ **Liquidación de Modelo — Deuda Sexshop Pendiente**\n\nLa modelo **${name}** (${email}) ha sido desactivada y liquidada.\n\n- **Ingresos Generados:** $${totalEarningsCOP.toLocaleString('es-CO')} COP\n- **Ahorros Reembolsados:** $${saldo_actual.toLocaleString('es-CO')} COP\n- **Activos Totales Disponibles:** $${availableAssets.toLocaleString('es-CO')} COP\n- **Deuda Cobrada:** $${(availableAssets - remainingAssets).toLocaleString('es-CO')} COP\n- **Deuda Pendiente Restante (Sin Cubrir):** $${totalUnpaidDebt.toLocaleString('es-CO')} COP\n\nLas cuotas restantes permanecen en estado **'pendiente'** en la base de datos para seguimiento contable.`;
+            await sendBotNotification(currentUser.id, 'custom_message' as never, debtMsg);
+          }
+
+          console.log(`✅ [LIQUIDAR] Liquidación completada exitosamente para ${email}`);
+
+        } catch (liquidationErr: any) {
+          console.error(`❌ [LIQUIDAR] Error crítico durante la liquidación:`, liquidationErr);
+          return NextResponse.json(
+            { success: false, error: `Error durante el proceso de liquidación: ${liquidationErr.message}` },
+            { status: 500 }
+          );
+        }
+      }
+
+      // 2. ADVERTENCIA SIMPLE AL DESACTIVAR (SIN LIQUIDAR)
+      else if (targetUser.is_active === true && is_active === false && liquidar !== true) {
+        const { data: pendingFinancings } = await supabase
+          .from('shop_financing')
+          .select('id, total_amount, installments, shop_financing_installments(amount, status)')
+          .eq('model_id', id)
+          .eq('status', 'aprobado');
+
+        if (pendingFinancings && pendingFinancings.length > 0) {
+          const totalDebt = pendingFinancings.reduce((sum: number, fin: any) => {
+            const pendingInstallments = (fin.shop_financing_installments || []).filter((i: any) => i.status === 'pendiente');
+            return sum + pendingInstallments.reduce((s: number, i: any) => s + i.amount, 0);
+          }, 0);
+
+          if (totalDebt > 0) {
+            try {
+              const { sendBotNotification } = await import('@/lib/chat/bot-notifications');
+              const debtMsg = `⚠️ **Advertencia — Cuenta desactivada con deuda de Sexshop**\n\nEl usuario **${name}** (${email}) fue desactivado, pero tiene **deuda pendiente de Sexshop por $${totalDebt.toLocaleString('es-CO')} COP** en ${pendingFinancings.length} financiación(es).\n\nSe recomienda gestionar el cobro pendiente antes de proceder. La desactivación fue ejecutada de todas formas (sin liquidar saldos).`;
+              await sendBotNotification(currentUser.id, 'custom_message' as never, debtMsg);
+            } catch (e) {
+              console.error('Error enviando alerta sexshop deuda:', e);
+            }
+          }
+        }
+      }
+
+      // 3. 🛡️ ESCUDO 3: REVERSIBILIDAD COMPLETA ("Ctrl+Z" al reactivar)
+      else if (targetUser.is_active === false && is_active === true) {
+        console.log(`🔄 [REACTIVAR] Reactivando modelo ${name} (${email}) - Revirtiendo liquidación`);
+        try {
+          const { data: openStatuses } = await supabase
+            .from('calculator_period_closure_status')
+            .select('period_date, period_type')
+            .eq('status', 'completed');
+
+          const { data: historyEntries } = await supabase
+            .from('calculator_history')
+            .select('period_date, period_type')
+            .eq('model_id', id);
+
+          const seen = new Set<string>();
+          const closedOpenPeriods: Array<{ periodDate: string; periodType: '1-15' | '16-31' }> = [];
+
+          for (const entry of historyEntries || []) {
+            const key = `${entry.period_date}_${entry.period_type}`;
+            if (seen.has(key)) continue;
+            seen.add(key);
+
+            const isCompletedGlobal = (openStatuses || []).some(
+              os => os.period_date === entry.period_date && os.period_type === entry.period_type
+            );
+
+            if (!isCompletedGlobal) {
+              closedOpenPeriods.push({
+                periodDate: entry.period_date,
+                periodType: entry.period_type as '1-15' | '16-31'
+              });
+            }
+          }
+
+          for (const p of closedOpenPeriods) {
+            // A. Eliminar calculator_history
+            await supabase
+              .from('calculator_history')
+              .delete()
+              .eq('model_id', id)
+              .eq('period_date', p.periodDate)
+              .eq('period_type', p.periodType);
+
+            // B. Restaurar model_values desde safety backup
+            const { data: backups } = await supabase
+              .from('model_values_safety_backup')
+              .select('*')
+              .eq('model_id', id)
+              .eq('period_start_date', p.periodDate)
+              .eq('period_type', p.periodType);
+
+            if (backups && backups.length > 0) {
+              const restoredValues = backups.map(b => ({
+                id: b.original_id,
+                model_id: b.model_id,
+                platform_id: b.platform_id,
+                value: Number(b.value),
+                period_date: b.period_date,
+                created_at: b.original_created_at,
+                updated_at: b.original_updated_at
+              }));
+
+              await supabase
+                .from('model_values')
+                .insert(restoredValues);
+
+              // Eliminar backup físico
+              await supabase
+                .from('model_values_safety_backup')
+                .delete()
+                .eq('model_id', id)
+                .eq('period_start_date', p.periodDate)
+                .eq('period_type', p.periodType);
+            }
+          }
+
+          // C. Revertir cobros de Sexshop
+          const targetPeriodDates = closedOpenPeriods.map(p => p.periodDate);
+          if (targetPeriodDates.length > 0) {
+            const { data: shopDeductions } = await supabase
+              .from('calculator_deductions')
+              .select('id, concept')
+              .eq('model_id', id)
+              .in('period_date', targetPeriodDates);
+
+            const shopDeductionIds = (shopDeductions || [])
+              .filter(d => d.concept.startsWith('Deducción Sexshop - Cuota') || d.concept.startsWith('Deducción Parcial Sexshop'))
+              .map(d => d.id);
+
+            if (shopDeductionIds.length > 0) {
+              await supabase
+                .from('calculator_deductions')
+                .delete()
+                .in('id', shopDeductionIds);
+            }
+          }
+
+          // Revertir cuotas a pendiente
+          const { data: modelFinancings } = await supabase
+            .from('shop_financing')
+            .select('id')
+            .eq('model_id', id);
+
+          const modelFinancingIds = (modelFinancings || []).map(f => f.id);
+
+          if (modelFinancingIds.length > 0) {
+            const { data: cobradasInstallments } = await supabase
+              .from('shop_financing_installments')
+              .select('id, financing_id')
+              .eq('status', 'cobrada')
+              .in('financing_id', modelFinancingIds)
+              .is('period_id', null);
+
+            if (cobradasInstallments && cobradasInstallments.length > 0) {
+              await supabase
+                .from('shop_financing_installments')
+                .update({
+                  status: 'pendiente',
+                  deducted_at: null,
+                  deducted_by: null
+                })
+                .in('id', cobradasInstallments.map(i => i.id));
+
+              const financingIdsToRevert = Array.from(new Set(cobradasInstallments.map(i => i.financing_id)));
+              await supabase
+                .from('shop_financing')
+                .update({ status: 'aprobado' })
+                .in('id', financingIdsToRevert)
+                .eq('status', 'completado');
+            }
+          }
+
+          // D. Revertir reembolso de ahorros
+          const { data: refundDeductions } = await supabase
+            .from('calculator_deductions')
+            .select('id')
+            .eq('model_id', id)
+            .eq('concept', 'Reembolso Total de Ahorros por Liquidación');
+
+          if (refundDeductions && refundDeductions.length > 0) {
+            await supabase
+              .from('calculator_deductions')
+              .delete()
+              .in('id', refundDeductions.map(d => d.id));
+          }
+
+          const { data: refundWithdrawals } = await supabase
+            .from('savings_withdrawals')
+            .select('id')
+            .eq('model_id', id)
+            .eq('estado', 'realizado')
+            .eq('comentarios_admin', 'Reembolso automático por liquidación y retiro de modelo');
+
+          if (refundWithdrawals && refundWithdrawals.length > 0) {
+            await supabase
+              .from('savings_withdrawals')
+              .update({
+                estado: 'cancelado',
+                cancelled_at: new Date().toISOString(),
+                cancelled_by: currentUser.id,
+                comentarios_admin: 'Retiro cancelado por reactivación de modelo (Ctrl+Z)'
+              })
+              .in('id', refundWithdrawals.map(w => w.id));
+          }
+
+          console.log(`✅ [REACTIVAR] Reactivación y Ctrl+Z completados exitosamente para ${email}`);
+
+        } catch (reactivationErr: any) {
+          console.error(`❌ [REACTIVAR] Error crítico durante reactivación:`, reactivationErr);
+          return NextResponse.json(
+            { success: false, error: `Error durante la reactivación: ${reactivationErr.message}` },
+            { status: 500 }
+          );
         }
       }
     }

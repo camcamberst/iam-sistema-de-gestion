@@ -12,7 +12,7 @@ const supabase = createClient(
 export async function GET(req: NextRequest) {
   const user = await getShopUser(req);
 
-  let query = supabase.from('shop_categories').select('*').order('name');
+  let query = supabase.from('shop_categories').select('*, shop_aisles(id, name)').order('name');
 
   if (user) {
     query = applyShopAffiliateFilter(query as any, user) as any;
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { name, description } = body;
+  const { name, description, aisle_id } = body;
   if (!name) return NextResponse.json({ error: 'name requerido' }, { status: 400 });
 
   const slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
@@ -41,8 +41,8 @@ export async function POST(req: NextRequest) {
 
   const { data, error } = await supabase
     .from('shop_categories')
-    .insert({ name, description, slug, created_by: user.id, affiliate_studio_id: scope })
-    .select()
+    .insert({ name, description, slug, created_by: user.id, affiliate_studio_id: scope, aisle_id: aisle_id || null })
+    .select('*, shop_aisles(id, name)')
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -58,7 +58,7 @@ export async function PUT(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { id, name, description, is_active } = body;
+  const { id, name, description, is_active, aisle_id } = body;
   if (!id) return NextResponse.json({ error: 'id requerido' }, { status: 400 });
 
   // Verificar que la categoría pertenece al mismo estudio
@@ -80,12 +80,13 @@ export async function PUT(req: NextRequest) {
   }
   if (description !== undefined) updates.description = description;
   if (is_active !== undefined) updates.is_active = is_active;
+  if (aisle_id !== undefined) updates.aisle_id = aisle_id || null;
 
   const { data, error } = await supabase
     .from('shop_categories')
     .update(updates)
     .eq('id', id)
-    .select()
+    .select('*, shop_aisles(id, name)')
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

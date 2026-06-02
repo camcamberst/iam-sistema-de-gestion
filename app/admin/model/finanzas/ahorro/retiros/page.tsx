@@ -355,6 +355,9 @@ export default function SolicitarRetiroPage() {
     );
   }
 
+  const inputClassName = `w-full h-10 px-3 bg-black/[0.04] dark:bg-white/[0.06] backdrop-blur-xl border border-black/[0.08] dark:border-white/[0.08] text-gray-900 dark:text-white text-[13px] font-medium rounded-xl hover:bg-black/[0.06] dark:hover:bg-white/[0.08] hover:border-black/10 dark:hover:border-white/[0.15] focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500 block transition-all duration-300 shadow-[0_4px_12px_rgba(0,0,0,0.02)]`;
+  const labelClassName = `block text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2`;
+
   return (
     <div className="min-h-screen relative w-full overflow-hidden">
       <ModelAuroraBackground />
@@ -403,31 +406,33 @@ export default function SolicitarRetiroPage() {
           {/* Formulario */}
           <div className="lg:col-span-2 relative z-[60]">
             <GlassCard padding="none" className="p-4 sm:p-6 !overflow-visible">
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-5">
                 {/* Saldo Disponible */}
                 {balance && (
                   <div
                     onClick={handleSaldoClick}
-                    className="cursor-pointer p-4 bg-purple-500/10 dark:bg-purple-500/15 rounded-xl border border-purple-500/20 dark:border-purple-500/30 hover:bg-purple-500/20 dark:hover:bg-purple-500/25 transition-all shadow-sm"
+                    className="cursor-pointer p-3 bg-purple-500/[0.04] dark:bg-purple-500/[0.06] rounded-xl border border-purple-500/15 dark:border-purple-500/25 hover:bg-purple-500/[0.08] dark:hover:bg-purple-500/[0.12] hover:border-purple-500/30 dark:hover:border-purple-500/40 transition-all duration-300 shadow-[0_4px_12px_rgba(0,0,0,0.02)]"
                   >
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">Saldo Disponible</p>
-                        <p className="text-2xl font-bold text-purple-600 dark:text-purple-400 mt-1">
+                        <p className="text-[11px] font-semibold uppercase tracking-wider text-purple-600/70 dark:text-purple-400/80">Saldo Disponible</p>
+                        <p className="text-xl font-bold tracking-tight text-purple-600 dark:text-purple-400 mt-0.5">
                           {formatNumber(balance.saldo_actual)} COP
                         </p>
                       </div>
-                      <svg className="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 text-purple-500/70 dark:text-purple-400/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
                       </svg>
                     </div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">Haz clic para usar todo el saldo disponible</p>
+                    <p className="text-[10px] text-purple-500/50 dark:text-purple-400/50 mt-1.5 flex items-center gap-1">
+                      Haz clic para usar todo el saldo disponible
+                    </p>
                   </div>
                 )}
 
                 {/* Monto a Retirar */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                  <label className={labelClassName}>
                     Monto a Retirar (COP) *
                   </label>
                   <input
@@ -436,36 +441,38 @@ export default function SolicitarRetiroPage() {
                     onChange={(e) => handleMontoChange(e.target.value)}
                     onBlur={handleMontoBlur}
                     placeholder="Ej: 500000"
-                    className={`w-full bg-black/[0.04] dark:bg-white/[0.06] backdrop-blur-xl border text-gray-900 dark:text-white text-sm font-semibold rounded-xl hover:bg-black/[0.06] dark:hover:bg-white/[0.08] hover:border-black/10 dark:hover:border-white/[0.15] focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 block p-3 transition-all duration-300 shadow-[0_4px_12px_rgba(0,0,0,0.02)] ${
-                      montoError ? 'border-red-500/50 dark:border-red-500/50' : 'border-black/10 dark:border-white/10'
+                    className={`${inputClassName} ${
+                      montoError ? 'border-red-500/50 dark:border-red-500/50 focus:ring-red-500/30 focus:border-red-500' : ''
                     }`}
                     required
                   />
                   {montoError && (
                     <p className="text-xs text-red-600 dark:text-red-400 mt-1">{montoError}</p>
                   )}
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  <p className="text-[11px] text-gray-500/80 dark:text-gray-400/70 mt-1">
                     Mínimo: $100,000 COP | Máximo: Saldo disponible
                   </p>
                 </div>
 
                 {/* Información de procesamiento */}
                 {processingInfo && withdrawalData.monto_solicitado > 0 && (
-                  <div className="p-4 bg-blue-500/10 dark:bg-blue-500/15 border border-blue-500/20 dark:border-blue-500/30 rounded-xl">
-                    <div className="flex items-start space-x-3">
-                      <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="p-3.5 bg-blue-500/[0.04] dark:bg-blue-500/[0.06] border border-blue-500/15 dark:border-blue-500/25 rounded-xl transition-all duration-300 shadow-[0_4px_12px_rgba(0,0,0,0.01)]">
+                    <div className="flex items-start space-x-2.5">
+                      <svg className="w-4 h-4 text-blue-500/70 dark:text-blue-400/70 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                       <div>
-                        <p className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                        <p className="text-[13px] font-semibold text-blue-600 dark:text-blue-400">
                           Tiempo de procesamiento: {processingInfo.tiempo}
                         </p>
-                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                          Porcentaje del saldo: {processingInfo.porcentaje.toFixed(2)}%
-                        </p>
-                        <p className="text-xs text-gray-600 dark:text-gray-400">
-                          Fecha estimada: {processingInfo.fechaEstimada.toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                        </p>
+                        <div className="text-[11px] text-gray-500 dark:text-gray-400 mt-1 space-y-0.5 leading-relaxed">
+                          <p>
+                            Porcentaje del saldo: <span className="font-semibold text-gray-700 dark:text-gray-300">{processingInfo.porcentaje.toFixed(2)}%</span>
+                          </p>
+                          <p>
+                            Fecha estimada: <span className="font-semibold text-gray-700 dark:text-gray-300">{processingInfo.fechaEstimada.toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -473,7 +480,7 @@ export default function SolicitarRetiroPage() {
 
                 {/* Medio de Pago */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                  <label className={labelClassName}>
                     Medio de Pago *
                   </label>
                   <AppleDropdown
@@ -485,6 +492,7 @@ export default function SolicitarRetiroPage() {
                     ]}
                     value={withdrawalData.medio_pago}
                     onChange={(value) => setWithdrawalData(prev => ({ ...prev, medio_pago: value as any }))}
+                    className="w-full max-w-full [&>button]:h-10 [&>button]:text-[13px] [&>button]:font-medium"
                   />
                 </div>
 
@@ -492,19 +500,19 @@ export default function SolicitarRetiroPage() {
                 {withdrawalData.medio_pago === 'nequi' || withdrawalData.medio_pago === 'daviplata' ? (
                   <>
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                      <label className={labelClassName}>
                         Nombre del Beneficiario *
                       </label>
                       <input
                         type="text"
                         value={withdrawalData.nombre_beneficiario || ''}
                         onChange={(e) => setWithdrawalData(prev => ({ ...prev, nombre_beneficiario: e.target.value }))}
-                        className="w-full bg-black/[0.04] dark:bg-white/[0.06] backdrop-blur-xl border border-black/[0.06] dark:border-white/[0.08] text-gray-900 dark:text-white text-sm font-semibold rounded-xl hover:bg-black/[0.06] dark:hover:bg-white/[0.08] hover:border-black/10 dark:hover:border-white/[0.15] focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 block p-3 transition-all duration-300 shadow-[0_4px_12px_rgba(0,0,0,0.02)]"
+                        className={inputClassName}
                         required
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                      <label className={labelClassName}>
                         Número de Teléfono *
                       </label>
                       <input
@@ -513,8 +521,8 @@ export default function SolicitarRetiroPage() {
                         onChange={(e) => handleTelefonoChange(e.target.value)}
                         placeholder="3001234567"
                         maxLength={10}
-                        className={`w-full bg-black/[0.04] dark:bg-white/[0.06] backdrop-blur-xl border text-gray-900 dark:text-white text-sm font-semibold rounded-xl hover:bg-black/[0.06] dark:hover:bg-white/[0.08] hover:border-black/10 dark:hover:border-white/[0.15] focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 block p-3 transition-all duration-300 shadow-[0_4px_12px_rgba(0,0,0,0.02)] ${
-                          telefonoError ? 'border-red-500/50 dark:border-red-500/50' : 'border-black/10 dark:border-white/10'
+                        className={`${inputClassName} ${
+                          telefonoError ? 'border-red-500/50 dark:border-red-500/50 focus:ring-red-500/30 focus:border-red-500' : ''
                         }`}
                         required
                       />
@@ -526,19 +534,19 @@ export default function SolicitarRetiroPage() {
                 ) : (
                   <>
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                      <label className={labelClassName}>
                         Nombre del Titular *
                       </label>
                       <input
                         type="text"
                         value={withdrawalData.nombre_titular || ''}
                         onChange={(e) => setWithdrawalData(prev => ({ ...prev, nombre_titular: e.target.value }))}
-                        className="w-full bg-black/[0.04] dark:bg-white/[0.06] backdrop-blur-xl border border-black/[0.06] dark:border-white/[0.08] text-gray-900 dark:text-white text-sm font-semibold rounded-xl hover:bg-black/[0.06] dark:hover:bg-white/[0.08] hover:border-black/10 dark:hover:border-white/[0.15] focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 block p-3 transition-all duration-300 shadow-[0_4px_12px_rgba(0,0,0,0.02)]"
+                        className={inputClassName}
                         required
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                      <label className={labelClassName}>
                         Banco *
                       </label>
                       <AppleDropdown
@@ -547,24 +555,25 @@ export default function SolicitarRetiroPage() {
                         value={withdrawalData.banco || ''}
                         onChange={(value) => setWithdrawalData(prev => ({ ...prev, banco: value }))}
                         placeholder="Selecciona un banco"
+                        className="w-full max-w-full [&>button]:h-10 [&>button]:text-[13px] [&>button]:font-medium"
                       />
                     </div>
                     {withdrawalData.banco === 'Otros' && (
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                        <label className={labelClassName}>
                           Nombre del Banco *
                         </label>
                         <input
                           type="text"
                           value={withdrawalData.banco_otro || ''}
                           onChange={(e) => setWithdrawalData(prev => ({ ...prev, banco_otro: e.target.value }))}
-                          className="w-full bg-black/[0.04] dark:bg-white/[0.06] backdrop-blur-xl border border-black/[0.06] dark:border-white/[0.08] text-gray-900 dark:text-white text-sm font-semibold rounded-xl hover:bg-black/[0.06] dark:hover:bg-white/[0.08] hover:border-black/10 dark:hover:border-white/[0.15] focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 block p-3 transition-all duration-300 shadow-[0_4px_12px_rgba(0,0,0,0.02)]"
+                          className={inputClassName}
                           required
                         />
                       </div>
                     )}
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                      <label className={labelClassName}>
                         Tipo de Cuenta *
                       </label>
                       <AppleDropdown
@@ -573,29 +582,30 @@ export default function SolicitarRetiroPage() {
                         value={withdrawalData.tipo_cuenta || ''}
                         onChange={(value) => setWithdrawalData(prev => ({ ...prev, tipo_cuenta: value as any }))}
                         placeholder="Selecciona tipo de cuenta"
+                        className="w-full max-w-full [&>button]:h-10 [&>button]:text-[13px] [&>button]:font-medium"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                      <label className={labelClassName}>
                         Número de Cuenta *
                       </label>
                       <input
                         type="text"
                         value={withdrawalData.numero_cuenta || ''}
                         onChange={(e) => setWithdrawalData(prev => ({ ...prev, numero_cuenta: e.target.value }))}
-                        className="w-full bg-black/[0.04] dark:bg-white/[0.06] backdrop-blur-xl border border-black/[0.06] dark:border-white/[0.08] text-gray-900 dark:text-white text-sm font-semibold rounded-xl hover:bg-black/[0.06] dark:hover:bg-white/[0.08] hover:border-black/10 dark:hover:border-white/[0.15] focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 block p-3 transition-all duration-300 shadow-[0_4px_12px_rgba(0,0,0,0.02)]"
+                        className={inputClassName}
                         required
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                      <label className={labelClassName}>
                         Documento del Titular *
                       </label>
                       <input
                         type="text"
                         value={withdrawalData.documento_titular || ''}
                         onChange={(e) => setWithdrawalData(prev => ({ ...prev, documento_titular: e.target.value }))}
-                        className="w-full bg-black/[0.04] dark:bg-white/[0.06] backdrop-blur-xl border border-black/[0.06] dark:border-white/[0.08] text-gray-900 dark:text-white text-sm font-semibold rounded-xl hover:bg-black/[0.06] dark:hover:bg-white/[0.08] hover:border-black/10 dark:hover:border-white/[0.15] focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 block p-3 transition-all duration-300 shadow-[0_4px_12px_rgba(0,0,0,0.02)]"
+                        className={inputClassName}
                         required
                       />
                     </div>
@@ -606,50 +616,48 @@ export default function SolicitarRetiroPage() {
                 <button
                   type="submit"
                   disabled={submitting || !isFormValid()}
-                  className="w-full relative overflow-hidden min-h-[44px] sm:min-h-0 px-6 py-3 sm:py-3.5 text-[13px] sm:text-[14px] font-extrabold rounded-full transition-all duration-300 transform active:scale-95 whitespace-nowrap touch-manipulation flex items-center justify-center group bg-gradient-to-r from-cyan-600 to-fuchsia-600 hover:from-cyan-500 hover:to-fuchsia-500 text-white border-none backdrop-blur-md shadow-md shadow-cyan-500/30 dark:shadow-[0_0_15px_rgba(34,211,238,0.5)] hover:shadow-lg hover:shadow-fuchsia-500/40 dark:hover:shadow-[0_0_20px_rgba(232,121,249,0.7)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                  className="w-full max-w-[260px] mx-auto h-10 px-5 text-[13px] font-medium rounded-full bg-gradient-to-r from-cyan-600 to-fuchsia-600 hover:from-cyan-500 hover:to-fuchsia-500 text-white border-none shadow-md transition-all duration-300 transform active:scale-95 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <div className="absolute inset-0 z-0 mix-blend-screen opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{
-                    background: 'linear-gradient(90deg, transparent, rgba(34,211,238,0.4), rgba(232,121,249,0.5), transparent)',
-                    backgroundSize: '200% 100%',
-                    animation: 'aurora-flow 1.5s ease-in-out infinite alternate'
-                  }}></div>
-                  <span className="relative z-10 flex items-center tracking-widest uppercase gap-2">
-                    {submitting ? 'ENVIANDO...' : 'SOLICITAR RETIRO'}
+                  <span className="relative z-10 flex items-center gap-1.5 font-medium">
+                    {submitting ? 'Enviando...' : 'Retirar'}
                   </span>
+
                 </button>
+
+
               </form>
             </GlassCard>
           </div>
 
           {/* Información lateral */}
           <div className="space-y-6">
-            <GlassCard padding="lg">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+            <GlassCard padding="lg" className="!p-5 sm:!p-6">
+              <h3 className="text-[12px] font-semibold text-gray-400 dark:text-gray-400 mb-4 tracking-wider uppercase">
                 Información Importante
               </h3>
-              <div className="space-y-3 text-sm text-gray-600 dark:text-gray-400">
-                <div className="flex items-start space-x-2">
-                  <svg className="w-5 h-5 text-purple-600 dark:text-purple-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="space-y-3.5 text-[13px] leading-relaxed text-gray-500 dark:text-gray-400">
+                <div className="flex items-start space-x-2.5">
+                  <svg className="w-4 h-4 text-purple-500/70 dark:text-purple-400/70 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   <p>
-                    <strong>Límite:</strong> Mínimo $100,000 COP. Solo puedes realizar un retiro por período.
+                    <strong className="text-gray-700 dark:text-gray-300 font-semibold">Límite:</strong> Mínimo $100,000 COP. Solo puedes realizar un retiro por período.
                   </p>
                 </div>
-                <div className="flex items-start space-x-2">
-                  <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="flex items-start space-x-2.5">
+                  <svg className="w-4 h-4 text-blue-500/70 dark:text-blue-400/70 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   <p>
-                    <strong>Tiempo de procesamiento:</strong> Retiros menores al 50% del saldo: 48 horas. Retiros mayores al 50%: 3 días.
+                    <strong className="text-gray-700 dark:text-gray-300 font-semibold">Tiempo de procesamiento:</strong> Retiros menores al 50% del saldo: 48 horas. Retiros mayores al 50%: 3 días.
                   </p>
                 </div>
-                <div className="flex items-start space-x-2">
-                  <svg className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="flex items-start space-x-2.5">
+                  <svg className="w-4 h-4 text-green-500/70 dark:text-green-400/70 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                   </svg>
                   <p>
-                    <strong>Aprobación:</strong> Tu solicitud será revisada por un administrador antes de ser procesada.
+                    <strong className="text-gray-700 dark:text-gray-300 font-semibold">Aprobación:</strong> Tu solicitud será revisada por un administrador antes de ser procesada.
                   </p>
                 </div>
               </div>

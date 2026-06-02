@@ -3,7 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { createPortal } from 'react-dom';
 import StandardModal from '@/components/ui/StandardModal';
+import PageHeader from '@/components/ui/PageHeader';
+import { InfoCardGrid } from '@/components/ui/InfoCard';
 
 interface AffiliateStudio {
   id: string;
@@ -24,6 +27,7 @@ interface AffiliateStudio {
     name: string;
     email: string;
     is_active: boolean;
+    avatar_url?: string;
   } | null;
   stats: {
     users: number;
@@ -77,9 +81,14 @@ export default function GestionarAfiliadosPage() {
   const [editAffiliateCommission, setEditAffiliateCommission] = useState('');
   const [editAffiliateIsActive, setEditAffiliateIsActive] = useState(true);
 
+  // Estados para imagen ampliada (Zoom Modal)
+  const [isMounted, setIsMounted] = useState(false);
+  const [zoomedImage, setZoomedImage] = useState<string | null>(null);
+
   // Cargar información del usuario y afiliados
   useEffect(() => {
     loadUserInfo();
+    setIsMounted(true);
   }, []);
 
   useEffect(() => {
@@ -477,10 +486,10 @@ export default function GestionarAfiliadosPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-transparent flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">Cargando...</p>
+          <p className="text-gray-600 dark:text-gray-400 font-medium text-sm">Cargando...</p>
         </div>
       </div>
     );
@@ -489,15 +498,15 @@ export default function GestionarAfiliadosPage() {
   // Solo super_admin puede acceder
   if (userRole !== 'super_admin') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
-        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 dark:border-gray-700/20 p-8 max-w-md text-center">
-          <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+      <div className="min-h-screen bg-transparent flex items-center justify-center p-4">
+        <div className="glass-card p-8 max-w-md text-center">
+          <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/20">
             <svg className="w-8 h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
           </div>
           <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">Acceso Denegado</h2>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-gray-600 dark:text-gray-400 text-sm">
             Solo los super administradores pueden acceder a esta sección.
           </p>
         </div>
@@ -506,47 +515,27 @@ export default function GestionarAfiliadosPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className="min-h-screen bg-transparent">
       <div className="max-w-screen-2xl mx-auto px-0 sm:px-4 md:px-6 lg:px-8 py-8 pt-16">
         {/* Header */}
-        <div className="mb-8 sm:mb-12">
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-600/10 to-pink-600/10 rounded-xl blur-xl"></div>
-            <div className="relative bg-white/80 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-purple-900/15 dark:ring-0.5 dark:ring-purple-400/20">
-              <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-3">
-                {/* Título e icono */}
-                <div className="flex items-center space-x-3 min-w-0 flex-1">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
-                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h1 className="text-base sm:text-lg md:text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent leading-tight whitespace-nowrap overflow-hidden text-ellipsis">
-                      Gestión de Afiliados
-                    </h1>
-                    <p className="mt-1 text-xs sm:text-sm text-gray-600 dark:text-gray-300 hidden sm:block">
-                      Administra estudios afiliados y sus configuraciones
-                    </p>
-                  </div>
-                </div>
-
-                {/* Botón de acción */}
-                <div className="flex-shrink-0">
-                  <button
-                    onClick={() => setShowCreateAffiliate(true)}
-                    className="w-full md:w-auto px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 font-medium flex items-center justify-center space-x-2 text-sm sm:text-base"
-                  >
-                    <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                    <span>Crear Nuevo Afiliado</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <PageHeader 
+          title="Gestión de Afiliados"
+          subtitle="Administra estudios afiliados, comisiones, asignaciones y audita la facturación y métricas de su burbuja."
+          icon={
+            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            </svg>
+          }
+          glow="superadmin"
+          actions={
+            <button
+              onClick={() => setShowCreateAffiliate(true)}
+              className="w-full md:w-auto px-5 py-2.5 bg-gradient-to-r from-cyan-600 to-fuchsia-600 hover:from-cyan-500 hover:to-fuchsia-500 text-white rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-fuchsia-500 focus:ring-offset-2 shadow-md shadow-cyan-500/20 dark:shadow-[0_0_15px_rgba(34,211,238,0.5)] hover:shadow-lg hover:shadow-fuchsia-500/40 active:scale-95 flex items-center justify-center text-xs sm:text-sm font-semibold border-none cursor-pointer"
+            >
+              <span>Crear Nuevo Afiliado</span>
+            </button>
+          }
+        />
 
         {/* Mensajes de error/success */}
         {error && (
@@ -576,21 +565,22 @@ export default function GestionarAfiliadosPage() {
         )}
 
         {/* Lista de Afiliados */}
-        <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-600/5 to-pink-600/5 rounded-xl blur-xl"></div>
-          <div className="relative bg-white/80 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl p-6 sm:p-8 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-purple-900/15 dark:ring-0.5 dark:ring-purple-400/20">
+        <div className="relative glass-card !rounded-[2rem] p-6 sm:p-8 overflow-hidden mt-6">
+          {/* Ambient Boreal Glow Inside Container */}
+          <div className="absolute top-0 right-0 w-80 h-80 bg-purple-500/5 rounded-full blur-3xl mix-blend-screen pointer-events-none" />
+          <div className="relative z-10">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100">
                 Estudios Afiliados
               </h2>
               {loadingAffiliates && (
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-600"></div>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
               )}
             </div>
 
             {loadingAffiliates ? (
               <div className="text-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
                 <p className="text-gray-600 dark:text-gray-400">Cargando afiliados...</p>
               </div>
             ) : affiliates.length === 0 ? (
@@ -608,7 +598,7 @@ export default function GestionarAfiliadosPage() {
                 </p>
                 <button
                   onClick={() => setShowCreateAffiliate(true)}
-                  className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 font-medium text-sm sm:text-base"
+                  className="px-6 py-3 bg-gradient-to-r from-cyan-600 to-fuchsia-600 text-white rounded-lg hover:from-cyan-500 hover:to-fuchsia-500 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-fuchsia-500 focus:ring-offset-2 shadow-md shadow-cyan-500/20 dark:shadow-[0_0_15px_rgba(34,211,238,0.3)] hover:shadow-lg transform hover:-translate-y-0.5 font-medium text-sm sm:text-base border-none cursor-pointer"
                 >
                   Crear Nuevo Afiliado
                 </button>
@@ -640,156 +630,180 @@ export default function GestionarAfiliadosPage() {
                         </div>
                       </div>
                       
-                      <div className="flex items-center justify-between sm:justify-end space-x-2">
-                        <div className={`flex items-center space-x-1.5 px-2 py-1 rounded-full ${
-                          affiliate.is_active
-                            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                            : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
-                        }`}>
-                          <div className={`w-1.5 h-1.5 rounded-full ${affiliate.is_active ? 'bg-green-500 animate-pulse' : 'bg-gray-500'}`}></div>
-                          <span className="text-[10px] sm:text-xs font-medium">{affiliate.is_active ? 'Activo' : 'Inactivo'}</span>
+                      <div className="flex items-center justify-between sm:justify-end gap-2">
+                        {/* Indicador de Estado LED - Solo el punto */}
+                        <div className="w-7.5 h-7.5 flex items-center justify-center select-none" title={affiliate.is_active ? 'Activo' : 'Inactivo'}>
+                          <div className={`w-2.5 h-2.5 rounded-full ${
+                            affiliate.is_active 
+                              ? 'bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.9)]' 
+                              : 'bg-zinc-400 dark:bg-zinc-600 shadow-[0_0_4px_rgba(156,163,175,0.4)]'
+                          }`} />
                         </div>
-                        <button
-                          onClick={() => {
-                            setSelectedAffiliateId(affiliate.id);
-                            setSelectedAffiliateName(affiliate.name);
-                            setEditAffiliateName(affiliate.name);
-                            setEditAffiliateDescription(affiliate.description || '');
-                            setEditAffiliateCommission(affiliate.commission_percentage.toString());
-                            setEditAffiliateIsActive(affiliate.is_active);
-                            setShowEditAffiliate(true);
-                          }}
-                          className="px-2 py-1 text-xs font-medium text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded transition-colors"
-                        >
-                          Editar
-                        </button>
-                        <button
-                          onClick={() => handleDeleteAffiliate(affiliate.id, affiliate.name)}
-                          className="px-2 py-1 text-xs font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
-                        >
-                          Eliminar
-                        </button>
+                        {/* Pastilla de Control - Ultra-Apilodorada Rediseñada en Burbujas Compactas */}
+                        <div className="flex items-center gap-0.5 p-0.5 bg-black/[0.03] dark:bg-white/[0.04] border border-black/[0.06] dark:border-white/[0.1] rounded-full backdrop-blur-md shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] transition-all duration-300 hover:scale-[1.03]">
+                          <button
+                            onClick={() => {
+                              setSelectedAffiliateId(affiliate.id);
+                              setSelectedAffiliateName(affiliate.name);
+                              setEditAffiliateName(affiliate.name);
+                              setEditAffiliateDescription(affiliate.description || '');
+                              setEditAffiliateCommission(affiliate.commission_percentage.toString());
+                              setEditAffiliateIsActive(affiliate.is_active);
+                              setShowEditAffiliate(true);
+                            }}
+                            className="w-7 h-5 flex items-center justify-center rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.08] dark:border-white/[0.12] text-zinc-500 dark:text-zinc-400 hover:text-emerald-500 dark:hover:text-emerald-400 hover:bg-emerald-500/10 dark:hover:bg-emerald-500/20 hover:border-emerald-500/30 dark:hover:border-emerald-400/30 hover:drop-shadow-[0_0_6px_rgba(52,211,153,0.4)] shadow-sm transition-all duration-200 active:scale-90 cursor-pointer border-none"
+                            title="Editar Estudio"
+                          >
+                            <svg className="w-[10px] h-[10px] sm:w-[11px] sm:h-[11px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={() => handleDeleteAffiliate(affiliate.id, affiliate.name)}
+                            className="w-7 h-5 flex items-center justify-center rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.08] dark:border-white/[0.12] text-zinc-500 dark:text-zinc-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-500/10 dark:hover:bg-red-500/20 hover:border-red-500/30 dark:hover:border-red-400/30 hover:drop-shadow-[0_0_6px_rgba(239,68,68,0.4)] shadow-sm transition-all duration-200 active:scale-90 cursor-pointer border-none"
+                            title="Eliminar Estudio"
+                          >
+                            <svg className="w-[10px] h-[10px] sm:w-[11px] sm:h-[11px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        </div>
                       </div>
                     </div>
 
-                    <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-lg p-4 sm:p-5 border border-gray-200/50 dark:border-gray-600/50 hover:border-purple-300 dark:hover:border-purple-600 transition-all duration-200 hover:shadow-md flex-1">
+                    <div className="relative bg-black/[0.015] dark:bg-white/[0.015] border border-black/[0.04] dark:border-white/[0.06] rounded-2xl sm:rounded-[1.75rem] p-4 sm:p-5 hover:border-purple-300/50 dark:hover:border-purple-600/50 hover:bg-black/[0.03] dark:hover:bg-white/[0.03] transition-all duration-300 hover:shadow-lg flex-1">
                       <div className="flex flex-col gap-3">
-                        <div className="flex flex-wrap gap-4">
-                          <div className="flex items-center space-x-2">
-                            <span className="text-xs text-gray-500 dark:text-gray-400">Comisión:</span>
-                            <span className="text-sm font-semibold text-purple-600 dark:text-purple-400">
-                              {affiliate.commission_percentage}%
-                            </span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <span className="text-xs text-gray-500 dark:text-gray-400">Usuarios:</span>
-                            <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                              {affiliate.stats.users}
-                            </span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <span className="text-xs text-gray-500 dark:text-gray-400">Sedes:</span>
-                            <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                              {affiliate.stats.sedes}
-                            </span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <span className="text-xs text-gray-500 dark:text-gray-400">Modelos:</span>
-                            <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                              {affiliate.stats.models}
-                            </span>
-                          </div>
-                        </div>
+                        <InfoCardGrid 
+                          compactContainer={true}
+                          columns={4}
+                          className="mb-4 mt-1"
+                          cards={[
+                            { value: `${affiliate.commission_percentage}%`, label: 'Comisión', color: 'purple', size: 'sm' },
+                            { value: affiliate.stats.users, label: 'Usuarios', color: 'blue', size: 'sm' },
+                            { value: affiliate.stats.sedes, label: 'Sedes', color: 'cyan', size: 'sm' },
+                            { value: affiliate.stats.models, label: 'Modelos', color: 'green', size: 'sm' }
+                          ]}
+                        />
                       </div>
                     
-                    {/* Información del Superadmin AFF */}
-                    <div className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-600">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center space-x-2">
-                          <div className="w-5 h-5 bg-gradient-to-br from-purple-500/10 to-pink-600/10 rounded-full flex items-center justify-center">
-                            <svg className="w-2.5 h-2.5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                            </svg>
-                          </div>
-                          <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">Superadmin AFF Encargado:</span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          {affiliate.superadmin_aff ? (
-                            <>
-                              <button
-                                onClick={() => {
-                                  if (!affiliate.superadmin_aff) return;
-                                  setSelectedAffiliateId(affiliate.id);
-                                  setSelectedAffiliateName(affiliate.name);
-                                  setEditSuperadminAffEmail(affiliate.superadmin_aff.email);
-                                  setEditSuperadminAffName(affiliate.superadmin_aff.name);
-                                  setEditSuperadminAffIsActive(affiliate.superadmin_aff.is_active);
-                                  setEditSuperadminAffPassword('');
-                                  setIsEditingSuperadminAff(true);
-                                  setShowManageSuperadminAff(true);
-                                }}
-                                className="px-2 py-1 text-xs font-medium text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded transition-colors"
-                              >
-                                Editar
-                              </button>
-                              <button
-                                onClick={() => handleDeleteSuperadminAff(affiliate.id, affiliate.name)}
-                                className="px-2 py-1 text-xs font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
-                              >
-                                Eliminar
-                              </button>
-                            </>
-                          ) : (
-                            <button
-                              onClick={() => {
-                                setSelectedAffiliateId(affiliate.id);
-                                setSelectedAffiliateName(affiliate.name);
-                                setEditSuperadminAffEmail('');
-                                setEditSuperadminAffName('');
-                                setEditSuperadminAffPassword('');
-                                setEditSuperadminAffIsActive(true);
-                                setIsEditingSuperadminAff(false);
-                                setShowManageSuperadminAff(true);
-                              }}
-                              className="px-2 py-1 text-xs font-medium text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded transition-colors"
-                            >
-                              Crear
-                            </button>
-                          )}
-                        </div>
+                    {/* Información del Superadmin AFF (Ficha macOS User Card) */}
+                    <div className="mt-4 pt-4 border-t border-black/[0.05] dark:border-white/[0.08]">
+                      <div className="text-[11px] font-bold text-zinc-400 dark:text-zinc-500 mb-2.5 ml-1">
+                        Superadmin AFF Encargado
                       </div>
                       
                       {affiliate.superadmin_aff ? (
-                        <div className="flex items-center space-x-2 ml-8">
-                          <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                            {affiliate.superadmin_aff.name}
-                          </span>
-                          <span className="text-xs text-gray-500 dark:text-gray-400">
-                            ({affiliate.superadmin_aff.email})
-                          </span>
-                          {!affiliate.superadmin_aff.is_active && (
-                            <span className="px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
-                              Inactivo
-                            </span>
-                          )}
+                        <div className="relative overflow-hidden bg-black/[0.015] dark:bg-white/[0.015] border border-black/[0.04] dark:border-white/[0.06] rounded-xl p-3 flex items-center justify-between gap-3 group transition-all duration-300 hover:bg-black/[0.025] dark:hover:bg-white/[0.025]">
+                          {/* Glow ambiental sutil */}
+                          <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/5 rounded-full blur-xl pointer-events-none" />
+                          
+                          <div className="flex items-center gap-3 min-w-0">
+                            {/* Contenedor de Foto del Superadmin con Click-to-Zoom y estilo estandarizado */}
+                            <div 
+                              className="w-9 h-9 rounded-full overflow-hidden bg-black/5 dark:bg-white/5 flex-shrink-0 border border-zinc-200/40 dark:border-zinc-800/80 cursor-pointer hover:opacity-90 transition-all ring-2 ring-transparent hover:ring-purple-500/20 dark:hover:ring-purple-500/20"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (affiliate.superadmin_aff) {
+                                  setZoomedImage(affiliate.superadmin_aff.avatar_url || '/favicon.png');
+                                }
+                              }}
+                            >
+                              <img 
+                                src={affiliate.superadmin_aff.avatar_url || '/favicon.png'} 
+                                alt={affiliate.superadmin_aff.name} 
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src = '/favicon.png';
+                                }}
+                              />
+                            </div>
+                            
+                            {/* Datos del Superadmin */}
+                            <div className="min-w-0 flex flex-col">
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[13px] font-semibold text-zinc-800 dark:text-zinc-200 truncate">
+                                  {affiliate.superadmin_aff.name}
+                                </span>
+                                {!affiliate.superadmin_aff.is_active && (
+                                  <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold tracking-wider uppercase bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                                    Inactivo
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">
+                                {affiliate.superadmin_aff.email}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Control Pastilla Zero-Bubble - Ultra-Apilodorada Rediseñada en Burbujas Compactas */}
+                          <div className="flex items-center gap-0.5 p-0.5 bg-black/[0.03] dark:bg-white/[0.04] border border-black/[0.06] dark:border-white/[0.1] rounded-full backdrop-blur-md shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] transition-all duration-300 hover:scale-[1.03]">
+                            <button
+                              onClick={() => {
+                                if (!affiliate.superadmin_aff) return;
+                                setSelectedAffiliateId(affiliate.id);
+                                setSelectedAffiliateName(affiliate.name);
+                                setEditSuperadminAffEmail(affiliate.superadmin_aff.email);
+                                setEditSuperadminAffName(affiliate.superadmin_aff.name);
+                                setEditSuperadminAffIsActive(affiliate.superadmin_aff.is_active);
+                                setEditSuperadminAffPassword('');
+                                setIsEditingSuperadminAff(true);
+                                setShowManageSuperadminAff(true);
+                              }}
+                              className="w-7 h-5 flex items-center justify-center rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.08] dark:border-white/[0.12] text-zinc-500 dark:text-zinc-400 hover:text-purple-500 dark:hover:text-purple-400 hover:bg-purple-500/10 dark:hover:bg-purple-500/20 hover:border-purple-500/30 dark:hover:border-purple-400/30 hover:drop-shadow-[0_0_8px_rgba(168,85,247,0.5)] shadow-sm transition-all duration-200 active:scale-90 cursor-pointer border-none"
+                              title="Editar Superadmin"
+                            >
+                              <svg className="w-[10px] h-[10px] sm:w-[11px] sm:h-[11px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                            </button>
+                            <button
+                              onClick={() => handleDeleteSuperadminAff(affiliate.id, affiliate.name)}
+                              className="w-7 h-5 flex items-center justify-center rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.08] dark:border-white/[0.12] text-zinc-500 dark:text-zinc-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-500/10 dark:hover:bg-red-500/20 hover:border-red-500/30 dark:hover:border-red-400/30 hover:drop-shadow-[0_0_6px_rgba(239,68,68,0.4)] shadow-sm transition-all duration-200 active:scale-90 cursor-pointer border-none"
+                              title="Eliminar Superadmin"
+                            >
+                              <svg className="w-[10px] h-[10px] sm:w-[11px] sm:h-[11px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          </div>
                         </div>
                       ) : (
-                        <p className="text-xs text-yellow-700 dark:text-yellow-400 font-medium ml-8">
-                          No hay superadmin AFF asignado
-                        </p>
+                        <div className="bg-black/[0.015] dark:bg-white/[0.015] border border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl p-3 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left transition-all duration-300 hover:bg-black/[0.02] dark:hover:bg-white/[0.02]">
+                          <p className="text-[12px] text-zinc-500 dark:text-zinc-400 font-medium">
+                            No hay superadmin AFF asignado
+                          </p>
+                          <button
+                            onClick={() => {
+                              setSelectedAffiliateId(affiliate.id);
+                              setSelectedAffiliateName(affiliate.name);
+                              setEditSuperadminAffEmail('');
+                              setEditSuperadminAffName('');
+                              setEditSuperadminAffPassword('');
+                              setEditSuperadminAffIsActive(true);
+                              setIsEditingSuperadminAff(false);
+                              setShowManageSuperadminAff(true);
+                            }}
+                            className="px-3.5 py-1.5 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-full text-[11px] font-bold uppercase tracking-wider transition-all duration-300 active:scale-95 shadow-sm shadow-purple-500/10 cursor-pointer border-none"
+                          >
+                            Asignar Encargado
+                          </button>
+                        </div>
                       )}
                     </div>
                     
                     {affiliate.created_by_user && (
-                      <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          Creado por: <span className="font-medium">{affiliate.created_by_user.name}</span> • 
-                          {' '}{new Date(affiliate.created_at).toLocaleDateString('es-ES', {
+                      <div className="mt-2.5 pt-2.5 border-t border-black/[0.05] dark:border-white/[0.08] flex items-center justify-between text-[11px] text-zinc-400 dark:text-zinc-500">
+                        <span>
+                          Creado por: <span className="font-semibold text-zinc-500 dark:text-zinc-400">{affiliate.created_by_user.name}</span>
+                        </span>
+                        <span>
+                          {new Date(affiliate.created_at).toLocaleDateString('es-ES', {
                             year: 'numeric',
-                            month: 'long',
+                            month: 'short',
                             day: 'numeric'
                           })}
-                        </p>
+                        </span>
                       </div>
                     )}
                     </div>
@@ -816,156 +830,158 @@ export default function GestionarAfiliadosPage() {
               setError('');
               setSuccess('');
             }}
-            title="Crear Nuevo Estudio Afiliado"
+            title={
+              <div className="flex items-center space-x-2.5">
+                <div className="w-8 h-8 bg-gradient-to-tr from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-md shadow-purple-500/10 border border-purple-400/20 flex-shrink-0">
+                  <svg className="w-4 h-4 text-white drop-shadow-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                </div>
+                <span className="text-base font-bold text-zinc-900 dark:text-white tracking-tight">Crear Nuevo Estudio Afiliado</span>
+              </div>
+            }
             maxWidthClass="max-w-lg"
-            paddingClass="p-7"
+            paddingClass="p-6 sm:p-7"
             headerMarginClass="mb-5"
             formSpaceYClass="space-y-5"
+            className="!rounded-[2rem] shadow-[0_8px_40px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.5)] border border-white/50 dark:border-white/10"
           >
-            <div className="flex items-center space-x-3 mb-5">
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-              </div>
-            </div>
-            
-            <form onSubmit={handleCreateAffiliate} className="space-y-5">
+            <form onSubmit={handleCreateAffiliate} className="space-y-4">
               {error && (
-                <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                <div className="bg-red-500/10 border border-red-500/20 backdrop-blur-md rounded-2xl p-4 shadow-sm">
                   <div className="flex items-center space-x-3">
-                    <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0">
-                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    <div className="w-5 h-5 bg-red-500/20 border border-red-500/30 rounded-full flex items-center justify-center flex-shrink-0 text-red-600 dark:text-red-400">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
                       </svg>
                     </div>
-                    <p className="text-sm text-red-700 font-medium">{error}</p>
+                    <p className="text-sm text-red-800 dark:text-red-300 font-semibold tracking-tight">{error}</p>
                   </div>
                 </div>
               )}
               
               {success && (
-                <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                <div className="bg-green-500/10 border border-green-500/20 backdrop-blur-md rounded-2xl p-4 shadow-sm">
                   <div className="flex items-center space-x-3">
-                    <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
-                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    <div className="w-5 h-5 bg-green-500/20 border border-green-500/30 rounded-full flex items-center justify-center flex-shrink-0 text-green-600 dark:text-green-400">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                       </svg>
                     </div>
-                    <p className="text-sm text-green-700 font-medium">{success}</p>
+                    <p className="text-sm text-green-800 dark:text-green-300 font-semibold tracking-tight">{success}</p>
                   </div>
                 </div>
               )}
             
               <div>
-                <label className="block text-gray-700 dark:text-gray-200 text-sm font-semibold mb-2">
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5 ml-1">
                   Nombre del Estudio Afiliado *
                 </label>
                 <input
                   type="text"
                   value={newAffiliateName}
                   onChange={(e) => setNewAffiliateName(e.target.value)}
-                  className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm transition-all duration-200"
+                  className="h-10 w-full bg-black/[0.02] dark:bg-white/[0.02] border border-black/[0.08] dark:border-white/[0.08] rounded-xl px-4 text-[13px] text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 dark:focus:ring-purple-400/50 focus:border-transparent transition-all duration-200 backdrop-blur-md shadow-inner"
                   placeholder="Ej: Estudio XYZ"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-gray-700 dark:text-gray-200 text-sm font-semibold mb-2">
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5 ml-1">
                   Descripción (Opcional)
                 </label>
                 <textarea
                   value={newAffiliateDescription}
                   onChange={(e) => setNewAffiliateDescription(e.target.value)}
-                  className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm transition-all duration-200"
+                  className="w-full bg-black/[0.02] dark:bg-white/[0.02] border border-black/[0.08] dark:border-white/[0.08] rounded-xl px-4 py-2.5 text-[13px] text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 dark:focus:ring-purple-400/50 focus:border-transparent transition-all duration-200 backdrop-blur-md shadow-inner"
                   placeholder="Descripción del estudio afiliado..."
                   rows={3}
                 />
               </div>
 
               <div>
-                <label className="block text-gray-700 dark:text-gray-200 text-sm font-semibold mb-2">
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5 ml-1">
                   Porcentaje de Comisión (%) *
                 </label>
                 <input
                   type="number"
                   value={newAffiliateCommission}
                   onChange={(e) => setNewAffiliateCommission(e.target.value)}
-                  className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm transition-all duration-200"
+                  className="h-10 w-full bg-black/[0.02] dark:bg-white/[0.02] border border-black/[0.08] dark:border-white/[0.08] rounded-xl px-4 text-[13px] text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 dark:focus:ring-purple-400/50 focus:border-transparent transition-all duration-200 backdrop-blur-md shadow-inner"
                   placeholder="10.00"
                   min="0"
                   max="100"
                   step="0.01"
                   required
                 />
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                <p className="text-[11px] text-zinc-400 dark:text-zinc-500 mt-1 ml-1 font-medium">
                   Porcentaje que recibe Agencia Innova (por defecto: 10%)
                 </p>
               </div>
 
               {/* Separador */}
-              <div className="border-t border-gray-200 dark:border-gray-600 pt-4 mt-4">
-                <div className="flex items-center space-x-2 mb-4">
+              <div className="border-t border-black/[0.06] dark:border-white/[0.08] pt-4 mt-4">
+                <div className="flex items-center space-x-2.5 py-1 ml-1 select-none">
                   <input
                     type="checkbox"
                     id="createSuperadminAff"
                     checked={createSuperadminAff}
                     onChange={(e) => setCreateSuperadminAff(e.target.checked)}
-                    className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                    className="w-4.5 h-4.5 text-purple-600 border-black/[0.08] dark:border-white/[0.08] bg-black/[0.02] dark:bg-white/[0.02] rounded focus:ring-purple-500 focus:ring-offset-0 focus:outline-none transition-all duration-200 cursor-pointer"
                   />
-                  <label htmlFor="createSuperadminAff" className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                  <label htmlFor="createSuperadminAff" className="text-[13px] font-semibold text-zinc-700 dark:text-zinc-300 cursor-pointer">
                     Crear Superadmin AFF para este estudio
                   </label>
                 </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+                <p className="text-[11px] text-zinc-400 dark:text-zinc-500 ml-8 mt-0.5 leading-relaxed">
                   El Superadmin AFF será el administrador principal del estudio afiliado y tendrá acceso completo a su burbuja.
                 </p>
 
                 {createSuperadminAff && (
-                  <div className="space-y-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 border border-purple-200 dark:border-purple-800">
+                  <div className="space-y-4 bg-black/[0.015] dark:bg-white/[0.015] border border-black/[0.04] dark:border-white/[0.06] rounded-2xl p-4 mt-2">
                     <div>
-                      <label className="block text-gray-700 dark:text-gray-200 text-sm font-semibold mb-2">
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5 ml-1">
                         Email del Superadmin AFF *
                       </label>
                       <input
                         type="email"
                         value={superadminAffEmail}
                         onChange={(e) => setSuperadminAffEmail(e.target.value)}
-                        className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm transition-all duration-200"
+                        className="h-10 w-full bg-black/[0.02] dark:bg-white/[0.02] border border-black/[0.08] dark:border-white/[0.08] rounded-xl px-4 text-[13px] text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 dark:focus:ring-purple-400/50 focus:border-transparent transition-all duration-200 backdrop-blur-md shadow-inner"
                         placeholder="superadmin@estudio.com"
                         required={createSuperadminAff}
                       />
                     </div>
 
                     <div>
-                      <label className="block text-gray-700 dark:text-gray-200 text-sm font-semibold mb-2">
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5 ml-1">
                         Nombre del Superadmin AFF *
                       </label>
                       <input
                         type="text"
                         value={superadminAffName}
                         onChange={(e) => setSuperadminAffName(e.target.value)}
-                        className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm transition-all duration-200"
+                        className="h-10 w-full bg-black/[0.02] dark:bg-white/[0.02] border border-black/[0.08] dark:border-white/[0.08] rounded-xl px-4 text-[13px] text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 dark:focus:ring-purple-400/50 focus:border-transparent transition-all duration-200 backdrop-blur-md shadow-inner"
                         placeholder="Nombre completo"
                         required={createSuperadminAff}
                       />
                     </div>
 
                     <div>
-                      <label className="block text-gray-700 dark:text-gray-200 text-sm font-semibold mb-2">
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5 ml-1">
                         Contraseña Temporal *
                       </label>
                       <input
                         type="password"
                         value={superadminAffPassword}
                         onChange={(e) => setSuperadminAffPassword(e.target.value)}
-                        className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm transition-all duration-200"
+                        className="h-10 w-full bg-black/[0.02] dark:bg-white/[0.02] border border-black/[0.08] dark:border-white/[0.08] rounded-xl px-4 text-[13px] text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 dark:focus:ring-purple-400/50 focus:border-transparent transition-all duration-200 backdrop-blur-md shadow-inner"
                         placeholder="Mínimo 6 caracteres"
                         minLength={6}
                         required={createSuperadminAff}
                       />
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      <p className="text-[11px] text-zinc-400 dark:text-zinc-500 mt-1 ml-1 font-medium">
                         El usuario deberá cambiar esta contraseña en su primer inicio de sesión.
                       </p>
                     </div>
@@ -973,7 +989,7 @@ export default function GestionarAfiliadosPage() {
                 )}
               </div>
 
-              <div className="flex space-x-3 pt-2 flex-nowrap">
+              <div className="flex items-center gap-1.5 p-1.5 bg-black/[0.03] dark:bg-white/[0.03] border border-black/[0.05] dark:border-white/[0.05] rounded-full w-full mt-6 backdrop-blur-md">
                 <button
                   type="button"
                   onClick={() => {
@@ -988,16 +1004,16 @@ export default function GestionarAfiliadosPage() {
                     setError('');
                     setSuccess('');
                   }}
-                  className="flex-1 bg-gray-100/80 dark:bg-gray-600/80 backdrop-blur-sm text-gray-700 dark:text-gray-200 py-2 px-4 rounded-xl hover:bg-gray-200/80 dark:hover:bg-gray-500/80 transition-all duration-200 font-medium border border-gray-200/50 dark:border-gray-500/50 text-sm whitespace-nowrap"
+                  className="flex-1 h-9 flex items-center justify-center rounded-full text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-black/5 dark:hover:bg-white/5 transition-all duration-200 text-xs font-semibold uppercase tracking-wider border-none cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={creatingAffiliate}
-                  className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-2 px-4 rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-200 disabled:opacity-50 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-sm whitespace-nowrap"
+                  className="flex-1 h-9 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full hover:from-purple-500 hover:to-pink-500 transition-all duration-200 disabled:opacity-50 text-xs font-bold uppercase tracking-wider shadow-md shadow-purple-500/20 active:scale-95 border-none cursor-pointer flex items-center justify-center gap-1.5"
                 >
-                  {creatingAffiliate ? 'Creando...' : 'Crear Afiliado'}
+                  <span>{creatingAffiliate ? 'Creando...' : 'Crear Afiliado'}</span>
                 </button>
               </div>
             </form>
@@ -1018,119 +1034,123 @@ export default function GestionarAfiliadosPage() {
               setError('');
               setSuccess('');
             }}
-            title={isEditingSuperadminAff ? 'Editar Superadmin AFF' : 'Crear Superadmin AFF'}
+            title={
+              <div className="flex items-center space-x-2.5">
+                <div className="w-8 h-8 bg-gradient-to-tr from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-md shadow-purple-500/10 border border-purple-400/20 flex-shrink-0">
+                  <svg className="w-4 h-4 text-white drop-shadow-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </div>
+                <span className="text-base font-bold text-zinc-900 dark:text-white tracking-tight">
+                  {isEditingSuperadminAff ? 'Editar Superadmin AFF' : 'Crear Superadmin AFF'}
+                </span>
+              </div>
+            }
             maxWidthClass="max-w-lg"
-            paddingClass="p-7"
+            paddingClass="p-6 sm:p-7"
             headerMarginClass="mb-5"
             formSpaceYClass="space-y-5"
+            className="!rounded-[2rem] shadow-[0_8px_40px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.5)] border border-white/50 dark:border-white/10"
           >
-            <div className="flex items-center space-x-3 mb-5">
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Estudio: <span className="font-semibold text-gray-900 dark:text-gray-100">{selectedAffiliateName}</span>
-                </p>
-              </div>
+            <div className="bg-black/[0.015] dark:bg-white/[0.015] border border-black/[0.04] dark:border-white/[0.06] rounded-xl px-3 py-2 flex items-center gap-2 mb-4 select-none">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Estudio:</span>
+              <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">{selectedAffiliateName}</span>
             </div>
             
-            <form onSubmit={handleManageSuperadminAff} className="space-y-5">
+            <form onSubmit={handleManageSuperadminAff} className="space-y-4">
               {error && (
-                <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                <div className="bg-red-500/10 border border-red-500/20 backdrop-blur-md rounded-2xl p-4 shadow-sm">
                   <div className="flex items-center space-x-3">
-                    <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0">
-                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    <div className="w-5 h-5 bg-red-500/20 border border-red-500/30 rounded-full flex items-center justify-center flex-shrink-0 text-red-600 dark:text-red-400">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
                       </svg>
                     </div>
-                    <p className="text-sm text-red-700 font-medium">{error}</p>
+                    <p className="text-sm text-red-800 dark:text-red-300 font-semibold tracking-tight">{error}</p>
                   </div>
                 </div>
               )}
               
               {success && (
-                <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                <div className="bg-green-500/10 border border-green-500/20 backdrop-blur-md rounded-2xl p-4 shadow-sm">
                   <div className="flex items-center space-x-3">
-                    <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
-                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    <div className="w-5 h-5 bg-green-500/20 border border-green-500/30 rounded-full flex items-center justify-center flex-shrink-0 text-green-600 dark:text-green-400">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                       </svg>
                     </div>
-                    <p className="text-sm text-green-700 font-medium">{success}</p>
+                    <p className="text-sm text-green-800 dark:text-green-300 font-semibold tracking-tight">{success}</p>
                   </div>
                 </div>
               )}
 
               <div>
-                <label className="block text-gray-700 dark:text-gray-200 text-sm font-semibold mb-2">
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5 ml-1">
                   Email del Superadmin AFF *
                 </label>
                 <input
                   type="email"
                   value={editSuperadminAffEmail}
                   onChange={(e) => setEditSuperadminAffEmail(e.target.value)}
-                  className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm transition-all duration-200"
+                  className="h-10 w-full bg-black/[0.02] dark:bg-white/[0.02] border border-black/[0.08] dark:border-white/[0.08] rounded-xl px-4 text-[13px] text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 dark:focus:ring-purple-400/50 focus:border-transparent transition-all duration-200 backdrop-blur-md shadow-inner"
                   placeholder="superadmin@estudio.com"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-gray-700 dark:text-gray-200 text-sm font-semibold mb-2">
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5 ml-1">
                   Nombre del Superadmin AFF *
                 </label>
                 <input
                   type="text"
                   value={editSuperadminAffName}
                   onChange={(e) => setEditSuperadminAffName(e.target.value)}
-                  className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm transition-all duration-200"
+                  className="h-10 w-full bg-black/[0.02] dark:bg-white/[0.02] border border-black/[0.08] dark:border-white/[0.08] rounded-xl px-4 text-[13px] text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 dark:focus:ring-purple-400/50 focus:border-transparent transition-all duration-200 backdrop-blur-md shadow-inner"
                   placeholder="Nombre completo"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-gray-700 dark:text-gray-200 text-sm font-semibold mb-2">
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5 ml-1">
                   {isEditingSuperadminAff ? 'Nueva Contraseña (Opcional)' : 'Contraseña Temporal *'}
                 </label>
                 <input
                   type="password"
                   value={editSuperadminAffPassword}
                   onChange={(e) => setEditSuperadminAffPassword(e.target.value)}
-                  className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm transition-all duration-200"
+                  className="h-10 w-full bg-black/[0.02] dark:bg-white/[0.02] border border-black/[0.08] dark:border-white/[0.08] rounded-xl px-4 text-[13px] text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 dark:focus:ring-purple-400/50 focus:border-transparent transition-all duration-200 backdrop-blur-md shadow-inner"
                   placeholder={isEditingSuperadminAff ? 'Dejar vacío para mantener la actual' : 'Mínimo 6 caracteres'}
                   minLength={isEditingSuperadminAff ? 0 : 6}
                   required={!isEditingSuperadminAff}
                 />
                 {!isEditingSuperadminAff && (
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  <p className="text-[11px] text-zinc-400 dark:text-zinc-500 mt-1 ml-1 font-medium">
                     El usuario deberá cambiar esta contraseña en su primer inicio de sesión.
                   </p>
                 )}
                 {isEditingSuperadminAff && (
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  <p className="text-[11px] text-zinc-400 dark:text-zinc-500 mt-1 ml-1 font-medium">
                     Dejar vacío para mantener la contraseña actual.
                   </p>
                 )}
               </div>
 
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2.5 py-1 ml-1 select-none">
                 <input
                   type="checkbox"
                   id="editSuperadminAffIsActive"
                   checked={editSuperadminAffIsActive}
                   onChange={(e) => setEditSuperadminAffIsActive(e.target.checked)}
-                  className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                  className="w-4.5 h-4.5 text-purple-600 border-black/[0.08] dark:border-white/[0.08] bg-black/[0.02] dark:bg-white/[0.02] rounded focus:ring-purple-500 focus:ring-offset-0 focus:outline-none transition-all duration-200 cursor-pointer"
                 />
-                <label htmlFor="editSuperadminAffIsActive" className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                <label htmlFor="editSuperadminAffIsActive" className="text-[13px] font-semibold text-zinc-700 dark:text-zinc-300 cursor-pointer">
                   Usuario activo
                 </label>
               </div>
 
-              <div className="flex space-x-3 pt-2 flex-nowrap">
+              <div className="flex items-center gap-1.5 p-1.5 bg-black/[0.03] dark:bg-white/[0.03] border border-black/[0.05] dark:border-white/[0.05] rounded-full w-full mt-6 backdrop-blur-md">
                 <button
                   type="button"
                   onClick={() => {
@@ -1143,18 +1163,20 @@ export default function GestionarAfiliadosPage() {
                     setError('');
                     setSuccess('');
                   }}
-                  className="flex-1 bg-gray-100/80 dark:bg-gray-600/80 backdrop-blur-sm text-gray-700 dark:text-gray-200 py-2 px-4 rounded-xl hover:bg-gray-200/80 dark:hover:bg-gray-500/80 transition-all duration-200 font-medium border border-gray-200/50 dark:border-gray-500/50 text-sm whitespace-nowrap"
+                  className="flex-1 h-9 flex items-center justify-center rounded-full text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-black/5 dark:hover:bg-white/5 transition-all duration-200 text-xs font-semibold uppercase tracking-wider border-none cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={managingSuperadminAff}
-                  className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-2 px-4 rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-200 disabled:opacity-50 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-sm whitespace-nowrap"
+                  className="flex-1 h-9 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full hover:from-purple-500 hover:to-pink-500 transition-all duration-200 disabled:opacity-50 text-xs font-bold uppercase tracking-wider shadow-md shadow-purple-500/20 active:scale-95 border-none cursor-pointer flex items-center justify-center gap-1.5"
                 >
-                  {managingSuperadminAff 
-                    ? (isEditingSuperadminAff ? 'Actualizando...' : 'Creando...') 
-                    : (isEditingSuperadminAff ? 'Actualizar' : 'Crear')}
+                  <span>
+                    {managingSuperadminAff 
+                      ? (isEditingSuperadminAff ? 'Actualizando...' : 'Creando...') 
+                      : (isEditingSuperadminAff ? 'Actualizar' : 'Crear')}
+                  </span>
                 </button>
               </div>
             </form>
@@ -1174,113 +1196,115 @@ export default function GestionarAfiliadosPage() {
               setError('');
               setSuccess('');
             }}
-            title="Editar Estudio Afiliado"
+            title={
+              <div className="flex items-center space-x-2.5">
+                <div className="w-8 h-8 bg-gradient-to-tr from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-md shadow-purple-500/10 border border-purple-400/20 flex-shrink-0">
+                  <svg className="w-4 h-4 text-white drop-shadow-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                </div>
+                <span className="text-base font-bold text-zinc-900 dark:text-white tracking-tight">Editar Estudio Afiliado</span>
+              </div>
+            }
             maxWidthClass="max-w-lg"
-            paddingClass="p-7"
+            paddingClass="p-6 sm:p-7"
             headerMarginClass="mb-5"
             formSpaceYClass="space-y-5"
+            className="!rounded-[2rem] shadow-[0_8px_40px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.5)] border border-white/50 dark:border-white/10"
           >
-            <div className="flex items-center space-x-3 mb-5">
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Estudio: <span className="font-semibold text-gray-900 dark:text-gray-100">{selectedAffiliateName}</span>
-                </p>
-              </div>
+            <div className="bg-black/[0.015] dark:bg-white/[0.015] border border-black/[0.04] dark:border-white/[0.06] rounded-xl px-3 py-2 flex items-center gap-2 mb-4 select-none">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Estudio:</span>
+              <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">{selectedAffiliateName}</span>
             </div>
             
-            <form onSubmit={handleEditAffiliate} className="space-y-5">
+            <form onSubmit={handleEditAffiliate} className="space-y-4">
               {error && (
-                <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                <div className="bg-red-500/10 border border-red-500/20 backdrop-blur-md rounded-2xl p-4 shadow-sm">
                   <div className="flex items-center space-x-3">
-                    <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0">
-                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    <div className="w-5 h-5 bg-red-500/20 border border-red-500/30 rounded-full flex items-center justify-center flex-shrink-0 text-red-600 dark:text-red-400">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
                       </svg>
                     </div>
-                    <p className="text-sm text-red-700 font-medium">{error}</p>
+                    <p className="text-sm text-red-800 dark:text-red-300 font-semibold tracking-tight">{error}</p>
                   </div>
                 </div>
               )}
               
               {success && (
-                <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                <div className="bg-green-500/10 border border-green-500/20 backdrop-blur-md rounded-2xl p-4 shadow-sm">
                   <div className="flex items-center space-x-3">
-                    <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
-                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    <div className="w-5 h-5 bg-green-500/20 border border-green-500/30 rounded-full flex items-center justify-center flex-shrink-0 text-green-600 dark:text-green-400">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                       </svg>
                     </div>
-                    <p className="text-sm text-green-700 font-medium">{success}</p>
+                    <p className="text-sm text-green-800 dark:text-green-300 font-semibold tracking-tight">{success}</p>
                   </div>
                 </div>
               )}
 
               <div>
-                <label className="block text-gray-700 dark:text-gray-200 text-sm font-semibold mb-2">
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5 ml-1">
                   Nombre del Estudio Afiliado *
                 </label>
                 <input
                   type="text"
                   value={editAffiliateName}
                   onChange={(e) => setEditAffiliateName(e.target.value)}
-                  className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm transition-all duration-200"
+                  className="h-10 w-full bg-black/[0.02] dark:bg-white/[0.02] border border-black/[0.08] dark:border-white/[0.08] rounded-xl px-4 text-[13px] text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 dark:focus:ring-purple-400/50 focus:border-transparent transition-all duration-200 backdrop-blur-md shadow-inner"
                   placeholder="Ej: Estudio XYZ"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-gray-700 dark:text-gray-200 text-sm font-semibold mb-2">
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5 ml-1">
                   Descripción (Opcional)
                 </label>
                 <textarea
                   value={editAffiliateDescription}
                   onChange={(e) => setEditAffiliateDescription(e.target.value)}
-                  className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm transition-all duration-200"
+                  className="w-full bg-black/[0.02] dark:bg-white/[0.02] border border-black/[0.08] dark:border-white/[0.08] rounded-xl px-4 py-2.5 text-[13px] text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 dark:focus:ring-purple-400/50 focus:border-transparent transition-all duration-200 backdrop-blur-md shadow-inner"
                   placeholder="Descripción del estudio afiliado..."
                   rows={3}
                 />
               </div>
 
               <div>
-                <label className="block text-gray-700 dark:text-gray-200 text-sm font-semibold mb-2">
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5 ml-1">
                   Porcentaje de Comisión (%) *
                 </label>
                 <input
                   type="number"
                   value={editAffiliateCommission}
                   onChange={(e) => setEditAffiliateCommission(e.target.value)}
-                  className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm transition-all duration-200"
+                  className="h-10 w-full bg-black/[0.02] dark:bg-white/[0.02] border border-black/[0.08] dark:border-white/[0.08] rounded-xl px-4 text-[13px] text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 dark:focus:ring-purple-400/50 focus:border-transparent transition-all duration-200 backdrop-blur-md shadow-inner"
                   placeholder="10.00"
                   min="0"
                   max="100"
                   step="0.01"
                   required
                 />
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                <p className="text-[11px] text-zinc-400 dark:text-zinc-500 mt-1 ml-1 font-medium">
                   Porcentaje que recibe Agencia Innova
                 </p>
               </div>
 
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2.5 py-1 ml-1 select-none">
                 <input
                   type="checkbox"
                   id="editAffiliateIsActive"
                   checked={editAffiliateIsActive}
                   onChange={(e) => setEditAffiliateIsActive(e.target.checked)}
-                  className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                  className="w-4.5 h-4.5 text-purple-600 border-black/[0.08] dark:border-white/[0.08] bg-black/[0.02] dark:bg-white/[0.02] rounded focus:ring-purple-500 focus:ring-offset-0 focus:outline-none transition-all duration-200 cursor-pointer"
                 />
-                <label htmlFor="editAffiliateIsActive" className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                <label htmlFor="editAffiliateIsActive" className="text-[13px] font-semibold text-zinc-700 dark:text-zinc-300 cursor-pointer">
                   Estudio activo
                 </label>
               </div>
 
-              <div className="flex space-x-3 pt-2 flex-nowrap">
+              <div className="flex items-center gap-1.5 p-1.5 bg-black/[0.03] dark:bg-white/[0.03] border border-black/[0.05] dark:border-white/[0.05] rounded-full w-full mt-6 backdrop-blur-md">
                 <button
                   type="button"
                   onClick={() => {
@@ -1292,20 +1316,45 @@ export default function GestionarAfiliadosPage() {
                     setError('');
                     setSuccess('');
                   }}
-                  className="flex-1 bg-gray-100/80 dark:bg-gray-600/80 backdrop-blur-sm text-gray-700 dark:text-gray-200 py-2 px-4 rounded-xl hover:bg-gray-200/80 dark:hover:bg-gray-500/80 transition-all duration-200 font-medium border border-gray-200/50 dark:border-gray-500/50 text-sm whitespace-nowrap"
+                  className="flex-1 h-9 flex items-center justify-center rounded-full text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-black/5 dark:hover:bg-white/5 transition-all duration-200 text-xs font-semibold uppercase tracking-wider border-none cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={editingAffiliate}
-                  className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-2 px-4 rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-200 disabled:opacity-50 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-sm whitespace-nowrap"
+                  className="flex-1 h-9 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full hover:from-purple-500 hover:to-pink-500 transition-all duration-200 disabled:opacity-50 text-xs font-bold uppercase tracking-wider shadow-md shadow-purple-500/20 active:scale-95 border-none cursor-pointer flex items-center justify-center gap-1.5"
                 >
-                  {editingAffiliate ? 'Actualizando...' : 'Actualizar'}
+                  <span>{editingAffiliate ? 'Actualizando...' : 'Actualizar'}</span>
                 </button>
               </div>
             </form>
           </StandardModal>
+        )}
+
+        {/* Zoomed Image Modal */}
+        {zoomedImage && isMounted && typeof document !== 'undefined' && createPortal(
+          <div 
+            className="fixed inset-0 flex items-center justify-center bg-black/75 backdrop-blur-md p-4 cursor-pointer animate-in fade-in duration-200"
+            onClick={() => setZoomedImage(null)}
+            style={{ zIndex: 100000 }}
+          >
+            <img 
+              src={zoomedImage} 
+              alt="Avatar Ampliado" 
+              className="w-full max-w-[360px] h-auto max-h-[360px] rounded-2xl shadow-2xl object-cover border border-white/10 cursor-default animate-in zoom-in-95 duration-200"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <button 
+              className="absolute top-6 right-6 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 backdrop-blur-md transition-colors cursor-pointer"
+              onClick={() => setZoomedImage(null)}
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>,
+          document.body
         )}
       </div>
     </div>

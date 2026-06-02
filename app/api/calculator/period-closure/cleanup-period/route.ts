@@ -323,7 +323,7 @@ async function validateBeforeCleanup(
     }
 
     if (!historyRecords || historyRecords.length === 0) {
-      errors.push('❌ NO SE HA EJECUTADO EL ARCHIVADO. Debes crear el archivo histórico primero.');
+      errors.push('NO SE HA EJECUTADO EL ARCHIVADO. Debes crear el archivo histórico primero.');
       return { valid: false, errors };
     }
 
@@ -339,7 +339,7 @@ async function validateBeforeCleanup(
     }
 
     if (!snapshot) {
-      errors.push('⚠️ NO EXISTE BACKUP DE SEGURIDAD. Es recomendable tener un snapshot.');
+      errors.push('NO EXISTE BACKUP DE SEGURIDAD. Es recomendable tener un snapshot.');
     }
 
     // 3. CONTAR MODELOS EN HISTORIAL vs VALORES ACTUALES
@@ -371,7 +371,7 @@ async function validateBeforeCleanup(
 
     if (missingInHistory.length > 0) {
       errors.push(
-        `❌ HAY ${missingInHistory.length} MODELOS CON VALORES QUE NO ESTÁN EN EL HISTORIAL. ` +
+        `HAY ${missingInHistory.length} MODELOS CON VALORES QUE NO ESTÁN EN EL HISTORIAL. ` +
         `El archivado está incompleto.`
       );
     }
@@ -401,7 +401,7 @@ async function validateBeforeCleanup(
 
     if (activeLock && activeLock.operation_type === 'archive') {
       errors.push(
-        `❌ HAY UN PROCESO DE ARCHIVADO EN EJECUCIÓN por ${activeLock.admin_email}. ` +
+        `HAY UN PROCESO DE ARCHIVADO EN EJECUCIÓN por ${activeLock.admin_email}. ` +
         `Espera a que termine.`
       );
     }

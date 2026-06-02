@@ -448,10 +448,10 @@ export default function MiAhorroPage() {
             {!goals.some(g => g.estado === 'activa') && (
               <button
                 onClick={() => setShowGoalModal(true)}
-                className="px-4 py-2 sm:py-2 bg-gradient-to-r from-cyan-500 to-fuchsia-500 hover:from-cyan-400 hover:to-fuchsia-400 text-white text-[10px] sm:text-[11px] font-bold rounded-full transition-all shadow-[0_0_15px_rgba(34,211,238,0.4)] hover:shadow-[0_0_25px_rgba(232,121,249,0.6)] uppercase tracking-wider"
+                className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-fuchsia-500 hover:from-cyan-400 hover:to-fuchsia-400 text-white text-xs font-medium rounded-full transition-all shadow-[0_0_15px_rgba(34,211,238,0.3)] hover:shadow-[0_0_25px_rgba(232,121,249,0.5)]"
               >
-                <span className="relative z-10 flex items-center tracking-widest uppercase gap-1">
-                  NUEVA META
+                <span className="relative z-10 flex items-center gap-1">
+                  Nueva Meta
                 </span>
               </button>
             )}

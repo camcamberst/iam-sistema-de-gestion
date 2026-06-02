@@ -8,6 +8,7 @@ interface ManualPeriodClosureProps {
   userId: string;
   userRole: 'super_admin' | 'admin' | 'superadmin_aff' | 'admin_aff';
   groupId?: string;
+  onValidationChange?: (validation: any) => void;
 }
 
 interface ArchiveStatus {
@@ -28,7 +29,7 @@ interface CleanupValidation {
   };
 }
 
-export default function ManualPeriodClosure({ userId, userRole, groupId }: ManualPeriodClosureProps) {
+export default function ManualPeriodClosure({ userId, userRole, groupId, onValidationChange }: ManualPeriodClosureProps) {
   const [isClosureDayActive, setIsClosureDayActive] = useState(false);
   const [periodToClose, setPeriodToClose] = useState<any>(null);
   const [archiveStatus, setArchiveStatus] = useState<ArchiveStatus | null>(null);
@@ -77,6 +78,12 @@ export default function ManualPeriodClosure({ userId, userRole, groupId }: Manua
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    if (onValidationChange) {
+      onValidationChange(cleanupValidation);
+    }
+  }, [cleanupValidation, onValidationChange]);
+
   const checkClosureDay = () => {
     const isToday = isClosureDay();
     setIsClosureDayActive(isToday);
@@ -96,7 +103,6 @@ export default function ManualPeriodClosure({ userId, userRole, groupId }: Manua
         
         // Si está archivado, resetear el resultado local para mostrar el estado global
         if (data.archived && !archiveResult) {
-          // Archivo ya existe, fue ejecutado por otro admin o en otra sesión
           console.log('Archivo histórico ya existe (ejecutado por otro admin)');
         }
       }
@@ -247,378 +253,418 @@ export default function ManualPeriodClosure({ userId, userRole, groupId }: Manua
   };
 
   return (
-    <div className="mb-8">
-      <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 rounded-xl border border-indigo-200 dark:border-indigo-800 shadow-lg overflow-hidden">
-        {/* Header compacto desplegable */}
-        <button
-          type="button"
-          onClick={() => setExpanded((e) => !e)}
-          className="w-full flex items-center justify-between gap-3 p-4 text-left hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 transition-colors"
-          aria-expanded={expanded}
-        >
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 flex-shrink-0 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center shadow-md">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-            </div>
-            <div className="min-w-0">
-              <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white truncate">
-                🔒 Cierre Manual de Período
-              </h3>
-              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate">
-                {isClosureDayActive ? (
-                  <>Período: <span className="font-semibold">{periodToClose?.periodType}</span></>
-                ) : (
-                  <>Días 1 y 16 de cada mes</>
-                )}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
-            {checking && (
-              <div className="w-3 h-3 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" title="Verificando..." />
-            )}
-            {!checking && archiveStatus?.archived && (
-              <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" title="Archivado">✅</span>
-            )}
-            {!checking && (cleanupValidation?.stats?.total_records_in_values ?? 1) === 0 && archiveStatus?.archived && (
-              <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200" title="Completado">🎉</span>
-            )}
-            {!checking && cleanupValidation?.can_cleanup && (cleanupValidation?.stats?.total_records_in_values ?? 0) > 0 && (
-              <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200" title="Pendiente limpieza">⚠️</span>
-            )}
-            <svg
-              className={`w-5 h-5 text-gray-500 dark:text-gray-400 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              aria-hidden
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </div>
-        </button>
+    <div className="space-y-6">
+      {/* Sleek, Low-profile Database Metrics Row (Matches the clean style of other hubs) */}
+      <div>
 
-        {/* Contenido desplegable */}
-        {expanded && (
-          <div className="px-6 pb-6 pt-0 border-t border-indigo-200/50 dark:border-indigo-800/50">
-        {/* Mensajes de error */}
+        {cleanupValidation?.stats && (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="bg-white/40 dark:bg-[#1a1a1c]/40 backdrop-blur-md border border-white/50 dark:border-white/[0.08] rounded-2xl p-4 flex flex-col items-center justify-center select-none shadow-sm relative overflow-hidden group">
+              <span className="block text-[10px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Historial</span>
+              <span className="text-xl font-black text-rose-500 dark:text-rose-400 mt-1">
+                {cleanupValidation.stats.models_in_history}
+              </span>
+              <span className="block text-[9px] text-gray-400 dark:text-zinc-500 mt-0.5">modelos archivados</span>
+            </div>
+            <div className="bg-white/40 dark:bg-[#1a1a1c]/40 backdrop-blur-md border border-white/50 dark:border-white/[0.08] rounded-2xl p-4 flex flex-col items-center justify-center select-none shadow-sm relative overflow-hidden group">
+              <span className="block text-[10px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Activos</span>
+              <span className="text-xl font-black text-purple-500 dark:text-purple-400 mt-1">
+                {cleanupValidation.stats.models_with_values}
+              </span>
+              <span className="block text-[9px] text-gray-400 dark:text-zinc-500 mt-0.5">modelos con datos</span>
+            </div>
+            <div className="bg-white/40 dark:bg-[#1a1a1c]/40 backdrop-blur-md border border-white/50 dark:border-white/[0.08] rounded-2xl p-4 flex flex-col items-center justify-center select-none shadow-sm relative overflow-hidden group">
+              <span className="block text-[10px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Reg. Historial</span>
+              <span className="text-xl font-black text-gray-700 dark:text-zinc-300 mt-1">
+                {cleanupValidation.stats.total_records_in_history}
+              </span>
+              <span className="block text-[9px] text-gray-400 dark:text-zinc-500 mt-0.5">filas totales</span>
+            </div>
+            <div className="bg-white/40 dark:bg-[#1a1a1c]/40 backdrop-blur-md border border-white/50 dark:border-white/[0.08] rounded-2xl p-4 flex flex-col items-center justify-center select-none shadow-sm relative overflow-hidden group">
+              <span className="block text-[10px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Reg. Activos</span>
+              <span className="text-xl font-black text-amber-500 dark:text-amber-400 mt-1">
+                {cleanupValidation.stats.total_records_in_values}
+              </span>
+              <span className="block text-[9px] text-gray-400 dark:text-zinc-500 mt-0.5">filas en curso</span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Banners de error y de resultados */}
+      <div className="space-y-4">
         {error && (
-          <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-            <p className="text-sm text-red-800 dark:text-red-400">❌ {error}</p>
+          <div className="p-4 bg-red-500/5 border border-red-500/20 rounded-2xl backdrop-blur-md animate-in fade-in duration-300 flex items-start gap-3">
+            <span className="text-red-500 text-base mt-0.5">❌</span>
+            <p className="text-xs sm:text-sm text-red-600 dark:text-red-400 font-semibold leading-relaxed">{error}</p>
           </div>
         )}
 
-        {/* Mensajes de resultado */}
         {archiveResult && !error && (
-          <div className="mb-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-            <p className="text-sm text-green-800 dark:text-green-400 font-semibold mb-2">
-              ✅ Archivo histórico creado exitosamente por ti
-            </p>
-            <div className="text-xs text-green-700 dark:text-green-300 space-y-1">
-              <p>• Modelos archivadas: {archiveResult.models_archived}</p>
-              <p>• Tiempo de ejecución: {(archiveResult.execution_time_ms / 1000).toFixed(2)}s</p>
-              {archiveResult.partial && (
-                <p className="text-yellow-700 dark:text-yellow-400 font-semibold">
-                  ⚠️ {archiveResult.partial.models_failed} modelos fallaron. Revisa el log.
-                </p>
-              )}
+          <div className="p-5 bg-emerald-500/5 border border-emerald-500/25 rounded-2xl backdrop-blur-md animate-in fade-in duration-300 flex items-start gap-3.5">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500 flex-shrink-0 shadow-md">
+              <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm text-emerald-600 dark:text-emerald-400 font-black">
+                Copia histórica creada con éxito
+              </p>
+              <div className="text-xs text-zinc-500 dark:text-zinc-400 space-y-0.5 mt-1">
+                <p>• Modelos archivadas: <span className="font-bold text-gray-700 dark:text-white">{archiveResult.models_archived}</span></p>
+                <p>• Tiempo de ejecución: <span className="font-semibold text-gray-600 dark:text-zinc-300">{(archiveResult.execution_time_ms / 1000).toFixed(2)}s</span></p>
+                {archiveResult.partial && (
+                  <p className="text-amber-600 dark:text-amber-400 font-bold mt-1">
+                    ⚠️ {archiveResult.partial.models_failed} modelos fallaron. Revisa el log detallado.
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         )}
 
         {!archiveResult && archiveStatus?.archived && archiveStatus?.last_log && (
-          <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-            <p className="text-sm text-blue-800 dark:text-blue-400 font-semibold mb-2">
-              ℹ️ Archivo histórico ya creado
-            </p>
-            <div className="text-xs text-blue-700 dark:text-blue-300 space-y-1">
-              <p>• Ejecutado por: {archiveStatus.last_log.user_email || 'Admin'}</p>
-              <p>• Fecha: {new Date(archiveStatus.last_log.timestamp).toLocaleString('es-CO')}</p>
-              {archiveStatus.last_log.models_affected && (
-                <p>• Modelos archivadas: {archiveStatus.last_log.models_affected}</p>
-              )}
+          <div className="p-5 bg-blue-500/5 border border-blue-500/20 rounded-2xl backdrop-blur-md animate-in fade-in duration-300 flex items-start gap-3.5">
+            <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500 flex-shrink-0 shadow-md">
+              <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm text-blue-600 dark:text-blue-400 font-black">
+                Archivo histórico ya completado
+              </p>
+              <div className="text-xs text-zinc-500 dark:text-zinc-400 space-y-0.5 mt-1">
+                <p>• Ejecutado por: <span className="font-bold text-gray-700 dark:text-white">{archiveStatus.last_log.user_email || 'Admin'}</span></p>
+                <p>• Fecha de ejecución: <span className="font-semibold text-gray-600 dark:text-zinc-300">{new Date(archiveStatus.last_log.timestamp).toLocaleString('es-CO')}</span></p>
+                {archiveStatus.last_log.models_affected && (
+                  <p>• Modelos archivadas: <span className="font-bold text-gray-700 dark:text-white">{archiveStatus.last_log.models_affected}</span></p>
+                )}
+              </div>
             </div>
           </div>
         )}
 
         {cleanupResult && !error && (
-          <div className="mb-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-            <p className="text-sm text-green-800 dark:text-green-400 font-semibold mb-2">
-              🎉 Limpieza completada por ti - Nuevo período iniciado
-            </p>
-            <div className="text-xs text-green-700 dark:text-green-300 space-y-1">
-              <p>• Registros archivados: {cleanupResult.records_archived}</p>
-              <p>• Totales reseteados: {cleanupResult.totals_reset}</p>
-              <p>• Calculadoras descongeladas: ✅</p>
+          <div className="p-5 bg-emerald-500/5 border border-emerald-500/25 rounded-2xl backdrop-blur-md animate-in fade-in duration-300 flex items-start gap-3.5">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500 flex-shrink-0 shadow-md">
+              <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm text-emerald-600 dark:text-emerald-400 font-black">
+                Limpieza y reinicio completado con éxito
+              </p>
+              <div className="text-xs text-zinc-500 dark:text-zinc-400 space-y-0.5 mt-1">
+                <p>• Registros archivados: <span className="font-bold text-gray-700 dark:text-white">{cleanupResult.records_archived}</span></p>
+                <p>• Totales reseteados: <span className="font-bold text-gray-700 dark:text-white">{cleanupResult.totals_reset}</span></p>
+                <p>• Calculadoras descongeladas: <span className="text-emerald-500 font-bold">✓ Completado</span></p>
+              </div>
             </div>
           </div>
         )}
 
         {forceResetResult && !error && userRole === 'super_admin' && (
-          <div className="mb-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-            <p className="text-sm text-green-800 dark:text-green-400 font-semibold mb-2">
-              ✅ Reset forzado completado
-            </p>
-            <div className="text-xs text-green-700 dark:text-green-300 space-y-1">
-              <p>• Valores borrados (model_values): {forceResetResult.deleted_model_values}</p>
-              <p>• Totales borrados (calculator_totals): {forceResetResult.deleted_calculator_totals}</p>
-              <p>• Calculadoras descongeladas: ✔</p>
-              <p>• Tiempo: {(forceResetResult.execution_time_ms / 1000).toFixed(2)}s</p>
+          <div className="p-5 bg-amber-500/5 border border-amber-500/20 rounded-2xl backdrop-blur-md animate-in fade-in duration-300 flex items-start gap-3.5">
+            <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-500 flex-shrink-0 shadow-md">
+              <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm text-amber-600 dark:text-amber-500 font-black">
+                Reset forzado global completado
+              </p>
+              <div className="text-xs text-zinc-500 dark:text-zinc-400 space-y-0.5 mt-1">
+                <p>• Valores borrados (model_values): <span className="font-bold text-gray-700 dark:text-white">{forceResetResult.deleted_model_values}</span></p>
+                <p>• Totales borrados (calculator_totals): <span className="font-bold text-gray-700 dark:text-white">{forceResetResult.deleted_calculator_totals}</span></p>
+                <p>• Calculadoras descongeladas: <span className="text-emerald-500 font-bold">✓ Completado</span></p>
+                <p>• Tiempo de ejecución: <span className="font-semibold text-gray-600 dark:text-zinc-300">{(forceResetResult.execution_time_ms / 1000).toFixed(2)}s</span></p>
+              </div>
             </div>
           </div>
         )}
 
         {avisoResult && !error && userRole === 'super_admin' && (
-          <div className="mb-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-            <p className="text-sm text-green-800 dark:text-green-400 font-semibold mb-2">
-              ✅ Aviso enviado por Botty
-            </p>
-            <p className="text-xs text-green-700 dark:text-green-300">
-              Enviado a {avisoResult.sent} de {avisoResult.total} modelo(s).
-            </p>
+          <div className="p-5 bg-emerald-500/5 border border-emerald-500/25 rounded-2xl backdrop-blur-md animate-in fade-in duration-300 flex items-start gap-3.5">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500 flex-shrink-0 shadow-md">
+              <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a2.002 2.002 0 00-2-2h-1M5 17H4a2 2 0 01-2-2V5a2 2 0 012-2h2.5" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm text-emerald-600 dark:text-emerald-400 font-black">
+                Aviso a modelos enviado con éxito
+              </p>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed">
+                Mensaje de notificación enviado vía Botty a <span className="font-bold text-gray-700 dark:text-white">{avisoResult.sent}</span> de <span className="font-semibold text-gray-600 dark:text-zinc-300">{avisoResult.total}</span> modelo(s).
+              </p>
+            </div>
           </div>
         )}
 
         {!cleanupResult && (cleanupValidation?.stats?.total_records_in_values ?? 1) === 0 && archiveStatus?.archived && (
-          <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-            <p className="text-sm text-blue-800 dark:text-blue-400 font-semibold mb-2">
-              ℹ️ Período ya cerrado y limpiado
-            </p>
-            <p className="text-xs text-blue-700 dark:text-blue-300">
-              El proceso de cierre ya fue completado. Las calculadoras están listas para el nuevo período.
-            </p>
+          <div className="p-5 bg-blue-500/5 border border-blue-500/20 rounded-2xl backdrop-blur-md animate-in fade-in duration-300 flex items-start gap-3.5 select-none">
+            <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500 flex-shrink-0 shadow-md">
+              <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm text-blue-600 dark:text-blue-400 font-black">
+                Período ya cerrado y limpiado
+              </p>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed">
+                El proceso de cierre ya fue completado. Las calculadoras están listas para el nuevo período.
+              </p>
+            </div>
           </div>
         )}
+      </div>
 
-        {/* Botones */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Botón 1: Crear Archivo Histórico */}
-          <button
-            onClick={() => setShowArchiveModal(true)}
-            disabled={!isClosureDayActive || archiveStatus?.archived || archiveStatus?.in_progress || archiving || checking}
-            title={
-              !isClosureDayActive 
-                ? 'Este botón solo está disponible los días 1 y 16 de cada mes' 
-                : archiveStatus?.archived 
-                ? 'Archivo ya creado por ' + (archiveStatus?.last_log?.user_email || 'otro admin') 
-                : ''
-            }
-            className={`relative group p-4 rounded-lg border-2 transition-all duration-200 ${
-              !isClosureDayActive || archiveStatus?.archived
-                ? 'bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700 cursor-not-allowed opacity-60'
-                : 'bg-white dark:bg-gray-900 border-indigo-300 dark:border-indigo-700 hover:border-indigo-500 hover:shadow-lg cursor-pointer'
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+      {/* Grid de Acciones */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Columna Izquierda: Flujo Oficial de Cierre (Paso 1 y Paso 2) */}
+        <div className="lg:col-span-2 space-y-4">
+          <div className="flex items-center gap-2 px-1.5 select-none">
+            <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)] animate-pulse" />
+            <h4 className="text-sm font-extrabold text-gray-900 dark:text-white tracking-tight">
+              Flujo de Cierre Obligatorio
+            </h4>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Paso 1: Crear archivo */}
+            <button
+              onClick={() => setShowArchiveModal(true)}
+              disabled={!isClosureDayActive || archiveStatus?.archived || archiveStatus?.in_progress || archiving || checking}
+              className={`w-full p-5 rounded-2xl border text-left flex items-start gap-4 transition-all duration-300 relative overflow-hidden group select-none ${
+                !isClosureDayActive || archiveStatus?.archived
+                  ? 'bg-[#1a1a1c]/20 dark:bg-[#1a1a1c]/10 border-rose-500/30 dark:border-rose-500/40 shadow-[0_0_15px_rgba(244,63,94,0.1)] opacity-70 cursor-not-allowed'
+                  : 'bg-white/40 dark:bg-[#1a1a1c]/40 backdrop-blur-md border-rose-500/50 dark:border-rose-500/60 shadow-[0_0_20px_rgba(244,63,94,0.15)] hover:bg-white/60 dark:hover:bg-[#1a1a1c]/60 hover:border-rose-500/80 dark:hover:border-rose-500/90 hover:shadow-[0_0_35px_rgba(244,63,94,0.32)] hover:scale-[1.01] active:scale-[0.98] cursor-pointer'
+              }`}
+            >
+              {/* Clean minimalist raw SVG icon (No bubble wrapper, direct SVG with intense glow) */}
+              <div className={`transition-transform duration-300 group-hover:scale-110 flex-shrink-0 mt-0.5 ${
                 archiveStatus?.archived
-                  ? 'bg-gray-300 dark:bg-gray-700'
-                  : 'bg-gradient-to-br from-indigo-500 to-purple-600'
+                  ? 'text-emerald-500 dark:text-emerald-400 drop-shadow-[0_0_8px_rgba(16,185,129,0.6)]'
+                  : !isClosureDayActive
+                  ? 'text-gray-400 dark:text-zinc-650'
+                  : 'text-rose-500 dark:text-rose-400 drop-shadow-[0_0_8px_rgba(244,63,94,0.6)]'
               }`}>
                 {archiveStatus?.archived ? (
-                  <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 ) : (
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.0}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
                   </svg>
                 )}
               </div>
-              <div className="flex-1 text-left">
-                <h4 className="text-sm font-bold text-gray-900 dark:text-white">
-                  Paso 1: Crear Archivo
+
+              <div className="flex-1 min-w-0">
+                <span className="block text-[10px] font-black tracking-wider text-rose-500 dark:text-rose-400/80 uppercase">
+                  Paso 1
+                </span>
+                <h4 className="text-base font-extrabold text-gray-900 dark:text-white mt-0.5 leading-tight">
+                  Crear archivo
                 </h4>
-                <p className="text-xs text-gray-600 dark:text-gray-400">
-                  {archiveStatus?.archived 
-                    ? 'Completado ✅' 
-                    : archiveStatus?.in_progress 
-                    ? 'En progreso...' 
-                    : 'Archivar datos del período'}
+                <p className="text-xs text-gray-500 dark:text-zinc-400 mt-2 leading-relaxed">
+                  Copia histórica de todos los valores registrados por las modelos antes de limpiar.
                 </p>
               </div>
-            </div>
-          </button>
+            </button>
 
-          {/* Botón 2: Limpiar y Resetear */}
-          <button
-            onClick={() => setShowCleanupModal(true)}
-            disabled={!isClosureDayActive || !cleanupValidation?.can_cleanup || cleaning || checking || ((cleanupValidation?.stats?.total_records_in_values ?? 1) === 0)}
-            title={
-              !isClosureDayActive
-                ? 'Este botón solo está disponible los días 1 y 16 de cada mes'
-                : (cleanupValidation?.stats?.total_records_in_values ?? 1) === 0 
-                ? 'Limpieza ya ejecutada' 
-                : !cleanupValidation?.can_cleanup 
-                ? 'Debes ejecutar el Paso 1 primero' 
-                : ''
-            }
-            className={`relative group p-4 rounded-lg border-2 transition-all duration-200 ${
-              !isClosureDayActive || !cleanupValidation?.can_cleanup || ((cleanupValidation?.stats?.total_records_in_values ?? 1) === 0)
-                ? 'bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700 cursor-not-allowed opacity-60'
-                : 'bg-white dark:bg-gray-900 border-purple-300 dark:border-purple-700 hover:border-purple-500 hover:shadow-lg cursor-pointer'
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                cleanupResult
-                  ? 'bg-gray-300 dark:bg-gray-700'
-                  : cleanupValidation?.can_cleanup
-                  ? 'bg-gradient-to-br from-purple-500 to-pink-600'
-                  : 'bg-gray-300 dark:bg-gray-700'
+            {/* Paso 2: Limpieza & reinicio */}
+            <button
+              onClick={() => setShowCleanupModal(true)}
+              disabled={!isClosureDayActive || !cleanupValidation?.can_cleanup || cleaning || checking || ((cleanupValidation?.stats?.total_records_in_values ?? 1) === 0)}
+              className={`w-full p-5 rounded-2xl border text-left flex items-start gap-4 transition-all duration-300 relative overflow-hidden group select-none ${
+                !isClosureDayActive || !cleanupValidation?.can_cleanup || ((cleanupValidation?.stats?.total_records_in_values ?? 1) === 0)
+                  ? 'bg-[#1a1a1c]/20 dark:bg-[#1a1a1c]/10 border-rose-500/30 dark:border-rose-500/40 shadow-[0_0_15px_rgba(244,63,94,0.1)] opacity-70 cursor-not-allowed'
+                  : 'bg-white/40 dark:bg-[#1a1a1c]/40 backdrop-blur-md border-rose-500/50 dark:border-rose-500/60 shadow-[0_0_20px_rgba(244,63,94,0.15)] hover:bg-white/60 dark:hover:bg-[#1a1a1c]/60 hover:border-rose-500/80 dark:hover:border-rose-500/90 hover:shadow-[0_0_35px_rgba(244,63,94,0.32)] hover:scale-[1.01] active:scale-[0.98] cursor-pointer'
+              }`}
+            >
+              {/* Clean minimalist raw SVG icon (No bubble wrapper, direct SVG with intense glow) */}
+              <div className={`transition-transform duration-300 group-hover:scale-110 flex-shrink-0 mt-0.5 ${
+                (cleanupValidation?.stats?.total_records_in_values ?? 1) === 0
+                  ? 'text-emerald-500 dark:text-emerald-400 drop-shadow-[0_0_8px_rgba(16,185,129,0.6)]'
+                  : !isClosureDayActive || !cleanupValidation?.can_cleanup
+                  ? 'text-gray-400 dark:text-zinc-650'
+                  : 'text-rose-500 dark:text-rose-400 drop-shadow-[0_0_8px_rgba(244,63,94,0.6)]'
               }`}>
-                {cleanupResult ? (
-                  <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                {(cleanupValidation?.stats?.total_records_in_values ?? 1) === 0 ? (
+                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 ) : (
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.0}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                   </svg>
                 )}
               </div>
-              <div className="flex-1 text-left">
-                <h4 className="text-sm font-bold text-gray-900 dark:text-white">
-                  Paso 2: Limpiar
+
+              <div className="flex-1 min-w-0">
+                <span className="block text-[10px] font-black tracking-wider text-rose-500 dark:text-rose-400/80 uppercase">
+                  Paso 2
+                </span>
+                <h4 className="text-base font-extrabold text-gray-900 dark:text-white mt-0.5 leading-tight">
+                  Limpieza & reinicio
                 </h4>
-                <p className="text-xs text-gray-600 dark:text-gray-400">
-                  {(cleanupValidation?.stats?.total_records_in_values ?? 1) === 0 
-                    ? 'Completado ✅' 
-                    : cleanupValidation?.can_cleanup 
-                    ? 'Resetear y descongelar' 
-                    : 'Requiere paso 1'}
+                <p className="text-xs text-gray-500 dark:text-zinc-400 mt-2 leading-relaxed">
+                  Borra y reinicia los totales a 0.00 en Mi Calculadora para iniciar el nuevo período.
                 </p>
               </div>
-            </div>
-          </button>
+            </button>
+          </div>
 
-          {/* Botón 3: Restaurar (Emergencia) */}
-          <button
-            onClick={() => setShowRestoreModal(true)}
-            disabled={!archiveStatus?.archived || restoring}
-            className="relative group p-4 rounded-lg border-2 border-red-300 dark:border-red-700 bg-white dark:bg-gray-900 hover:border-red-500 hover:shadow-lg transition-all duration-200 disabled:bg-gray-100 disabled:border-gray-300 disabled:cursor-not-allowed"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-gradient-to-br from-red-500 to-orange-600">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </div>
+
+        {/* Columna Derecha: Operaciones Especiales */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 px-1.5 select-none">
+            <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)] animate-pulse" />
+            <h4 className="text-sm font-extrabold text-gray-900 dark:text-white tracking-tight">
+              Operaciones Especiales
+            </h4>
+          </div>
+          
+          <div className="grid grid-cols-1 gap-3">
+            {/* Aviso a Modelos (📢) */}
+            {userRole === 'super_admin' && (
+              <button
+                type="button"
+                onClick={handleEnviarAvisoModelos}
+                disabled={avisoLoading}
+                title="Envía por Botty un mensaje a todas las modelos indicando que la calculadora se ha restablecido."
+                className="w-full pl-6 pr-5 py-3.5 rounded-full border bg-white/40 dark:bg-[#1a1a1c]/40 backdrop-blur-md border-rose-500/40 dark:border-rose-500/50 shadow-[0_0_15px_rgba(244,63,94,0.1)] hover:bg-white/60 dark:hover:bg-[#1a1a1c]/60 hover:border-rose-500/70 dark:hover:border-rose-500/80 hover:shadow-[0_0_25px_rgba(244,63,94,0.22)] transition-all duration-300 active:scale-98 flex items-center gap-3.5 group cursor-pointer disabled:opacity-50 disabled:border-rose-500/20 disabled:shadow-none disabled:cursor-not-allowed select-none"
+              >
+                {/* Minimalist Raw Icon, No Bubble wrapper, illuminated emerald neon */}
+                <div className="text-emerald-500 dark:text-emerald-400 drop-shadow-[0_0_8px_rgba(16,185,129,0.6)] transition-transform duration-300 group-hover:scale-110 flex-shrink-0">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.0}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z" />
+                  </svg>
+                </div>
+                <div className="flex-1 text-left min-w-0">
+                  <h5 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white truncate">
+                    Aviso a modelos
+                  </h5>
+                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate mt-0.5">
+                    {avisoLoading ? 'Enviando notificación...' : 'Calculadora restaurada'}
+                  </p>
+                </div>
+              </button>
+            )}
+
+            {/* Reset Forzado (🔥) */}
+            {userRole === 'super_admin' && (
+              <button
+                type="button"
+                onClick={handleForceResetAll}
+                disabled={forceResetLoading}
+                title="Acción administrativa para borrar todos los valores activos sin verificar fecha de cierre."
+                className="w-full pl-6 pr-5 py-3.5 rounded-full border bg-white/40 dark:bg-[#1a1a1c]/40 backdrop-blur-md border-rose-500/40 dark:border-rose-500/50 shadow-[0_0_15px_rgba(244,63,94,0.1)] hover:bg-white/60 dark:hover:bg-[#1a1a1c]/60 hover:border-rose-500/70 dark:hover:border-rose-500/80 hover:shadow-[0_0_25px_rgba(244,63,94,0.22)] transition-all duration-300 active:scale-98 flex items-center gap-3.5 group cursor-pointer disabled:opacity-50 disabled:border-rose-500/20 disabled:shadow-none disabled:cursor-not-allowed select-none"
+              >
+                {/* Minimalist Raw Icon, No Bubble wrapper, illuminated orange neon */}
+                <div className="text-orange-500 dark:text-orange-400 drop-shadow-[0_0_8px_rgba(249,115,22,0.6)] transition-transform duration-300 group-hover:scale-110 flex-shrink-0">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.0}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.362 5.214A8.252 8.252 0 0112 21 8.25 8.25 0 016.038 7.048 8.287 8.287 0 009 9.6a8.983 8.983 0 013.361-6.867 8.21 8.21 0 003 2.48z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 18a3.75 3.75 0 00.495-7.467 5.99 5.99 0 00-1.925 3.546 5.974 5.974 0 01-2.133-1A3.75 3.75 0 0012 18z" />
+                  </svg>
+                </div>
+                <div className="flex-1 text-left min-w-0">
+                  <h5 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white truncate">
+                    Reset forzado
+                  </h5>
+                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate mt-0.5">
+                    {forceResetLoading ? 'Ejecutando limpieza...' : 'Todas las calculadoras'}
+                  </p>
+                </div>
+              </button>
+            )}
+
+            {/* Restaurar (🚨) */}
+            <button
+              onClick={() => setShowRestoreModal(true)}
+              disabled={!archiveStatus?.archived || restoring}
+              className="w-full pl-6 pr-5 py-3.5 rounded-full border bg-white/40 dark:bg-[#1a1a1c]/40 backdrop-blur-md border-rose-500/40 dark:border-rose-500/50 shadow-[0_0_15px_rgba(244,63,94,0.1)] hover:bg-white/60 dark:hover:bg-[#1a1a1c]/60 hover:border-rose-500/70 dark:hover:border-rose-500/80 hover:shadow-[0_0_25px_rgba(244,63,94,0.22)] transition-all duration-300 active:scale-98 flex items-center gap-3.5 group cursor-pointer disabled:opacity-50 disabled:border-rose-500/20 disabled:shadow-none disabled:cursor-not-allowed select-none"
+            >
+              {/* Minimalist Raw Icon, No Bubble wrapper, illuminated rose/red neon */}
+              <div className="text-rose-500 dark:text-rose-400 drop-shadow-[0_0_8px_rgba(244,63,94,0.6)] transition-transform duration-300 group-hover:scale-110 flex-shrink-0">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.0}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m0-10.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.249-8.25-3.286zm0 13.036h.008v.008H12v-.008z" />
                 </svg>
               </div>
-              <div className="flex-1 text-left">
-                <h4 className="text-sm font-bold text-gray-900 dark:text-white">
-                  🚨 Restaurar
-                </h4>
-                <p className="text-xs text-gray-600 dark:text-gray-400">
+              <div className="flex-1 text-left min-w-0">
+                <h5 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white truncate">
+                  Restaurar datos
+                </h5>
+                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate mt-0.5">
                   Solo emergencias
                 </p>
               </div>
-            </div>
-          </button>
-
-          {/* Botón 4: Reset forzado (solo super_admin) */}
-          {userRole === 'super_admin' && (
-            <button
-              type="button"
-              onClick={handleForceResetAll}
-              disabled={forceResetLoading}
-              title="Borra todos los valores en Mi Calculadora y todos los totales. Descongela todas las calculadoras. No se puede deshacer."
-              className="relative group p-4 rounded-lg border-2 border-red-300 dark:border-red-700 bg-white dark:bg-gray-900 hover:border-red-500 hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-gradient-to-br from-red-600 to-orange-700">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
-                  </svg>
-                </div>
-                <div className="flex-1 text-left">
-                  <h4 className="text-sm font-bold text-gray-900 dark:text-white">
-                    🔥 Reset forzado
-                  </h4>
-                  <p className="text-xs text-gray-600 dark:text-gray-400">
-                    {forceResetLoading ? 'Ejecutando...' : 'Todas las calculadoras'}
-                  </p>
-                </div>
-              </div>
             </button>
-          )}
-
-          {/* Botón 5: Enviar aviso a modelos (solo super_admin) */}
-          {userRole === 'super_admin' && (
-            <button
-              type="button"
-              onClick={handleEnviarAvisoModelos}
-              disabled={avisoLoading}
-              title="Envía por Botty un mensaje a todas las modelos: Mi Calculadora restaurada, pueden ingresar valores y consultar facturación en Mi Historial."
-              className="relative group p-4 rounded-lg border-2 border-emerald-300 dark:border-emerald-700 bg-white dark:bg-gray-900 hover:border-emerald-500 hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-gradient-to-br from-emerald-500 to-teal-600">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a2.002 2.002 0 00-2-2h-1M5 17H4a2 2 0 01-2-2V5a2 2 0 012-2h2.5M9 17h.01M12 17h.01M15 13h.01M12 13h.01M9 13h.01M7 13h.01" />
-                  </svg>
-                </div>
-                <div className="flex-1 text-left">
-                  <h4 className="text-sm font-bold text-gray-900 dark:text-white">
-                    📢 Aviso a modelos
-                  </h4>
-                  <p className="text-xs text-gray-600 dark:text-gray-400">
-                    {avisoLoading ? 'Enviando...' : 'Mi Calculadora restaurada'}
-                  </p>
-                </div>
-              </div>
-            </button>
-          )}
+          </div>
         </div>
+      </div>
 
-        {/* Validación de limpieza */}
-        {cleanupValidation && !cleanupValidation.can_cleanup && cleanupValidation.validation_errors.length > 0 && (
-          <div className="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-            <p className="text-sm font-semibold text-yellow-800 dark:text-yellow-400 mb-2">
-              ⚠️ No se puede ejecutar la limpieza:
-            </p>
-            <ul className="text-xs text-yellow-700 dark:text-yellow-300 space-y-1 list-disc list-inside">
-              {cleanupValidation.validation_errors.map((err, idx) => (
-                <li key={idx}>{err}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-          </div>
+      {/* Glowing Status Banner (Moved here to act as a unified card status footer bar) */}
+      <div className="mt-6 sm:-mx-6 sm:-mb-6 border-t border-black/[0.06] dark:border-white/[0.08] pt-3.5 pb-3.5 px-1.5 sm:px-6 flex items-center justify-between gap-3 select-none text-[11px] font-bold text-gray-500 dark:text-zinc-400 sm:bg-black/[0.03] sm:dark:bg-white/[0.02]">
+        <div className="flex items-center gap-2">
+          <span className="relative flex h-1.5 w-1.5 flex-shrink-0">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.8)]"></span>
+          </span>
+          <span>
+            {isClosureDayActive ? (
+              <>Período activo para archivar: <span className="text-rose-500 dark:text-rose-400 font-extrabold drop-shadow-[0_0_6px_rgba(244,63,94,0.6)]">{periodToClose?.label || periodToClose?.periodType}</span></>
+            ) : (
+              <>Próximo cierre de período: <span className="text-rose-500 dark:text-rose-400 font-extrabold drop-shadow-[0_0_6px_rgba(244,63,94,0.6)]">Días 1 y 16 de cada mes</span></>
+            )}
+          </span>
+        </div>
+        
+        {checking && (
+          <span className="flex items-center gap-1.5 text-[10px] text-zinc-400 flex-shrink-0">
+            <span className="w-2.5 h-2.5 border border-zinc-400 border-t-transparent rounded-full animate-spin" />
+            Sincronizando
+          </span>
         )}
       </div>
 
       {/* Modal: Confirmar Archivado */}
       {showArchiveModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="glass-modal max-w-md w-full p-6">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
-              📦 Confirmar Creación de Archivo Histórico
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="glass-modal max-w-md w-full p-6 bg-white dark:bg-zinc-800 rounded-3xl border border-black/10 dark:border-white/10 shadow-2xl">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <span>📦</span> Confirmar creación de archivo histórico
             </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-              Se creará el archivo histórico del período <strong>{periodToClose?.periodType}</strong>.
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">
+              Se creará el archivo histórico del período <strong className="text-gray-900 dark:text-white">{periodToClose?.periodType}</strong>.
               Este proceso puede tardar varios minutos.
             </p>
-            <p className="text-xs text-gray-500 dark:text-gray-500 mb-6">
+            <p className="text-xs text-amber-600 dark:text-amber-500 mb-6 bg-amber-500/5 p-3 rounded-xl border border-amber-500/10 leading-relaxed font-semibold">
               ⚠️ Una vez iniciado, no se puede cancelar. Asegúrate de que todas las modelos hayan terminado de ingresar sus valores.
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setShowArchiveModal(false)}
                 disabled={archiving}
-                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50"
+                className="flex-1 px-4 py-2.5 border border-gray-300 dark:border-gray-700 rounded-full text-xs font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 transition-all active:scale-95"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleArchive}
                 disabled={archiving}
-                className="flex-1 px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg hover:from-indigo-600 hover:to-purple-700 disabled:opacity-50 flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-2.5 bg-gradient-to-r from-rose-500 to-pink-600 text-white rounded-full text-xs font-bold hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2 transition-all cursor-pointer"
               >
                 {archiving ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                     Archivando...
                   </>
                 ) : (
@@ -632,39 +678,39 @@ export default function ManualPeriodClosure({ userId, userRole, groupId }: Manua
 
       {/* Modal: Confirmar Limpieza */}
       {showCleanupModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="glass-modal max-w-md w-full p-6">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
-              🧹 Confirmar Limpieza y Reseteo
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="glass-modal max-w-md w-full p-6 bg-white dark:bg-zinc-800 rounded-3xl border border-black/10 dark:border-white/10 shadow-2xl">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <span>🧹</span> Confirmar limpieza y reseteo
             </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              Se realizarán las siguientes acciones:
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 leading-relaxed">
+              Se realizarán las siguientes acciones en el sistema:
             </p>
-            <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-2 mb-6 list-disc list-inside">
-              <li>Los datos se moverán a la tabla de archivo</li>
-              <li>Las calculadoras se resetearán a 0.00</li>
-              <li>Se descongelarán todas las calculadoras</li>
-              <li>Se iniciará el período <strong>{getNewPeriodAfterClosure().periodType}</strong></li>
+            <ul className="text-xs text-zinc-500 dark:text-zinc-400 space-y-2 mb-6 list-disc list-inside bg-black/[0.02] dark:bg-white/[0.02] p-4 rounded-xl border border-black/[0.05] dark:border-white/[0.05]">
+              <li>Los datos se moverán a la tabla de archivo histórico.</li>
+              <li>Las calculadoras de modelos se resetearán a <strong className="text-gray-900 dark:text-white">0.00</strong>.</li>
+              <li>Se descongelarán todas las calculadoras congeladas.</li>
+              <li>Se iniciará el nuevo período <strong className="text-gray-900 dark:text-white">{getNewPeriodAfterClosure().periodType}</strong>.</li>
             </ul>
-            <p className="text-xs text-red-600 dark:text-red-400 mb-6 font-semibold">
-              ⚠️ Esta acción es irreversible. Asegúrate de que el archivado se completó correctamente.
+            <p className="text-xs text-red-600 dark:text-red-400 mb-6 bg-red-500/5 p-3 rounded-xl border border-red-500/10 leading-relaxed font-semibold">
+              ⚠️ Esta acción es irreversible. Asegúrate de que el archivado del Paso 1 se completó correctamente.
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setShowCleanupModal(false)}
                 disabled={cleaning}
-                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50"
+                className="flex-1 px-4 py-2.5 border border-gray-300 dark:border-gray-700 rounded-full text-xs font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 transition-all active:scale-95"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleCleanup}
                 disabled={cleaning}
-                className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-lg hover:from-purple-600 hover:to-pink-700 disabled:opacity-50 flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-2.5 bg-gradient-to-r from-rose-500 to-pink-600 text-white rounded-full text-xs font-bold hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2 transition-all cursor-pointer"
               >
                 {cleaning ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                     Limpiando...
                   </>
                 ) : (
@@ -676,20 +722,19 @@ export default function ManualPeriodClosure({ userId, userRole, groupId }: Manua
         </div>
       )}
 
-      {/* Modal: Restaurar (Para implementar) */}
+      {/* Modal: Restaurar */}
       {showRestoreModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="glass-modal max-w-md w-full p-6">
-            <h3 className="text-lg font-bold text-red-600 dark:text-red-400 mb-4">
-              🚨 Restaurar Período (Emergencia)
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="glass-modal max-w-md w-full p-6 bg-white dark:bg-zinc-800 rounded-3xl border border-black/10 dark:border-white/10 shadow-2xl text-center">
+            <h3 className="text-lg font-bold text-red-600 dark:text-red-400 mb-4 flex items-center justify-center gap-2">
+              <span>🚨</span> Restaurar período (Emergencia)
             </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-              Esta función está reservada para situaciones de emergencia. 
-              Contacta al desarrollador para implementar la restauración.
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">
+              Esta función está reservada estrictamente para situaciones de contingencia y requiere asistencia técnica directa.
             </p>
             <button
               onClick={() => setShowRestoreModal(false)}
-              className="w-full px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600"
+              className="w-full px-4 py-2.5 bg-gray-100 dark:bg-zinc-700 text-xs font-bold text-gray-700 dark:text-gray-200 rounded-full hover:bg-gray-200 dark:hover:bg-zinc-650 transition-all active:scale-95 cursor-pointer"
             >
               Cerrar
             </button>

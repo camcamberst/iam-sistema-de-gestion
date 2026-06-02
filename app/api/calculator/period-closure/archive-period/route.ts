@@ -264,6 +264,21 @@ export async function POST(request: NextRequest) {
         p_models_total: filteredModels.length
       });
 
+      // 🛡️ ESCUDO 4: Omitir modelos que ya fueron liquidados/archivados anticipadamente
+      const { data: alreadyArchived } = await supabase
+        .from('calculator_history')
+        .select('id')
+        .eq('model_id', model.id)
+        .eq('period_date', periodToClose.periodDate)
+        .eq('period_type', periodToClose.periodType)
+        .limit(1);
+
+      if (alreadyArchived && alreadyArchived.length > 0) {
+        console.log(`  ⏩ [${model.name || model.email}] Omitido (ya liquidado para este período)`);
+        results.succeeded.push(model.id);
+        continue;
+      }
+
       // Intentar archivar con reintentos
       const archiveResult = await archiveModelWithRetry(
         model.id,

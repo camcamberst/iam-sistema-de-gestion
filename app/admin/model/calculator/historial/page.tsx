@@ -100,13 +100,23 @@ export default function CalculatorHistorialPage() {
   // 🌟 ESTADO DE CARRUSEL MÓVIL
   const [mobileCarouselSide, setMobileCarouselSide] = useState<'cop' | 'usd'>('cop');
   const [ratesCarouselIndexes, setRatesCarouselIndexes] = useState<Record<string, number>>({});
+  const [mobileCarouselIndex, setMobileCarouselIndex] = useState(0);
+
+  // Estados para modal "Agregar plataforma" (Admin en planilla cerrada)
+  const [showAddPlatformModal, setShowAddPlatformModal] = useState(false);
+  const [addPlatformPeriod, setAddPlatformPeriod] = useState<Period | null>(null);
+  const [availablePortfolioPlatforms, setAvailablePortfolioPlatforms] = useState<any[]>([]);
+  const [selectedAddPlatformId, setSelectedAddPlatformId] = useState('');
+  const [addPlatformValue, setAddPlatformValue] = useState('');
+  const [loadingPortfolio, setLoadingPortfolio] = useState(false);
 
   const [saving, setSaving] = useState(false);
 
   const router = useRouter();
   const searchParams = useSearchParams();
   const from = searchParams.get('from');
-  const showBackButton = from === 'historial-modelo';
+  const embedded = searchParams.get('embedded') === 'true';
+  const showBackButton = from === 'historial-modelo' && !embedded;
 
   // Función para recargar datos
   const loadData = async () => {
@@ -320,10 +330,26 @@ export default function CalculatorHistorialPage() {
     });
   }, [allPeriods, selectedYear, selectedMonth, selectedPeriodType]);
 
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.parent) {
+      window.parent.postMessage({
+        type: 'PERIOD_DATA_STATUS',
+        hasData: filteredPeriods.length > 0,
+        selectedYear,
+        selectedMonth,
+        selectedPeriodType
+      }, '*');
+    }
+  }, [filteredPeriods, selectedYear, selectedMonth, selectedPeriodType]);
+
   const isAdmin = userRole === 'admin' || userRole === 'super_admin';
 
   // ... (Funciones de edición plataforma/rates sin cambios)
-  const startEditPlatform = (periodKey: string, platformId: string, val: number) => { setEditingPlatform({ periodKey, platformId }); setEditValue(val.toString()); };
+  const startEditPlatform = (periodKey: string, platformId: string, val: number) => { 
+    setEditingPlatform({ periodKey, platformId }); 
+    setEditValue(val.toString()); 
+    setMobileCarouselIndex(0); // Forzar visualización de Valores (slide 0) en móvil al editar
+  };
   const startEditRates = (p: Period) => {
     const k = `${p.period_date}-${p.period_type}`;
     setEditingRates(k);
@@ -334,6 +360,101 @@ export default function CalculatorHistorialPage() {
     });
   };
   const cancelEdit = () => { setEditingPlatform(null); setEditingRates(null); setEditValue(''); setAddingDeductionFor(null); setDeductionType('deduction'); };
+
+  const handleAddPlatformClick = async (period: Period) => {
+    setAddPlatformPeriod(period);
+    setSelectedAddPlatformId('');
+    setAddPlatformValue('');
+    setShowAddPlatformModal(true);
+    setLoadingPortfolio(true);
+
+    try {
+      // 1. Cargar el portafolio de la modelo
+      const response = await fetch(`/api/modelo-plataformas?model_id=${targetModelId}`);
+      const portfolio = await response.json();
+
+      // 2. Filtrar plataformas que ya están en esta quincena
+      const existingIds = new Set((period.platforms || []).map(p => p.platform_id));
+      const filtered = (portfolio || [])
+        .filter((item: any) => !existingIds.has(item.platform_id))
+        .map((item: any) => ({
+          id: item.platform_id,
+          name: item.platform_name || item.platform_id
+        }));
+
+      setAvailablePortfolioPlatforms(filtered);
+    } catch (e) {
+      console.error('Error fetching portfolio platforms:', e);
+      setAvailablePortfolioPlatforms([]);
+    } finally {
+      setLoadingPortfolio(false);
+    }
+  };
+
+  const handleSaveNewPlatform = async () => {
+    if (!selectedAddPlatformId || !addPlatformValue || !addPlatformPeriod || !isAdmin) return;
+
+    try {
+      setSaving(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) throw new Error('Sesión no válida');
+
+      const response = await fetch('/api/model/calculator/historial/update', {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` 
+        },
+        body: JSON.stringify({
+          period_date: addPlatformPeriod.period_date,
+          period_type: addPlatformPeriod.period_type,
+          model_id: targetModelId,
+          platform_id: selectedAddPlatformId,
+          value: Number(addPlatformValue)
+        })
+      });
+
+      const data = await response.json();
+      if (!data.success) throw new Error(data.error);
+
+      setShowAddPlatformModal(false);
+      setAddPlatformPeriod(null);
+      await loadData();
+    } catch (e: any) {
+      alert(e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeletePlatform = async (period: Period, platformId: string) => {
+    if (!isAdmin) return;
+    if (!confirm(`¿Estás seguro de que deseas eliminar la plataforma ${platformId.toUpperCase()} de este período?`)) return;
+
+    try {
+      setSaving(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) throw new Error('Sesión no válida');
+
+      const response = await fetch(`/api/model/calculator/historial/update?period_date=${period.period_date}&period_type=${period.period_type}&model_id=${targetModelId}&platform_id=${platformId}`, {
+        method: 'DELETE',
+        headers: { 
+          'Authorization': `Bearer ${token}` 
+        }
+      });
+
+      const data = await response.json();
+      if (!data.success) throw new Error(data.error);
+
+      await loadData();
+    } catch (e: any) {
+      alert(e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const savePlatformValue = async (periodKey: string, platformId: string) => {
     if (!isAdmin) return;
@@ -563,13 +684,33 @@ export default function CalculatorHistorialPage() {
         </div>
       )}
 
-      {/* Header — Migrado a PageHeader */}
-      <PageHeader
-        title="Mi Historial"
-        subtitle="Historial de períodos archivados"
-        glow="model"
-        icon={<History className="w-5 h-5 sm:w-6 sm:h-6 text-white" />}
-      />
+      {/* Header — Migrado a PageHeader (Oculto si está embebido) */}
+      {!embedded && (
+        <PageHeader
+          title="Mi Historial"
+          subtitle="Historial de períodos archivados"
+          glow="model"
+          icon={<History className="w-5 h-5 sm:w-6 sm:h-6 text-white" />}
+        />
+      )}
+
+      {embedded && (
+        <style dangerouslySetInnerHTML={{ __html: `
+          /* Hide layout elements when embedded in iframe */
+          header, nav, footer, .galena-bottom-player, [class*="BottomPlayer"] {
+            display: none !important;
+          }
+          /* Reset layout background and padding */
+          main {
+            padding: 0 !important;
+            padding-bottom: 0 !important;
+          }
+          .min-h-screen {
+            min-height: 0 !important;
+            background: transparent !important;
+          }
+        `}} />
+      )}
 
       {/* Controles de Filtado (Año, Mes, Período) - Centrados debajo del header */}
       <div className="flex justify-center items-center gap-3 sm:gap-5 flex-wrap mt-10 sm:mt-10 md:mt-12 mb-8">
@@ -581,10 +722,16 @@ export default function CalculatorHistorialPage() {
       {error && <div className="p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg mb-4 text-center border border-red-100 dark:border-red-800">{error}</div>}
       
       {!error && filteredPeriods.length === 0 && (
-        <div className="p-12 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 text-center">
-          <History className="w-16 h-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">No hay datos</h3>
-          <p className="text-gray-500 dark:text-gray-400 text-sm">Selecciona un período válido con los filtros.</p>
+        <div className="relative bg-white/40 dark:bg-[#1a1a1c]/40 backdrop-blur-3xl rounded-3xl border border-black/5 dark:border-white/5 p-12 text-center shadow-lg dark:shadow-blue-900/5 max-w-xl mx-auto mt-6">
+          <div className="w-20 h-20 bg-gradient-to-tr from-blue-500/10 via-indigo-500/5 to-purple-500/15 rounded-3xl border border-indigo-500/20 dark:border-indigo-400/15 flex items-center justify-center mx-auto mb-6 shadow-[0_0_20px_rgba(99,102,241,0.15)] relative">
+            <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-500 animate-ping"></span>
+            <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-500"></span>
+            
+            <History className="w-9 h-9 text-indigo-500 dark:text-indigo-400" />
+          </div>
+          <p className="text-lg font-normal text-gray-500 dark:text-gray-400 tracking-tight">
+            No existen datos para este período
+          </p>
         </div>
       )}
 
@@ -599,7 +746,16 @@ export default function CalculatorHistorialPage() {
                 <div className="flex flex-col justify-center min-w-0 flex-1">
                   <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center drop-shadow-sm dark:drop-shadow-[0_0_8px_rgba(255,255,255,0.4)] truncate">
                     <Calendar className="w-5 h-5 text-blue-500 dark:text-blue-400 mr-2.5 shrink-0" />
-                    {formatPeriodMonth(period.period_date, period.period_type)}
+                    <span>{formatPeriodMonth(period.period_date, period.period_type)}</span>
+                    {isAdmin && (
+                      <button
+                        onClick={() => handleAddPlatformClick(period)}
+                        className="ml-2.5 p-1 rounded-full bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/20 active:scale-95 transition-all duration-200 cursor-pointer shrink-0"
+                        title="Agregar plataforma a esta planilla"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </h3>
                     {period.is_synthetic && (
                       <p className="text-[10px] sm:text-xs text-amber-600 dark:text-amber-400 mt-1 flex items-center gap-1">
@@ -680,8 +836,44 @@ export default function CalculatorHistorialPage() {
                   </div>
                 ) : (
                   <>
+                  {/* Thin elegant header row when embedded */}
+                  {embedded && (
+                    <div className="flex items-center justify-between gap-2 sm:gap-4 w-full px-2.5 sm:px-3 py-1.5 text-[10.5px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-white/10 bg-black/[0.01] dark:bg-white/[0.01] rounded-t-lg">
+                      <div className="flex-1 text-left">Plataformas</div>
+                      <div className="flex items-center justify-end gap-0 shrink-0">
+                        {/* Desktop-only Headers */}
+                        <div className="hidden sm:block w-[90px] text-center pr-3">Valores</div>
+                        <div className="hidden sm:block w-[100px] text-center pr-3">USD Mod</div>
+                        <div className="hidden sm:block w-[110px] text-center pr-2">COP Mod</div>
+
+                        {/* Mobile Header Carousel */}
+                        <div 
+                          className="block sm:hidden relative overflow-hidden cursor-pointer active:scale-[0.98] transition-all bg-black/[0.03] dark:bg-white/[0.03] rounded-lg text-center"
+                          style={{ height: '22px', width: '110px' }}
+                          onClick={() => setMobileCarouselIndex(prev => prev + 1)}
+                        >
+                          <div 
+                            className="absolute bottom-0 w-full flex flex-col-reverse transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]"
+                            style={{ transform: `translateY(${mobileCarouselIndex * 22}px)` }}
+                          >
+                            {Array(20).fill([
+                              { label: 'COP Mod' },
+                              { label: 'USD Mod' },
+                              { label: 'Valores' }
+                            ]).flat().map((item, idx) => (
+                              <div key={idx} className="flex-shrink-0 flex items-center justify-center text-center w-full" style={{ height: '22px' }}>
+                                <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{item.label}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {isAdmin && <div className="hidden sm:block w-[60px] text-center pl-2"></div>}
+                      </div>
+                    </div>
+                  )}
                   {/* Layout Unificado (Desktop & Mobile) idéntico a Calculadora */}
-                  <div className="space-y-2 mt-4 sm:mt-6">
+                  <div className="space-y-0.5 mt-4 sm:mt-6">
                     {period.platforms.filter(p=>p.value>0).map(p => {
                       const isTokens = ['chaturbate', 'myfreecams', 'stripchat', 'dxlive'].includes((p.platform_id || '').toLowerCase() || p.platform_name.toLowerCase());
                       const displayCurrency = isTokens ? 'TKN' : (p.platform_currency || 'USD');
@@ -691,114 +883,159 @@ export default function CalculatorHistorialPage() {
                       const displayCopModelo = editingPlatform?.periodKey === periodKey && editingPlatform?.platformId === p.platform_id ? computedRates.copModelo : (p.value_cop_modelo||0);
 
                       return (
-                    <div key={p.platform_id} className="relative bg-black/[0.04] dark:bg-[#0a0a0c]/60 backdrop-blur-2xl border border-white/30 dark:border-white/[0.06] rounded-[0.85rem] p-2.5 sm:p-3 shadow-sm shadow-black/5 dark:shadow-none transition-all hover:bg-black/[0.06] dark:hover:bg-[#0a0a0c]/80">
-                      <div className="flex items-end justify-between gap-2 sm:gap-4 w-full">
-                        
-                        {/* Izquierda: Nombre e insignias */}
-                        <div className="flex items-center gap-1.5 sm:gap-2 flex-1 min-w-0">
-                          {/* 1. Porcentaje (SOLO ESCRITORIO) */}
-                          <div className="hidden sm:flex text-[8.5px] uppercase font-bold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-white/[0.02] px-1.5 py-[2px] rounded tracking-wider items-center justify-center shrink-0">
-                            {p.platform_id === 'superfoon' ? '100%' : `${p.platform_percentage}%`}
-                          </div>
-                          
-                          {/* 2. Divisa (Unificado para Móvil y Escritorio) */}
-                          <span className={`flex text-[8.5px] uppercase font-bold px-1.5 py-[2px] rounded items-center justify-center shrink-0 ${
-                            p.platform_currency === 'EUR' ? 'bg-emerald-100/60 dark:bg-[#2dd4bf]/15 text-emerald-700 dark:text-[#2dd4bf]' :
-                            p.platform_currency === 'GBP' ? 'bg-blue-100/60 dark:bg-[#5caaf5]/15 text-blue-700 dark:text-[#5caaf5]' :
-                            'bg-purple-100/60 dark:bg-[#c488fc]/15 text-purple-700 dark:text-[#c488fc]'
-                          }`}>
-                            {displayCurrency}
-                          </span>
-
-                          <span className="font-bold text-[13.5px] sm:text-[14px] text-gray-800 dark:text-gray-300 uppercase tracking-wide truncate">
-                            {p.platform_name}
-                          </span>
-                        </div>
-
-                        {/* Derecha: Input y Resultados */}
-                        <div className="flex items-end justify-end gap-3 sm:gap-[40px] shrink-0">
-                          {/* 1. Valor Original Edit/Read */}
-                          <div className="flex items-end sm:translate-y-[2px]">
-                            <div className="flex flex-col items-start justify-end min-w-[66px] sm:min-w-[70px] pr-2 border-r border-gray-200 dark:border-white/10">
-                              <span className="hidden sm:block whitespace-nowrap text-[8px] sm:text-[9.5px] font-bold opacity-0 mb-[1px] sm:mb-[2px] select-none" aria-hidden="true">-</span>
-                              {editingPlatform?.periodKey === periodKey && editingPlatform?.platformId === p.platform_id ? (
-                                  <input type="number" value={editValue} onChange={e=>setEditValue(e.target.value)} className="w-[66px] h-[26px] sm:h-[28px] bg-white dark:bg-gray-800 border border-black/[0.1] dark:border-white/20 rounded-md px-1.5 text-[12px] sm:text-[13px] font-bold text-gray-900 dark:text-gray-100 text-left sm:mb-0 tabular-nums" />
-                              ) : (
-                                  <div className="flex items-center justify-start gap-[3px] text-[13px] sm:text-[13px] font-semibold tracking-tight text-gray-900 dark:text-gray-100 sm:mb-0 tabular-nums">
-                                    <span className={isTokens ? "opacity-0 select-none" : "font-normal"}>$</span>
-                                    <span>{isTokens ? Math.round(p.value).toString() : formatNumberOnly(p.value)}</span>
-                                  </div>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* 2. Resultados (USD Mod y COP Mod agrupados) */}
-                          <div 
-                            className="flex items-end cursor-pointer sm:cursor-default"
-                            onClick={() => {
-                              if (window.innerWidth < 640) {
-                                setMobileCarouselSide(prev => prev === 'cop' ? 'usd' : 'cop');
-                              }
-                            }}
-                          >
-                            {/* --- VISTA DESKTOP --- */}
-                            <div className="hidden sm:flex items-end">
-                              {/* USD Mod */}
-                              <div className="flex flex-col items-start w-[100px] flex-shrink-0 pr-3 border-r border-gray-200 dark:border-white/10">
-                                <span className="whitespace-nowrap text-[9.5px] uppercase font-bold text-emerald-600 dark:text-[#2dd4bf] opacity-80 tracking-widest mb-[2px]">USD MOD</span>
-                                <div className="flex items-center justify-start gap-[3px] text-[13px] tracking-tight text-emerald-600 dark:text-[#2dd4bf] font-semibold tabular-nums">
-                                  <span className="font-normal">$</span>
-                                  <span>{formatNumberOnly(displayUsdModelo)}</span>
-                                </div>
+                        <div key={p.platform_id} className="relative group hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors border-b border-gray-100 dark:border-white/5 last:border-0 rounded-lg p-2.5 sm:p-3">
+                          <div className="flex items-center justify-between gap-2 sm:gap-4 w-full">
+                            
+                            {/* Izquierda: Nombre e insignias */}
+                            <div className="flex items-center gap-1.5 sm:gap-2 flex-1 min-w-0">
+                              {/* 1. Porcentaje (SOLO ESCRITORIO) */}
+                              <div className="hidden sm:flex text-[8.5px] uppercase font-bold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-white/[0.02] py-[2px] rounded tracking-wider items-center justify-center shrink-0 w-[36px]">
+                                {p.platform_id === 'superfoon' ? '100%' : `${p.platform_percentage ?? 80}%`}
                               </div>
-                              {/* COP Mod */}
-                              <div className="flex flex-col items-start w-[100px] flex-shrink-0 pl-3">
-                                <span className="block whitespace-nowrap text-[9.5px] uppercase font-bold text-purple-600 dark:text-[#c488fc] opacity-80 tracking-widest mb-[2px]">GANANCIAS</span>
-                                <div className="flex items-center justify-start gap-[3px] text-[13px] tracking-tight text-purple-700 dark:text-[#c488fc] font-semibold tabular-nums">
-                                  <span className="font-normal">$</span>
-                                  <span>{displayCopModelo.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
-                                </div>
-                              </div>
+                              
+                              {/* 2. Divisa (Unificado para Móvil y Escritorio) */}
+                              <span className={`flex text-[8.5px] uppercase font-bold px-1.5 py-[2px] rounded items-center justify-center shrink-0 ${
+                                p.platform_currency === 'EUR' ? 'bg-emerald-100/60 dark:bg-[#2dd4bf]/15 text-emerald-700 dark:text-[#2dd4bf]' :
+                                p.platform_currency === 'GBP' ? 'bg-blue-100/60 dark:bg-[#5caaf5]/15 text-blue-700 dark:text-[#5caaf5]' :
+                                'bg-purple-100/60 dark:bg-[#c488fc]/15 text-purple-700 dark:text-[#c488fc]'
+                              }`}>
+                                {displayCurrency}
+                              </span>
+
+                              <span className="font-bold text-[13.5px] sm:text-[14px] text-gray-800 dark:text-gray-300 truncate">
+                                {p.platform_name}
+                              </span>
                             </div>
 
-                            {/* --- VISTA MÓVIL (CARRUSEL) --- */}
-                            <div className="sm:hidden relative overflow-hidden min-w-[74px] w-[74px] h-[34px] flex-shrink-0">
-                              <div className={`absolute top-0 left-0 w-full flex flex-col transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${mobileCarouselSide === 'usd' ? '-translate-y-1/2' : 'translate-y-0'}`}>
-                                {/* Slide 1: COP Mod */}
-                                <div className="h-[34px] flex flex-col items-start justify-end">
-                                  <span className="block whitespace-nowrap text-[8px] uppercase font-bold text-purple-600 dark:text-[#c488fc] opacity-80 tracking-widest mb-[1px]">GANANCIAS</span>
-                                  <div className="flex items-center justify-start gap-[3px] text-[12.5px] tracking-tight text-purple-700 dark:text-[#c488fc] font-semibold tabular-nums">
-                                    <span className="font-normal">$</span>
-                                    <span>{displayCopModelo.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
-                                  </div>
-                                </div>
-                                {/* Slide 2: USD Mod */}
-                                <div className="h-[34px] flex flex-col items-start justify-end">
-                                  <span className="block whitespace-nowrap text-[8px] uppercase font-bold text-emerald-600 dark:text-[#2dd4bf] opacity-80 tracking-widest mb-[1px]">USD MOD</span>
-                                  <div className="flex items-center justify-start gap-[3px] text-[12.5px] tracking-tight text-emerald-600 dark:text-[#2dd4bf] font-semibold tabular-nums">
-                                    <span className="font-normal">$</span>
-                                    <span>{formatNumberOnly(displayUsdModelo)}</span>
-                                  </div>
-                                </div>
-                              </div>
+                             {/* Derecha: Input y Resultados */}
+                             <div className={`flex items-center justify-end shrink-0 ${embedded ? 'gap-0' : 'gap-3 sm:gap-[40px]'}`}>
+                               {embedded ? (
+                                 <>
+                                   {/* VISTA ESCRITORIO (sm o superior): Tres columnas lado a lado */}
+                                   <div className="hidden sm:flex items-center justify-end gap-0 shrink-0">
+                                     {/* 1. Valor Original (Valores) */}
+                                     <div className="flex items-center justify-end w-[90px] pr-3 border-r border-gray-200 dark:border-white/10">
+                                       <div className="flex items-center justify-end w-full">
+                                         {editingPlatform?.periodKey === periodKey && editingPlatform?.platformId === p.platform_id ? (
+                                             <input type="number" value={editValue} onChange={e=>setEditValue(e.target.value)} className="w-[66px] h-[28px] bg-white dark:bg-gray-800 border border-black/[0.1] dark:border-white/20 rounded-md px-1.5 text-[13px] font-bold text-gray-900 dark:text-gray-100 text-right tabular-nums" />
+                                         ) : (
+                                             <div className="flex items-center justify-end gap-[3px] text-[14px] font-bold tracking-tight text-gray-900 dark:text-gray-100 tabular-nums">
+                                               <span className={isTokens ? "opacity-0 select-none hidden" : "font-normal text-gray-500"}>$</span>
+                                               <span>{isTokens ? Math.round(p.value).toString() : formatNumberOnly(p.value)}</span>
+                                             </div>
+                                         )}
+                                       </div>
+                                     </div>
+
+                                     {/* 2. USD Mod */}
+                                     <div className="flex items-center justify-end gap-1.5 w-[100px] pr-3 border-r border-gray-200 dark:border-white/10">
+                                       <div className="flex items-center gap-[2px] text-[13.5px] font-semibold text-emerald-600 dark:text-[#2dd4bf] tabular-nums">
+                                         <span className="text-[11px] font-medium opacity-70">$</span>
+                                         {formatNumberOnly(displayUsdModelo)}
+                                       </div>
+                                     </div>
+
+                                     {/* 3. COP Mod */}
+                                     <div className="flex items-center justify-end gap-1.5 w-[110px] pr-2">
+                                       <div className="flex items-center gap-[2px] text-[13.5px] font-semibold text-purple-700 dark:text-[#c488fc] tabular-nums">
+                                         <span className="text-[11px] font-medium opacity-70">$</span>
+                                         {displayCopModelo.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                                       </div>
+                                     </div>
+                                   </div>
+
+                                   {/* VISTA MÓVIL (carrusel rotativo): Una sola columna de 110px */}
+                                   <div 
+                                     className="block sm:hidden relative overflow-hidden cursor-pointer active:scale-[0.98] transition-all bg-black/[0.01] dark:bg-white/[0.01] rounded-lg text-center"
+                                     style={{ height: '22px', width: '110px' }}
+                                     onClick={() => {
+                                       if (editingPlatform?.periodKey === periodKey && editingPlatform?.platformId === p.platform_id) return;
+                                       setMobileCarouselIndex(prev => prev + 1);
+                                     }}
+                                   >
+                                     <div 
+                                       className="absolute bottom-0 w-full flex flex-col-reverse transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]"
+                                       style={{ transform: `translateY(${mobileCarouselIndex * 22}px)` }}
+                                     >
+                                       {Array(20).fill([
+                                         { type: 'cop', content: displayCopModelo.toLocaleString('es-CO', { minimumFractionDigits: 0 }) },
+                                         { type: 'usd', content: formatNumberOnly(displayUsdModelo) },
+                                         { type: 'valores', isInput: editingPlatform?.periodKey === periodKey && editingPlatform?.platformId === p.platform_id }
+                                       ]).flat().map((item, rawIdx) => {
+                                         let textClass = "text-gray-900 dark:text-gray-100 font-bold";
+                                         let currencyPrefix = "";
+                                         if (item.type === 'cop') {
+                                           textClass = "text-purple-700 dark:text-[#c488fc] font-bold";
+                                           currencyPrefix = "$ ";
+                                         } else if (item.type === 'usd') {
+                                           textClass = "text-emerald-600 dark:text-[#2dd4bf] font-bold";
+                                           currencyPrefix = "$ ";
+                                         } else if (item.type === 'valores' && !isTokens) {
+                                           currencyPrefix = "$ ";
+                                         }
+
+                                         return (
+                                           <div key={rawIdx} className="flex-shrink-0 flex items-center justify-center text-center w-full" style={{ height: '22px' }}>
+                                             {item.type === 'valores' && item.isInput ? (
+                                               <input 
+                                                 type="number" 
+                                                 value={editValue} 
+                                                 onChange={e=>setEditValue(e.target.value)} 
+                                                 onClick={e => e.stopPropagation()}
+                                                 className="w-[85px] h-[20px] bg-white dark:bg-gray-800 border border-black/[0.1] dark:border-white/20 rounded px-1 text-[11px] font-bold text-gray-900 dark:text-gray-100 text-center tabular-nums" 
+                                               />
+                                             ) : (
+                                               <span className={`text-[12.5px] tabular-nums ${textClass}`}>
+                                                 <span className="font-normal text-gray-500 text-[10px] mr-0.5">{currencyPrefix}</span>
+                                                 {item.type === 'valores' ? (isTokens ? Math.round(p.value).toString() : formatNumberOnly(p.value)) : item.content}
+                                                 {item.type === 'valores' && isTokens && <span className="text-[9px] font-bold text-gray-500 ml-1">TKN</span>}
+                                               </span>
+                                             )}
+                                           </div>
+                                         );
+                                       })}
+                                     </div>
+                                   </div>
+                                 </>
+                               ) : (
+                                 <div className="flex flex-col sm:flex-row sm:items-center items-end gap-0.5 sm:gap-6 min-w-[75px] sm:min-w-[180px]">
+                                   {/* USD Mod */}
+                                   <div className="flex items-center justify-end gap-1.5 w-[75px] sm:w-[85px]">
+                                     <span className="hidden sm:inline-block text-[9px] font-bold text-emerald-600/70 dark:text-emerald-400/50 uppercase tracking-widest">MOD</span>
+                                     <div className="flex items-center gap-[2px] text-[12px] sm:text-[13.5px] font-semibold text-emerald-600 dark:text-[#2dd4bf] tabular-nums">
+                                       <span className="text-[10px] sm:text-[11px] font-medium opacity-70">$</span>
+                                       {formatNumberOnly(displayUsdModelo)}
+                                     </div>
+                                   </div>
+                                   {/* COP Mod */}
+                                   <div className="flex items-center justify-end gap-1.5 w-[75px] sm:w-[95px]">
+                                     <span className="hidden sm:inline-block text-[9px] font-bold text-purple-600/70 dark:text-purple-400/50 uppercase tracking-widest">GAN</span>
+                                     <div className="flex items-center gap-[2px] text-[12px] sm:text-[13.5px] font-semibold text-purple-700 dark:text-[#c488fc] tabular-nums">
+                                       <span className="text-[10px] sm:text-[11px] font-medium opacity-70">$</span>
+                                       {displayCopModelo.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                                     </div>
+                                   </div>
+                                 </div>
+                               )}
+                             </div>
+
+                                {isAdmin && (
+                                 <div className={`hidden sm:flex items-center justify-center pl-2 border-l border-gray-200 dark:border-white/10 ml-1 sm:ml-2 h-6 shrink-0 ${embedded ? 'w-[60px]' : 'gap-2'}`}>
+                                   {editingPlatform?.periodKey === periodKey && editingPlatform?.platformId === p.platform_id ? (
+                                     <div className="flex items-center gap-1.5">
+                                       <button onClick={()=>savePlatformValue(periodKey, p.platform_id)} className="text-green-600 hover:scale-110 transition-transform" title="Guardar"><Save className="w-4 h-4"/></button>
+                                       <button onClick={cancelEdit} className="text-red-500 hover:scale-110 transition-transform" title="Cancelar"><X className="w-4 h-4"/></button>
+                                     </div>
+                                   ) : (
+                                     <div className="flex items-center gap-2">
+                                       <button onClick={()=>startEditPlatform(periodKey, p.platform_id, p.value)} className="text-blue-500 opacity-100 sm:opacity-60 sm:hover:opacity-100 transition-opacity" title="Editar"><Edit2 className="w-3.5 h-3.5 sm:w-4 sm:h-4"/></button>
+                                       <button onClick={()=>handleDeletePlatform(period, p.platform_id)} className="text-red-500 opacity-100 sm:opacity-60 sm:hover:opacity-100 transition-opacity active:scale-95" title="Eliminar"><Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4"/></button>
+                                     </div>
+                                   )}
+                                 </div>
+                               )}
                             </div>
                           </div>
-
-                          {isAdmin && (
-                            <div className="flex items-center gap-2 pl-2">
-                              {editingPlatform?.periodKey === periodKey && editingPlatform?.platformId === p.platform_id ? (
-                                <>
-                                  <button onClick={()=>savePlatformValue(periodKey, p.platform_id)} className="text-green-600 hover:scale-110 transition-transform"><Save className="w-4 h-4"/></button>
-                                  <button onClick={cancelEdit} className="text-red-500 hover:scale-110 transition-transform"><X className="w-4 h-4"/></button>
-                                </>
-                              ) : (
-                                <button onClick={()=>startEditPlatform(periodKey, p.platform_id, p.value)} className="text-blue-500 opacity-60 hover:opacity-100 transition-opacity"><Edit2 className="w-4 h-4"/></button>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
                       );
                     })}
                   </div>
@@ -1009,6 +1246,102 @@ export default function CalculatorHistorialPage() {
             </div>
             );
           })}
+        </div>
+      )}
+
+      {/* MODAL GLASSMÓRFICO: Agregar Plataforma a Planilla Cerrada */}
+      {showAddPlatformModal && addPlatformPeriod && (
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in">
+          <div className="relative w-full max-w-md bg-white/90 dark:bg-[#161618]/90 backdrop-blur-2xl rounded-3xl border border-white/20 dark:border-white/10 shadow-2xl p-6 overflow-hidden animate-slide-up">
+            <div className="absolute top-0 right-0 p-4">
+              <button
+                onClick={() => { setShowAddPlatformModal(false); setAddPlatformPeriod(null); }}
+                className="p-1.5 rounded-full hover:bg-black/5 dark:hover:bg-white/5 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="mb-6">
+              <div className="flex items-center gap-2 mb-1.5">
+                <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
+                <span className="text-[10px] font-bold tracking-widest text-blue-600 dark:text-blue-400 uppercase">Administración</span>
+              </div>
+              <h3 className="text-lg font-black text-gray-900 dark:text-white">
+                Agregar Plataforma
+              </h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Periodo: {formatPeriodMonth(addPlatformPeriod.period_date, addPlatformPeriod.period_type)}
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                  Seleccionar Plataforma
+                </label>
+                {loadingPortfolio ? (
+                  <div className="h-10 flex items-center justify-center bg-black/5 dark:bg-white/5 rounded-xl border border-black/10 dark:border-white/10">
+                    <span className="text-xs text-gray-500 animate-pulse">Cargando portafolio...</span>
+                  </div>
+                ) : availablePortfolioPlatforms.length === 0 ? (
+                  <div className="p-3 text-center bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-100 dark:border-yellow-900/30 rounded-xl">
+                    <p className="text-xs text-yellow-700 dark:text-yellow-400 font-medium">
+                      Todas las plataformas del portafolio ya están registradas en este período.
+                    </p>
+                  </div>
+                ) : (
+                  <select
+                    value={selectedAddPlatformId}
+                    onChange={(e) => setSelectedAddPlatformId(e.target.value)}
+                    className="w-full h-10 px-3 text-sm rounded-xl bg-black/[0.04] dark:bg-white/[0.06] border border-black/10 dark:border-white/10 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500"
+                  >
+                    <option value="" className="dark:bg-[#161618]">Selecciona una plataforma</option>
+                    {availablePortfolioPlatforms.map((p) => (
+                      <option key={p.id} value={p.id} className="dark:bg-[#161618]">
+                        {p.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                  Monto Facturado
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    value={addPlatformValue}
+                    onChange={(e) => setAddPlatformValue(e.target.value)}
+                    placeholder="0.00"
+                    disabled={availablePortfolioPlatforms.length === 0}
+                    className="w-full h-10 pl-3 pr-8 text-sm rounded-xl bg-black/[0.04] dark:bg-white/[0.06] border border-black/10 dark:border-white/10 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-gray-400">
+                    VAL
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-8">
+              <button
+                onClick={() => { setShowAddPlatformModal(false); setAddPlatformPeriod(null); }}
+                className="flex-1 py-2.5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSaveNewPlatform}
+                disabled={!selectedAddPlatformId || !addPlatformValue || saving}
+                className="flex-1 py-2.5 text-xs font-bold rounded-xl text-white bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 shadow-lg shadow-indigo-500/20 disabled:opacity-50 disabled:pointer-events-none active:scale-95 transition-all duration-200"
+              >
+                {saving ? 'Guardando...' : 'Agregar'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

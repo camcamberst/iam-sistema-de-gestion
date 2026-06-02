@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { getTotalSavingsBalance } from '@/lib/savings/savings-utils';
 
 
 export const dynamic = 'force-dynamic';
@@ -118,9 +119,94 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: withdrawalsError.message }, { status: 500 });
     }
 
+    // Obtener los saldos y metas asociadas a cada retiro de forma concurrente
+    const withdrawalsWithAudit = await Promise.all((withdrawals || []).map(async (w: any) => {
+      const modelId = w.model_id;
+      
+      // 1. Obtener saldo actual
+      const balanceData = await getTotalSavingsBalance(modelId);
+      const saldoActual = balanceData.success ? balanceData.saldo_actual : 0;
+      
+      // 2. Obtener meta activa
+      const { data: activeGoal } = await supabase
+        .from('savings_goals')
+        .select('*')
+        .eq('model_id', modelId)
+        .eq('estado', 'activa')
+        .maybeSingle();
+        
+      // 3. Obtener meta cancelada recientemente (últimos 30 días)
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
+      const { data: canceledGoals } = await supabase
+        .from('savings_goals')
+        .select('*')
+        .eq('model_id', modelId)
+        .eq('estado', 'cancelada')
+        .gte('updated_at', thirtyDaysAgo.toISOString())
+        .order('updated_at', { ascending: false })
+        .limit(1);
+        
+      const recentCanceledGoal = canceledGoals && canceledGoals.length > 0 ? canceledGoals[0] : null;
+      
+      // 4. Calcular desglose de auditoría
+      let metaAuditoria = null;
+      if (activeGoal) {
+        const montoMeta = parseFloat(String(activeGoal.monto_meta || 0));
+        const montoActual = parseFloat(String(activeGoal.monto_actual || 0));
+        const porcentaje = montoMeta > 0 ? (montoActual / montoMeta) * 100 : 0;
+        const faltante = Math.max(0, montoMeta - montoActual);
+        
+        // Saldo comprometido = Lo que ya se ha ahorrado para la meta, topado al monto de la meta
+        // Saldo libre = Saldo disponible total menos lo que ya está acumulado/comprometido por la meta
+        const saldoComprometido = Math.min(saldoActual, montoMeta);
+        const saldoLibre = Math.max(0, saldoActual - montoMeta);
+        const canibaliza = w.monto_solicitado > saldoLibre;
+        
+        // Verificar si la fecha límite aún no se ha cumplido
+        let plazoIncumplido = false;
+        if (activeGoal.fecha_limite) {
+          const limite = new Date(activeGoal.fecha_limite);
+          plazoIncumplido = limite.getTime() > Date.now();
+        }
+        
+        metaAuditoria = {
+          tiene_meta_activa: true,
+          nombre_meta: activeGoal.nombre_meta,
+          monto_meta: montoMeta,
+          monto_actual: montoActual,
+          porcentaje_progreso: Math.min(100, porcentaje),
+          faltante,
+          fecha_limite: activeGoal.fecha_limite,
+          saldo_actual: saldoActual,
+          saldo_comprometido: saldoComprometido,
+          saldo_libre: saldoLibre,
+          canibaliza,
+          plazo_incumplido: plazoIncumplido
+        };
+      }
+      
+      let cancelacionAuditoria = null;
+      if (recentCanceledGoal) {
+        cancelacionAuditoria = {
+          tiene_meta_cancelada: true,
+          nombre_meta: recentCanceledGoal.nombre_meta,
+          monto_meta: parseFloat(String(recentCanceledGoal.monto_meta || 0)),
+          cancelada_el: recentCanceledGoal.updated_at
+        };
+      }
+      
+      return {
+        ...w,
+        meta_auditoria: metaAuditoria,
+        cancelacion_auditoria: cancelacionAuditoria
+      };
+    }));
+
     return NextResponse.json({
       success: true,
-      withdrawals: withdrawals || []
+      withdrawals: withdrawalsWithAudit
     });
 
   } catch (error: any) {

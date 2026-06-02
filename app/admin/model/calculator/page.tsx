@@ -71,6 +71,7 @@ export default function ModelCalculatorPage() {
   const [yesterdayValues, setYesterdayValues] = useState<Record<string, number>>({});
   const [todayEarnings, setTodayEarnings] = useState<number>(0);
   const [earningsOffset, setEarningsOffset] = useState<number>(0);
+  const [draftRestoredAlert, setDraftRestoredAlert] = useState(false);
   
   // 🔧 EARLY FREEZE: Estado para plataformas congeladas
   const [frozenPlatforms, setFrozenPlatforms] = useState<string[]>([]);
@@ -312,6 +313,22 @@ export default function ModelCalculatorPage() {
     return () => clearInterval(interval);
   }, [user, periodDate]);
 
+  // Guardar borrador local en tiempo real ante cambios de inputValues
+  useEffect(() => {
+    if (!loading && user?.id && Object.keys(inputValues).length > 0) {
+      try {
+        const draftKey = `calculator_draft_${user.id}`;
+        const draftData = {
+          values: inputValues,
+          timestamp: Date.now()
+        };
+        localStorage.setItem(draftKey, JSON.stringify(draftData));
+      } catch (e) {
+        console.warn('⚠️ [CALCULATOR] Error writing draft to localStorage:', e);
+      }
+    }
+  }, [inputValues, loading, user?.id]);
+
   // Handler para resetear ganancias hoy
   const handleResetTodayEarnings = () => {
     if (confirm('¿Deseas reiniciar el contador de "Ganancias Hoy"?\nEsto pondrá el contador en $0 para tu sesión actual, sin afectar los registros históricos ni los totales acumulados.')) {
@@ -455,28 +472,8 @@ export default function ModelCalculatorPage() {
     setTodayEarnings(earnings);
     console.log('🔍 [CALCULATOR] Today earnings calculated:', { todayUsdModelo, yesterdayUsdModelo, earnings });
     
-    // 🔧 NUEVO: Guardar ganancias del día en la base de datos
-    if (user?.id && earnings !== 0) {
-      try {
-        const response = await fetch('/api/daily-earnings', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            modelId: user.id,
-            earnings: earnings,
-            date: new Date().toISOString().split('T')[0]
-          })
-        });
-        
-        if (response.ok) {
-          console.log('✅ [CALCULATOR] Daily earnings saved to database:', earnings);
-        } else {
-          console.warn('⚠️ [CALCULATOR] Failed to save daily earnings to database');
-        }
-      } catch (error) {
-        console.error('❌ [CALCULATOR] Error saving daily earnings:', error);
-      }
-    }
+    // Guardado de daily earnings a la BD removido de aquí para evitar peticiones redundantes al escribir.
+    // Ahora se guarda de forma consolidada únicamente durante saveValues() (manual o autosave).
     
     return earnings;
   };
@@ -727,75 +724,133 @@ export default function ModelCalculatorPage() {
         const savedJson = await savedResp.json();
         console.log('🔍 [CALCULATOR] Saved values (v2) RAW RESPONSE:', savedJson);
         
+        let platformToValue: Record<string, number> = {};
+        let maxUpdatedAt = 0;
+        
         if (savedJson.success && Array.isArray(savedJson.data) && savedJson.data.length > 0) {
-          const platformToValue: Record<string, number> = {};
           for (const row of savedJson.data) {
             if (row && row.platform_id) {
               const parsed = Number.parseFloat(String(row.value));
               platformToValue[row.platform_id] = Number.isFinite(parsed) ? parsed : 0;
-            }
-          }
-          
-          console.log('🔍 [CALCULATOR] Valores encontrados en API:', platformToValue);
-          console.log('🔍 [CALCULATOR] Plataformas habilitadas:', enabledPlatforms.map((p: Platform) => ({ id: p.id, name: p.name })));
-          
-          // 🔧 NUEVO ENFOQUE: Usar enabledPlatforms directamente (no el estado platforms)
-          const updatedPlatforms = enabledPlatforms.map((p: Platform) => ({
-            ...p,
-            value: platformToValue[p.id] ?? p.value
-          }));
-          
-          console.log('🔍 [CALCULATOR] Plataformas actualizadas:', updatedPlatforms.map((p: Platform) => ({ id: p.id, name: p.name, value: p.value })));
-          setPlatforms(updatedPlatforms);
-
-          // 🔧 NUEVO: Cargar valores de ayer para calcular ganancias del día
-          // Usar periodDate del estado (ya inicializado)
-          const currentPeriodStart = periodDate || getColombiaPeriodStartDate();
-          const yesterdayDate = new Date(new Date(currentPeriodStart).getTime() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-          console.log('🔍 [CALCULATOR] Loading yesterday values for date:', yesterdayDate);
-          
-          try {
-            const yesterdayResp = await fetch(`/api/calculator/model-values-v2?modelId=${userId}&periodDate=${yesterdayDate}`);
-            const yesterdayJson = await yesterdayResp.json();
-            console.log('🔍 [CALCULATOR] Yesterday values response:', yesterdayJson);
-            
-            if (yesterdayJson.success && Array.isArray(yesterdayJson.data) && yesterdayJson.data.length > 0) {
-              const yesterdayPlatformToValue: Record<string, number> = {};
-              for (const row of yesterdayJson.data) {
-                if (row && row.platform_id) {
-                  const parsed = Number.parseFloat(String(row.value));
-                  yesterdayPlatformToValue[row.platform_id] = Number.isFinite(parsed) ? parsed : 0;
-                }
-              }
-              setYesterdayValues(yesterdayPlatformToValue);
-              console.log('🔍 [CALCULATOR] Yesterday values loaded successfully:', yesterdayPlatformToValue);
               
-              // 🔧 CRÍTICO: Calcular ganancias del día DESPUÉS de cargar yesterdayValues
-              if (rates) {
-                console.log('🔍 [CALCULATOR] Calculating today earnings with loaded yesterday values...');
-                calculateTodayEarnings(updatedPlatforms, yesterdayPlatformToValue, rates);
+              if (row.updated_at) {
+                const ts = new Date(row.updated_at).getTime();
+                if (ts > maxUpdatedAt) maxUpdatedAt = ts;
               }
-            } else {
-              setYesterdayValues({});
-              console.log('🔍 [CALCULATOR] No yesterday values found, setting empty object');
             }
-          } catch (yesterdayError) {
-            console.error('❌ [CALCULATOR] Error loading yesterday values:', yesterdayError);
-            setYesterdayValues({});
           }
-          
-          // Sincronizar manualmente
-          syncPlatformsToInputs(updatedPlatforms);
-          console.log('🔍 [CALCULATOR] Valores guardados aplicados y sincronizados');
-          
-          // 🔧 NUEVO: Calcular ganancias del día después de cargar yesterdayValues
-          // Se calculará en el useEffect cuando yesterdayValues esté listo
-        } else {
-          console.log('🔍 [CALCULATOR] No se encontraron valores guardados o API falló:', savedJson);
-          // Asegurar que las plataformas se muestren aunque no haya valores guardados
-          setPlatforms(enabledPlatforms);
-          syncPlatformsToInputs(enabledPlatforms);
         }
+        
+        console.log('🔍 [CALCULATOR] Valores encontrados en API:', platformToValue);
+        console.log('🔍 [CALCULATOR] Plataformas habilitadas:', enabledPlatforms.map((p: Platform) => ({ id: p.id, name: p.name })));
+        
+        // 🔧 NUEVO ENFOQUE: Usar enabledPlatforms directamente (no el estado platforms)
+        const updatedPlatforms = enabledPlatforms.map((p: Platform) => ({
+          ...p,
+          value: platformToValue[p.id] ?? p.value
+        }));
+        
+        console.log('🔍 [CALCULATOR] Plataformas actualizadas:', updatedPlatforms.map((p: Platform) => ({ id: p.id, name: p.name, value: p.value })));
+        setPlatforms(updatedPlatforms);
+
+        // 🔧 SHIFT SESSION BILLING: Lógica de 6 horas de inactividad
+        const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
+        const now = Date.now();
+        
+        let sessionBaseline: Record<string, number> = {};
+        let isNewSession = false;
+        
+        if (maxUpdatedAt === 0) {
+          // Sin valores guardados en BD aún
+          isNewSession = true;
+          console.log('🔍 [CALCULATOR] No saved values in database. Fresh session.');
+        } else if (now - maxUpdatedAt > SIX_HOURS_MS) {
+          // Más de 6 horas de inactividad desde el último guardado => Sesión expirada!
+          isNewSession = true;
+          console.log('⏰ [CALCULATOR] Last save was > 6 hours ago. Starting new session.');
+        }
+        
+        const localBaselineKey = `session_baseline_${userId}`;
+        const localStartTimeKey = `session_start_time_${userId}`;
+        
+        if (isNewSession) {
+          sessionBaseline = { ...platformToValue };
+          try {
+            localStorage.setItem(localBaselineKey, JSON.stringify(sessionBaseline));
+            localStorage.setItem(localStartTimeKey, String(now));
+            
+            // Limpiar offset de ganancias previas para que esta nueva sesión empiece en 0
+            const dateKey = new Date().toISOString().split('T')[0];
+            const offsetKey = `earnings_offset_${userId}_${dateKey}`;
+            localStorage.removeItem(offsetKey);
+            setEarningsOffset(0);
+          } catch (e) {
+            console.warn('⚠️ [CALCULATOR] Error writing session baseline to localStorage:', e);
+          }
+        } else {
+          // Intentar recuperar línea base activa de localStorage
+          try {
+            const savedBaselineStr = localStorage.getItem(localBaselineKey);
+            const savedStartTimeStr = localStorage.getItem(localStartTimeKey);
+            if (savedBaselineStr && savedStartTimeStr) {
+              sessionBaseline = JSON.parse(savedBaselineStr);
+              console.log('🔑 [CALCULATOR] Resuming active session with baseline:', sessionBaseline);
+            } else {
+              // Si no hay en localStorage, crearla con los valores actuales
+              sessionBaseline = { ...platformToValue };
+              localStorage.setItem(localBaselineKey, JSON.stringify(sessionBaseline));
+              localStorage.setItem(localStartTimeKey, String(now));
+            }
+          } catch (e) {
+            console.warn('⚠️ [CALCULATOR] Error loading session baseline from localStorage:', e);
+            sessionBaseline = { ...platformToValue };
+          }
+        }
+        
+        setYesterdayValues(sessionBaseline);
+        console.log('🔍 [CALCULATOR] Shift Session baseline established:', sessionBaseline);
+        
+        // Calcular ganancias de la sesión en base a los valores cargados
+        if (rates) {
+          calculateTodayEarnings(updatedPlatforms, sessionBaseline, rates);
+        }
+        
+        // 🔧 BORRADOR LOCAL: Recuperar cambios locales no guardados si aplican
+        let restoredDraft: Record<string, string> | null = null;
+        try {
+          const draftKey = `calculator_draft_${userId}`;
+          const savedDraftStr = localStorage.getItem(draftKey);
+          if (savedDraftStr) {
+            const draftObj = JSON.parse(savedDraftStr);
+            const draftTimestamp = draftObj.timestamp || 0;
+            // Restaurar si el borrador es más nuevo que el último guardado en la BD
+            // y fue guardado hace menos de 6 horas
+            if (draftTimestamp > maxUpdatedAt && (now - draftTimestamp) < SIX_HOURS_MS) {
+              restoredDraft = draftObj.values;
+              console.log('✨ [CALCULATOR] Unsaved draft restored from localStorage:', restoredDraft);
+              setDraftRestoredAlert(true);
+              setTimeout(() => setDraftRestoredAlert(false), 6000);
+            }
+          }
+        } catch (e) {
+          console.warn('⚠️ [CALCULATOR] Error parsing draft from localStorage:', e);
+        }
+
+        if (restoredDraft) {
+          setInputValues(restoredDraft);
+          // Sincronizar inputs al estado platforms para actualizar totales mostrados
+          setPlatforms(prev => prev.map(p => {
+            const inputValue = restoredDraft![p.id];
+            const numeric = Number.parseFloat(inputValue || '0');
+            const value = Number.isFinite(numeric) ? numeric : 0;
+            return { ...p, value };
+          }));
+        } else {
+          // Sincronizar normalmente desde los valores de la base de datos
+          syncPlatformsToInputs(updatedPlatforms);
+        }
+        
+        console.log('🔍 [CALCULATOR] Valores guardados y borradores aplicados y sincronizados');
 
         // 🔧 EARLY FREEZE: Cargar lista de plataformas congeladas desde el endpoint
         try {
@@ -1023,6 +1078,40 @@ export default function ModelCalculatorPage() {
       } else {
         console.log('✅ [CALCULATOR] Totals saved successfully');
       }
+      
+      // 3. Guardar ganancias diarias consolidadas en base de datos al guardar de forma consolidada
+      if (user?.id && todayEarnings !== 0) {
+        try {
+          console.log('🔍 [CALCULATOR] Saving consolidated daily earnings to DB:', todayEarnings);
+          const dailyEarningsResponse = await fetch('/api/daily-earnings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              modelId: user.id,
+              earnings: todayEarnings,
+              date: new Date().toISOString().split('T')[0]
+            })
+          });
+          if (dailyEarningsResponse.ok) {
+            console.log('✅ [CALCULATOR] Daily earnings saved successfully');
+          } else {
+            console.warn('⚠️ [CALCULATOR] Failed to save daily earnings consolidado');
+          }
+        } catch (dailyErr) {
+          console.error('❌ [CALCULATOR] Exception saving consolidated daily earnings:', dailyErr);
+        }
+      }
+
+      // Limpiar borrador local de localStorage al guardar de forma exitosa
+      if (user?.id) {
+        try {
+          const draftKey = `calculator_draft_${user.id}`;
+          localStorage.removeItem(draftKey);
+          console.log('🧹 [CALCULATOR] Cleaned local draft after successful save');
+        } catch (draftCleanErr) {
+          console.warn('⚠️ [CALCULATOR] Failed to clean local draft:', draftCleanErr);
+        }
+      }
 
       // Operación de guardado ejecutada en modo silencioso (sin alertas molestas ni toasts redundantes)
       
@@ -1186,34 +1275,33 @@ export default function ModelCalculatorPage() {
               Tasas Actualizadas
             </h3>
           </div>
-          <div className="flex-1 relative glass-card bg-black/[0.08] dark:bg-white/[0.06] backdrop-blur-3xl border border-white/40 dark:border-white/[0.08] max-sm:p-1.5 sm:p-2.5 rounded-[1.25rem] sm:rounded-2xl shadow-sm shadow-black/5 dark:shadow-[0_1px_0_0_rgba(255,255,255,0.02)_inset,0_4px_20px_rgba(0,0,0,0.4)] flex flex-col overflow-hidden">
-            <div className="relative z-10 flex flex-col flex-1">
-              <div className="grid grid-cols-3 gap-2 sm:gap-3">
-                <InfoCard
-                  value={`${rates?.gbp_usd || 1.20}`}
-                  label="GBP→USD"
-                  color="blue"
-                  size="sm"
-                  clickable={false}
-                  className=""
-                />
-                <InfoCard
-                  value={`${rates?.eur_usd || 1.01}`}
-                  label="EUR→USD"
-                  color="green"
-                  size="sm"
-                  clickable={false}
-                />
-                <InfoCard
-                  value={`$${rates?.usd_cop || 3900}`}
-                  label="USD→COP"
-                  color="purple"
-                  size="sm"
-                  clickable={false}
-                />
-              </div>
-            </div>
-          </div>
+          <InfoCardGrid
+            compactContainer={true}
+            columns={3}
+            cards={[
+              {
+                value: `${rates?.gbp_usd || 1.20}`,
+                label: "GBP→USD",
+                color: "blue",
+                size: "sm",
+                clickable: false
+              },
+              {
+                value: `${rates?.eur_usd || 1.01}`,
+                label: "EUR→USD",
+                color: "green",
+                size: "sm",
+                clickable: false
+              },
+              {
+                value: `$${rates?.usd_cop || 3900}`,
+                label: "USD→COP",
+                color: "purple",
+                size: "sm",
+                clickable: false
+              }
+            ]}
+          />
         </div>
 
         {/* Barra de Isla Dinámica - Tiempos del Mundo y Cierre */}
@@ -1253,6 +1341,14 @@ export default function ModelCalculatorPage() {
           </GlassCard>
         )}
 
+        {draftRestoredAlert && (
+          <div className="flex justify-center mb-4 animate-[fade-in_0.3s_ease-out]">
+            <div className="bg-teal-500/[0.05] dark:bg-[#2dd4bf]/[0.06] border border-teal-500/15 dark:border-[#2dd4bf]/20 text-teal-600 dark:text-[#2dd4bf] text-[10px] sm:text-[11px] font-medium tracking-wider py-1.5 px-4 rounded-full shadow-sm backdrop-blur-md">
+              Borrador local restaurado
+            </div>
+          </div>
+        )}
+        
         {/* Tabla de Calculadora - ESTILO APPLE REFINADO */}
         <div className="flex flex-col gap-1.5 sm:gap-2 mb-4">
           <div className="flex items-center justify-between px-1">
@@ -1261,7 +1357,7 @@ export default function ModelCalculatorPage() {
               Calculadora de Ingresos
             </h2>
           </div>
-        <GlassCard padding="md" auroraEffect={false} className="!bg-black/[0.08] dark:!bg-white/[0.06] !backdrop-blur-3xl !border-white/40 dark:!border-white/[0.08] !shadow-sm !shadow-black/5">
+        <GlassCard padding="none" auroraEffect={false} className="!bg-black/[0.08] dark:!bg-white/[0.06] !backdrop-blur-3xl !border-white/40 dark:!border-white/[0.08] !shadow-sm !shadow-black/5 !rounded-[1.1rem] sm:!rounded-[1.25rem] md:!rounded-[1.25rem] !p-1 sm:!p-1.5 !overflow-hidden">
           
           {(() => {
             console.log('🔍 [RENDER] platforms.length:', platforms.length);
@@ -1286,7 +1382,7 @@ export default function ModelCalculatorPage() {
           ) : (
             <>
               {/* Vista de Cards Unificada (Móvil y Escritorio) */}
-              <div className="space-y-3">
+              <div className="space-y-1 sm:space-y-1.5">
                 {platforms.filter(p => p.enabled).map(platform => {
                   // Calcular dólares y COP para esta plataforma usando fórmulas específicas
                   const usdBruto = platform.value;
@@ -1511,7 +1607,7 @@ export default function ModelCalculatorPage() {
                             </span>
 
                             {/* 3. Nombre de la Plataforma (Visible en ambos, se trunca en móvil si falta espacio) */}
-                            <span className="font-bold text-[13.5px] sm:text-[14px] text-gray-800 dark:text-gray-300 uppercase tracking-wide drop-shadow-none dark:drop-shadow-none truncate">
+                            <span className="font-bold text-[13.5px] sm:text-[14px] text-gray-800 dark:text-gray-300 drop-shadow-none dark:drop-shadow-none truncate">
                               {platform.name}
                             </span>
                             
@@ -1716,7 +1812,7 @@ export default function ModelCalculatorPage() {
                             <span className="text-[9px] font-semibold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-white/[0.05] border border-gray-200 dark:border-white/5 px-1.5 py-[2px] rounded whitespace-nowrap">
                               {platform.id === 'superfoon' ? '100%' : `${platform.percentage}%`}
                             </span>
-                            <span className="font-medium text-[13px] tracking-wide uppercase text-gray-900 dark:text-gray-300">
+                            <span className="font-medium text-[13px] text-gray-900 dark:text-gray-300">
                               {platform.name}
                             </span>
                             {isFrozen && (
@@ -1771,7 +1867,7 @@ export default function ModelCalculatorPage() {
                         <td className="py-2 px-3 border-b border-gray-200/20 dark:border-white/[0.04]">
                           <div className="flex items-center space-x-2">
                             <span className="px-1.5 py-[2px] rounded flex items-center justify-center bg-transparent border border-gray-300 dark:border-white/10 text-gray-500 dark:text-gray-400 text-[9px] font-semibold tracking-wide uppercase shrink-0">
-                              COP
+                            COP
                             </span>
                             <div className="text-gray-700 dark:text-gray-400 font-medium text-[13px]">
                               ${copModelo.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
@@ -1794,28 +1890,23 @@ export default function ModelCalculatorPage() {
           <button
             onClick={saveValues}
             disabled={saving || platforms.filter(p => p.enabled).length === 0}
-            className={`w-full sm:w-auto relative overflow-hidden min-h-[44px] sm:min-h-0 px-6 py-2.5 sm:px-6 sm:py-2 text-[13px] sm:text-[11px] font-extrabold rounded-full transition-all duration-300 transform active:scale-95 whitespace-nowrap touch-manipulation flex items-center justify-center group ${
+            className={`w-full max-w-[220px] sm:max-w-[140px] min-h-[40px] px-4 py-2 text-[13px] font-medium rounded-full transition-all duration-300 transform active:scale-95 whitespace-nowrap touch-manipulation flex items-center justify-center ${
               !saving && platforms.filter(p => p.enabled).length > 0
-                ? 'bg-gradient-to-r from-cyan-600 to-fuchsia-600 hover:from-cyan-500 hover:to-fuchsia-500 text-white border-none backdrop-blur-md shadow-md shadow-cyan-500/30 dark:shadow-[0_0_15px_rgba(34,211,238,0.5)] hover:shadow-lg hover:shadow-fuchsia-500/40 dark:hover:shadow-[0_0_20px_rgba(232,121,249,0.7)]'
+                ? 'bg-gradient-to-r from-cyan-600 to-fuchsia-600 hover:from-cyan-500 hover:to-fuchsia-500 text-white border-none shadow-md hover:shadow-lg'
                 : 'bg-gray-300 dark:bg-black/40 text-gray-500 dark:text-gray-500 cursor-not-allowed border-none'
             }`}
           >
-            {!saving && platforms.filter(p => p.enabled).length > 0 && (
-              <div className="absolute inset-0 z-0 mix-blend-screen opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{
-                background: 'linear-gradient(90deg, transparent, rgba(34,211,238,0.4), rgba(232,121,249,0.5), transparent)',
-                backgroundSize: '200% 100%',
-                animation: 'aurora-flow 1.5s ease-in-out infinite alternate'
-              }}></div>
-            )}
-            <span className="relative z-10 flex items-center tracking-widest uppercase">
-              {saving ? 'GUARDANDO...' : (
-                <>
-                  GUARDAR
-                </>
-              )}
+            <span className="relative z-10 flex items-center gap-1.5 font-medium">
+              {saving ? 'Guardando...' : 'Guardar'}
             </span>
           </button>
+
+
+
+
+
         </div>
+
 
         {/* Totales y Alertas - REGLA CARDS AESTHETIC */}
         <div className="flex flex-col gap-1.5 sm:gap-2 h-full mb-1 sm:mb-2">
@@ -1826,18 +1917,20 @@ export default function ModelCalculatorPage() {
             </h3>
           </div>
 
-          <div className="flex-1 relative glass-card bg-black/[0.08] dark:bg-white/[0.06] backdrop-blur-3xl border border-white/40 dark:border-white/[0.08] max-sm:p-1.5 sm:p-2.5 rounded-[1.25rem] sm:rounded-2xl shadow-sm shadow-black/5 dark:shadow-[0_1px_0_0_rgba(255,255,255,0.02)_inset,0_4px_20px_rgba(0,0,0,0.4)] flex flex-col overflow-hidden">
-            <div className="relative z-10 grid grid-cols-3 gap-2 sm:gap-3">
-            <InfoCard
-              value={`$${Math.max(0, todayEarnings - earningsOffset).toFixed(2)}`}
-              label="Hoy ↺"
-              color="blue"
-              size="sm"
-              onClick={handleResetTodayEarnings}
-              clickable={true}
-            />
-            <InfoCard
-              value={`$${platforms.reduce((sum, p) => {
+          <InfoCardGrid
+            compactContainer={true}
+            columns={3}
+            cards={[
+              {
+                value: `$${Math.max(0, todayEarnings - earningsOffset).toFixed(2)}`,
+                label: "Hoy ↺",
+                color: "blue",
+                size: "sm",
+                onClick: handleResetTodayEarnings,
+                clickable: true
+              },
+              {
+                value: `$${platforms.reduce((sum, p) => {
                   // Calcular USD modelo usando fórmulas específicas + porcentaje
                   let usdModelo = 0;
                   if (p.currency === 'EUR') {
@@ -1871,19 +1964,18 @@ export default function ModelCalculatorPage() {
                       usdModelo = p.value;
                     }
                   }
-                const norm = String(p.id || '').toLowerCase();
-                if (norm === 'superfoon') {
-                  return sum + usdModelo; // 100% para Superfoon
-                }
+                  const norm = String(p.id || '').toLowerCase();
+                  if (norm === 'superfoon') {
+                    return sum + usdModelo; // 100% para Superfoon
+                  }
                   return sum + (usdModelo * p.percentage / 100);
-              }, 0).toFixed(2)}`}
-              label="USD"
-              color="green"
-              size="sm"
-            />
-            {/* En móvil, la tercera card ocupa 2 columnas para mantener balance */}
-            <InfoCard
-              value={`$${((platforms.reduce((sum, p) => {
+                }, 0).toFixed(2)}`,
+                label: "USD",
+                color: "green",
+                size: "sm"
+              },
+              {
+                value: `$${((platforms.reduce((sum, p) => {
                   // Calcular USD modelo usando fórmulas específicas + porcentaje
                   let usdModelo = 0;
                   if (p.currency === 'EUR') {
@@ -1919,19 +2011,18 @@ export default function ModelCalculatorPage() {
                       usdModelo = p.value;
                     }
                   }
-                const norm = String(p.id || '').toLowerCase();
-                if (norm === 'superfoon') {
-                  return sum + usdModelo; // 100% para Superfoon
-                }
-                return sum + (usdModelo * p.percentage / 100);
-              }, 0)) * (rates?.usd_cop || 3900)).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}
-              label="Mis Ganancias"
-              color="purple"
-              size="sm"
-              className=""
-            />
-          </div>
-        </div>
+                  const norm = String(p.id || '').toLowerCase();
+                  if (norm === 'superfoon') {
+                    return sum + usdModelo; // 100% para Superfoon
+                  }
+                  return sum + (usdModelo * p.percentage / 100);
+                }, 0)) * (rates?.usd_cop || 3900)).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
+                label: "Mis Ganancias",
+                color: "purple",
+                size: "sm"
+              }
+            ]}
+          />
         </div>
 
           {/* Reactor Boreal (Objetivos y Métricas Dinámicas) */}

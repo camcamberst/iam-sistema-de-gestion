@@ -36,6 +36,31 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es" className={inter.variable}>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                let isDark = false;
+                try {
+                  if (window.parent && window.parent !== window) {
+                    isDark = window.parent.document.documentElement.classList.contains('dark');
+                  } else {
+                    isDark = localStorage.getItem('theme') === 'dark';
+                  }
+                } catch (e) {
+                  isDark = localStorage.getItem('theme') === 'dark';
+                }
+                if (isDark) {
+                  document.documentElement.classList.add('dark');
+                } else {
+                  document.documentElement.classList.remove('dark');
+                }
+              })();
+            `
+          }}
+        />
+      </head>
       <body className={`${inter.className} min-h-screen bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 antialiased group/body overflow-x-hidden`}>
         <TokenAutoLogin />
         <ThemeTransition>

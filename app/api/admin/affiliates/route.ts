@@ -108,7 +108,7 @@ export async function GET(request: NextRequest) {
         let superadminAff = null;
         const { data: superadminAffData } = await supabase
           .from('users')
-          .select('id, name, email, is_active')
+          .select('id, name, email, is_active, avatar_url')
           .eq('affiliate_studio_id', studio.id)
           .eq('role', 'superadmin_aff')
           .limit(1)

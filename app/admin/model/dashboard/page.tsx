@@ -360,7 +360,7 @@ export default function ModelDashboard() {
           {user.role === 'modelo' && (
             <div className="order-1 lg:order-2 flex flex-col gap-1.5 sm:gap-2">
               {/* TÍTULO MINIMALISTA POR FUERA DE LA CAJA */}
-              <div className="flex items-center space-x-1 sm:space-x-1.5 px-1">
+              <div className="flex items-center space-x-1 sm:space-x-1.5 px-1 h-[40px]">
                 <div className="flex items-center justify-center text-emerald-500 drop-shadow-[0_0_8px_rgba(16,185,129,0.6)]">
                   <svg className="w-4 h-4 sm:w-[1.125rem] sm:h-[1.125rem]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -377,31 +377,31 @@ export default function ModelDashboard() {
               ) : (
                 <>
                   {/* LA CAJA MINIMALISTA CON SOLO LAS 3 TARJETAS */}
-                  <div className="glass-card bg-black/[0.08] dark:bg-white/[0.08] backdrop-blur-3xl border border-white/40 dark:border-white/[0.08] max-sm:dark:border-white/8 max-sm:p-1.5 sm:p-2 mb-1.5 sm:mb-2 rounded-[1.25rem] sm:rounded-2xl shadow-sm shadow-black/5 dark:shadow-[0_1px_0_0_rgba(255,255,255,0.02)_inset,0_4px_20px_rgba(0,0,0,0.4)]">
-                    <InfoCardGrid
-                      cards={[
-                        {
-                          value: productivityData ? `$${productivityData.todayEarnings.toFixed(2)}` : '—',
-                          label: "Hoy",
-                          color: "blue",
-                          size: "sm"
-                        },
-                        {
-                          value: productivityData ? `$${productivityData.usdModelo.toFixed(2)}` : '—',
-                          label: "USD",
-                          color: "green",
-                          size: "sm"
-                        },
-                        {
-                          value: productivityData ? `$${Math.round(productivityData.copModelo).toLocaleString('es-CO')}` : '—',
-                          label: "Mis Ganancias",
-                          color: "purple",
-                          size: "sm"
-                        }
-                      ]}
-                      columns={3}
-                    />
-                  </div>
+                  <InfoCardGrid
+                    compactContainer={true}
+                    className="mb-1.5 sm:mb-2"
+                    cards={[
+                      {
+                        value: productivityData ? `$${productivityData.todayEarnings.toFixed(2)}` : '—',
+                        label: "Hoy",
+                        color: "blue",
+                        size: "sm"
+                      },
+                      {
+                        value: productivityData ? `$${productivityData.usdModelo.toFixed(2)}` : '—',
+                        label: "USD",
+                        color: "green",
+                        size: "sm"
+                      },
+                      {
+                        value: productivityData ? `$${Math.round(productivityData.copModelo).toLocaleString('es-CO')}` : '—',
+                        label: "Mis Ganancias",
+                        color: "purple",
+                        size: "sm"
+                      }
+                    ]}
+                    columns={3}
+                  />
 
                   <div className="-mt-1 sm:-mt-1 relative z-10">
                     {productivityData && (

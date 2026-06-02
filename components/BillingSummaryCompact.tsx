@@ -299,33 +299,32 @@ export default function BillingSummaryCompact({ userRole, userId, userGroups = [
         ) : summary && (
           <div className="flex flex-col gap-1.5 sm:gap-2 flex-1 min-h-0">
             {/* Primera Caja: Tarjetas de Resumen (Ajustada según Regla Cards) */}
-            <div className="glass-card bg-black/[0.08] dark:bg-white/[0.08] backdrop-blur-3xl border border-white/40 dark:border-white/[0.08] max-sm:dark:border-white/8 max-sm:p-1.5 sm:p-2 !rounded-[1.25rem] sm:!rounded-2xl shadow-sm shadow-black/5 dark:shadow-[0_1px_0_0_rgba(255,255,255,0.02)_inset,0_4px_20px_rgba(0,0,0,0.4)] relative flex-none">
-              <InfoCardGrid
-                columns={3}
-                cards={[
-                  {
-                    value: `$${formatCurrency(summary.totalUsdBruto)}`,
-                    label: 'Gross',
-                    color: 'blue',
-                    size: 'sm'
-                  },
-                  {
-                    value: `$${formatCurrency(summary.totalUsdModelo)}`,
-                    label: 'Team Cut',
-                    color: 'green',
-                    size: 'sm'
-                  },
-                  {
-                    value: `$${formatCurrency(summary.totalUsdSede)}`,
-                    label: userRole === 'superadmin_aff' && affiliateStudioName 
-                      ? affiliateStudioName 
-                      : 'Profit',
-                    color: 'purple',
-                    size: 'sm'
-                  }
-                ]}
-              />
-            </div>
+            <InfoCardGrid
+              columns={3}
+              compactContainer={true}
+              cards={[
+                {
+                  value: `$${formatCurrency(summary.totalUsdBruto)}`,
+                  label: 'Gross',
+                  color: 'blue',
+                  size: 'sm'
+                },
+                {
+                  value: `$${formatCurrency(summary.totalUsdModelo)}`,
+                  label: 'Team Cut',
+                  color: 'green',
+                  size: 'sm'
+                },
+                {
+                  value: `$${formatCurrency(summary.totalUsdSede)}`,
+                  label: userRole === 'superadmin_aff' && affiliateStudioName 
+                    ? affiliateStudioName 
+                    : 'Profit',
+                  color: 'purple',
+                  size: 'sm'
+                }
+              ]}
+            />
 
             {/* Segunda Caja: Lista y Footer (Expansiva) */}
             <div className="glass-card p-3 sm:p-4 hover:shadow-xl transition-all duration-300 relative flex-1 flex flex-col min-h-0">

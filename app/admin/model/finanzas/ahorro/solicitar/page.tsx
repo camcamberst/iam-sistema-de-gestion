@@ -548,17 +548,14 @@ export default function SolicitarAhorroPage() {
                     <button
                       type="submit"
                       disabled={submitting || !windowInfo.isWithin || loadingNeto}
-                      className="w-full relative overflow-hidden min-h-[44px] sm:min-h-0 px-6 py-3 sm:py-3.5 text-[13px] sm:text-[14px] font-extrabold rounded-full transition-all duration-300 transform active:scale-95 whitespace-nowrap touch-manipulation flex items-center justify-center group bg-gradient-to-r from-cyan-600 to-fuchsia-600 hover:from-cyan-500 hover:to-fuchsia-500 text-white border-none backdrop-blur-md shadow-md shadow-cyan-500/30 dark:shadow-[0_0_15px_rgba(34,211,238,0.5)] hover:shadow-lg hover:shadow-fuchsia-500/40 dark:hover:shadow-[0_0_20px_rgba(232,121,249,0.7)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                      className="w-full max-w-[260px] mx-auto h-10 px-5 text-[13px] font-medium rounded-full bg-gradient-to-r from-cyan-600 to-fuchsia-600 hover:from-cyan-500 hover:to-fuchsia-500 text-white border-none shadow-md transition-all duration-300 transform active:scale-95 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <div className="absolute inset-0 z-0 mix-blend-screen opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{
-                        background: 'linear-gradient(90deg, transparent, rgba(34,211,238,0.4), rgba(232,121,249,0.5), transparent)',
-                        backgroundSize: '200% 100%',
-                        animation: 'aurora-flow 1.5s ease-in-out infinite alternate'
-                      }}></div>
-                      <span className="relative z-10 flex items-center tracking-widest uppercase gap-2">
-                        {submitting ? 'ENVIANDO...' : existingSavings?.estado === 'pendiente' ? 'ACTUALIZAR SOLICITUD' : 'SOLICITAR AHORRO'}
+                      <span className="relative z-10 flex items-center gap-1.5">
+                        {submitting ? 'Enviando...' : existingSavings?.estado === 'pendiente' ? 'Actualizar Solicitud' : 'Solicitar Ahorro'}
                       </span>
                     </button>
+
+
                   </>
                 )}
               </form>

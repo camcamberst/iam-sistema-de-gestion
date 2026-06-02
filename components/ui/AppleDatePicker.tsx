@@ -8,9 +8,11 @@ interface AppleDatePickerProps {
   onChange: (date: string) => void;
   placeholder?: string;
   className?: string;
+  theme?: 'cyan' | 'emerald';
+  pill?: boolean;
 }
 
-const ITEM_HEIGHT = 44; // 44px for better touch target (Apple standard)
+const ITEM_HEIGHT = 36; // 36px for a more compact Apple Style 2 aesthetic
 const VISIBLE_ITEMS = 3;
 const CONTAINER_HEIGHT = ITEM_HEIGHT * VISIBLE_ITEMS;
 
@@ -131,8 +133,8 @@ function ScrollColumn({
         const dist = Math.abs(i - selectedIndex);
         
         let opacityClass = 'opacity-20';
-        if (dist === 0) opacityClass = 'opacity-100 font-bold scale-110';
-        else if (dist === 1) opacityClass = 'opacity-50 font-medium scale-100';
+        if (dist === 0) opacityClass = 'opacity-100 font-medium scale-110';
+        else if (dist === 1) opacityClass = 'opacity-50 font-normal scale-100';
 
         return (
           <div 
@@ -151,7 +153,7 @@ function ScrollColumn({
   );
 }
 
-export default function AppleDatePicker({ value, onChange, placeholder = "Seleccionar fecha...", className = "" }: AppleDatePickerProps) {
+export default function AppleDatePicker({ value, onChange, placeholder = "Seleccionar fecha...", className = "", theme = "cyan", pill = false }: AppleDatePickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const popoverRef = useRef<HTMLDivElement>(null);
 
@@ -213,7 +215,7 @@ export default function AppleDatePicker({ value, onChange, placeholder = "Selecc
   const daysOptions = Array.from({ length: daysInMonth }, (_, i) => ({ value: i + 1, label: String(i + 1).padStart(2, '0') }));
   const monthNames = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
   const monthsOptions = monthNames.map((m, i) => ({ value: i, label: m }));
-  const yearsOptions = Array.from({ length: 30 }, (_, i) => ({ value: currentYear + i, label: String(currentYear + i) }));
+  const yearsOptions = Array.from({ length: 20 }, (_, i) => ({ value: currentYear - 10 + i, label: String(currentYear - 10 + i) }));
 
   const dayIndex = daysOptions.findIndex(o => o.value === day);
   const monthIndex = monthsOptions.findIndex(o => o.value === month);
@@ -227,13 +229,26 @@ export default function AppleDatePicker({ value, onChange, placeholder = "Selecc
     return dateObj.toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' });
   };
 
+  const isEmerald = theme === 'emerald';
+  const focusRingClasses = isEmerald
+    ? 'focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500'
+    : 'focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500';
+  const openRingClasses = isOpen
+    ? (isEmerald ? 'ring-2 ring-emerald-500/50 border-emerald-500' : 'ring-2 ring-cyan-500/50 border-cyan-500')
+    : '';
+  const confirmBtnClasses = isEmerald
+    ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-md active:scale-95 transition-all w-full'
+    : 'bg-gradient-to-r from-cyan-500 to-fuchsia-500 text-white shadow-md active:scale-95 transition-all w-full';
+
+  const roundedClass = pill ? 'rounded-full' : 'rounded-xl';
+
   return (
     <div className="relative w-full" ref={popoverRef}>
       {/* Trigger Button */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between bg-black/[0.03] dark:bg-white/[0.03] border border-black/5 dark:border-white/10 text-[13px] rounded-xl focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 px-4 py-2.5 transition-colors ${isOpen ? 'ring-2 ring-cyan-500/50 border-cyan-500' : ''} ${className}`}
+        className={`w-full flex items-center justify-between bg-black/[0.03] dark:bg-white/[0.03] border border-black/5 dark:border-white/10 text-[13px] ${roundedClass} px-4 py-2.5 transition-colors ${focusRingClasses} ${openRingClasses} ${className}`}
       >
         <span className={value ? "text-gray-900 dark:text-white font-medium capitalize" : "text-gray-500 dark:text-gray-400"}>
           {value ? formatDisplayDate(value) : placeholder}
@@ -243,22 +258,22 @@ export default function AppleDatePicker({ value, onChange, placeholder = "Selecc
 
       {/* Popover Menu */}
       {isOpen && (
-        <div className="absolute z-[100] top-full mt-2 w-full sm:w-[320px] left-0 sm:left-auto right-0 sm:right-auto p-4 sm:p-5 bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-[20px] sm:rounded-[24px] border border-gray-200/50 dark:border-white/10 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15)] dark:shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] animate-fade-in origin-top overflow-hidden">
+        <div className="absolute z-[100] top-full mt-1.5 w-full sm:w-[260px] left-0 sm:left-auto right-0 sm:right-auto p-3.5 bg-white/95 dark:bg-[#1a1a1c]/95 backdrop-blur-xl rounded-[20px] border border-black/[0.08] dark:border-white/[0.08] shadow-[0_10px_30px_rgba(0,0,0,0.08)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.5)] animate-fade-in origin-top overflow-hidden">
           
           {/* Wheel Container */}
           <div 
-            className="relative flex mx-auto bg-gray-50 dark:bg-black/20 rounded-2xl border border-gray-100 dark:border-white/5 overflow-hidden"
+            className="relative flex mx-auto bg-black/[0.02] dark:bg-black/30 rounded-xl border border-black/[0.04] dark:border-white/[0.05] overflow-hidden"
             style={{ height: CONTAINER_HEIGHT }}
           >
             {/* Lupa / Highlight Bar */}
             <div 
-              className="absolute left-0 right-0 pointer-events-none bg-black/[0.03] dark:bg-white/[0.04] border-y border-black/[0.05] dark:border-white/10"
+              className="absolute left-0 right-0 pointer-events-none bg-black/[0.04] dark:bg-white/[0.06] border-y border-black/[0.06] dark:border-white/[0.08]"
               style={{ top: ITEM_HEIGHT, height: ITEM_HEIGHT }}
             />
             
             {/* Gradientes de atenuación para bordes suaves (arriba y abajo) */}
-            <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-gray-50 to-transparent dark:from-[#151926] pointer-events-none z-10" />
-            <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-gray-50 to-transparent dark:from-[#151926] pointer-events-none z-10" />
+            <div className="absolute top-0 left-0 right-0 h-6 bg-gradient-to-b from-white dark:from-[#1a1a1c] to-transparent pointer-events-none z-10" />
+            <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-white dark:from-[#1a1a1c] to-transparent pointer-events-none z-10" />
 
             {/* Wheels */}
             <ScrollColumn 
@@ -279,18 +294,18 @@ export default function AppleDatePicker({ value, onChange, placeholder = "Selecc
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center space-x-2 sm:space-x-3 mt-4">
+          <div className="flex items-center space-x-2 mt-3.5">
             <button
               type="button"
               onClick={handleConfirm}
-              className="px-4 py-2.5 text-[13px] font-bold rounded-full bg-gradient-to-r from-cyan-500 to-fuchsia-500 text-white shadow-[0_0_15px_rgba(34,211,238,0.3)] hover:shadow-[0_0_25px_rgba(232,121,249,0.5)] active:scale-95 transition-all w-full tracking-wide uppercase"
+              className={`px-3 py-2 text-xs font-medium rounded-full ${confirmBtnClasses}`}
             >
               Confirmar
             </button>
             <button
               type="button"
               onClick={() => { onChange(''); setIsOpen(false); }}
-              className="px-4 py-2.5 text-[13px] font-bold rounded-full bg-black/5 dark:bg-white/10 text-gray-600 dark:text-gray-300 hover:bg-black/10 dark:hover:bg-white/20 active:scale-95 transition-all w-full tracking-wide uppercase"
+              className="px-3 py-2 text-xs font-medium rounded-full bg-black/5 dark:bg-white/10 text-gray-600 dark:text-gray-300 hover:bg-black/10 dark:hover:bg-white/20 active:scale-95 transition-all w-full"
             >
               Borrar
             </button>

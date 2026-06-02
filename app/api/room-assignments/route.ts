@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-
 export const dynamic = 'force-dynamic';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -17,39 +16,55 @@ export async function GET(request: NextRequest) {
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Con roomId: usar vista room_assignments_detailed para incluir nombre y email de la modelo
-    // Sin roomId: usar tabla base room_assignments para no perder filas por JOINs
-    const tableName = roomId ? 'room_assignments_detailed' : 'room_assignments';
-    const selectFields = roomId
-      ? 'id, model_id, room_id, jornada, assigned_at, model_name, model_email'
-      : 'id, model_id, room_id, jornada, assigned_at';
-    let query = supabase
-      .from(tableName)
-      .select(selectFields)
-      .order('jornada', { ascending: true });
-
+    let assignments = [];
     if (roomId) {
-      console.log('🔍 [ROOM-ASSIGNMENTS] Obteniendo asignaciones para room:', roomId);
-      query = query.eq('room_id', roomId);
+      console.log('🔍 [ROOM-ASSIGNMENTS] Obteniendo asignaciones con detalles para room:', roomId);
+      const { data, error } = await supabase
+        .from('room_assignments')
+        .select('id, model_id, room_id, jornada, assigned_at, users:model_id(name, email, avatar_url)')
+        .eq('room_id', roomId)
+        .order('jornada', { ascending: true });
+
+      if (error) {
+        console.error('❌ [ROOM-ASSIGNMENTS] Error obteniendo asignaciones detalladas:', error);
+        return NextResponse.json(
+          { success: false, error: `Error obteniendo asignaciones detalladas: ${error.message}` },
+          { status: 500 }
+        );
+      }
+
+      assignments = data?.map((assignment: any) => ({
+        id: assignment.id,
+        model_id: assignment.model_id,
+        room_id: assignment.room_id,
+        jornada: assignment.jornada,
+        assigned_at: assignment.assigned_at,
+        model_name: assignment.users?.name,
+        model_email: assignment.users?.email,
+        model_avatar: assignment.users?.avatar_url
+      })) || [];
     } else {
-      console.log('🔍 [ROOM-ASSIGNMENTS] Obteniendo todas las asignaciones desde tabla room_assignments');
+      console.log('🔍 [ROOM-ASSIGNMENTS] Obteniendo todas las asignaciones básicas');
+      const { data, error } = await supabase
+        .from('room_assignments')
+        .select('id, model_id, room_id, jornada, assigned_at')
+        .order('jornada', { ascending: true });
+
+      if (error) {
+        console.error('❌ [ROOM-ASSIGNMENTS] Error obteniendo asignaciones básicas:', error);
+        return NextResponse.json(
+          { success: false, error: `Error obteniendo asignaciones básicas: ${error.message}` },
+          { status: 500 }
+        );
+      }
+      assignments = data || [];
     }
 
-    const { data: assignments, error } = await query;
-
-    if (error) {
-      console.error('❌ [ROOM-ASSIGNMENTS] Error obteniendo asignaciones:', error);
-      return NextResponse.json(
-        { success: false, error: `Error obteniendo asignaciones: ${error.message}` },
-        { status: 500 }
-      );
-    }
-
-    console.log('✅ [ROOM-ASSIGNMENTS] Asignaciones obtenidas:', assignments?.length || 0);
+    console.log('✅ [ROOM-ASSIGNMENTS] Asignaciones obtenidas:', assignments.length);
 
     return NextResponse.json({
       success: true,
-      assignments: assignments || []
+      assignments: assignments
     });
 
   } catch (error) {
@@ -258,14 +273,23 @@ async function handleMove(supabase: any, model_id: string, from_room_id: string,
   });
 
   if (error) {
-    console.error('❌ [MOVE] Error moviendo asignación:', error);
+    console.error('❌ [MOVE] Error RPC moviendo asignación:', error);
     return NextResponse.json(
-      { success: false, error: 'Error moviendo asignación' },
+      { success: false, error: 'Error de red o permisos al mover asignación' },
       { status: 500 }
     );
   }
 
-  console.log('✅ [MOVE] Asignación movida exitosamente');
+  // Comprobar errores lógicos devueltos por la función de la base de datos
+  if (data && data.success === false) {
+    console.error('❌ [MOVE] Error en transacción SQL:', data.error);
+    return NextResponse.json(
+      { success: false, error: data.error || 'Error procesando cambio de room' },
+      { status: 400 }
+    );
+  }
+
+  console.log('✅ [MOVE] Asignación movida exitosamente:', data);
   return NextResponse.json({
     success: true,
     message: 'Modelo movida exitosamente'

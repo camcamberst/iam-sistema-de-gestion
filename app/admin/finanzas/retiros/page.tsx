@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import AppleDropdown from '@/components/ui/AppleDropdown';
+import AppleDatePicker from '@/components/ui/AppleDatePicker';
 
 interface User {
   id: string;
@@ -45,6 +46,26 @@ interface Withdrawal {
       };
     }>;
   };
+  meta_auditoria?: {
+    tiene_meta_activa: boolean;
+    nombre_meta: string;
+    monto_meta: number;
+    monto_actual: number;
+    porcentaje_progreso: number;
+    faltante: number;
+    fecha_limite?: string;
+    saldo_actual: number;
+    saldo_comprometido: number;
+    saldo_libre: number;
+    canibaliza: boolean;
+    plazo_incumplido: boolean;
+  } | null;
+  cancelacion_auditoria?: {
+    tiene_meta_cancelada: boolean;
+    nombre_meta: string;
+    monto_meta: number;
+    cancelada_el: string;
+  } | null;
 }
 
 export default function GestionRetirosPage() {
@@ -445,25 +466,25 @@ export default function GestionRetirosPage() {
         <div className="mb-6 bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl p-4 border border-white/20 dark:border-gray-600/20 shadow-md">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                 Fecha desde
               </label>
-              <input
-                type="date"
+              <AppleDatePicker
                 value={fechaDesde}
-                onChange={(e) => setFechaDesde(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                onChange={(date) => setFechaDesde(date)}
+                placeholder="dd/mm/aaaa"
+                className="rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-white font-medium"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                 Fecha hasta
               </label>
-              <input
-                type="date"
+              <AppleDatePicker
                 value={fechaHasta}
-                onChange={(e) => setFechaHasta(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                onChange={(date) => setFechaHasta(date)}
+                placeholder="dd/mm/aaaa"
+                className="rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-white font-medium"
               />
             </div>
           </div>
@@ -577,6 +598,48 @@ export default function GestionRetirosPage() {
                         </div>
                       )}
                     </div>
+
+                    {/* Alertas de Metas de Ahorro y Cancelaciones */}
+                    {withdrawal.meta_auditoria && (
+                      <div className="mb-3 p-3 bg-amber-500/[0.04] dark:bg-amber-500/[0.06] border border-amber-500/20 text-amber-700 dark:text-amber-400 rounded-xl text-xs flex flex-col gap-1.5 shadow-sm">
+                        <div className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-[10px]">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                          <span>Compromiso de Meta Activa</span>
+                        </div>
+                        <p className="text-gray-700 dark:text-gray-300 font-medium">
+                          Esta modelo tiene la meta activa <strong>"{withdrawal.meta_auditoria.nombre_meta}"</strong> ({withdrawal.meta_auditoria.porcentaje_progreso.toFixed(0)}% completado). 
+                          Saldo comprometido: <strong>{formatCurrency(withdrawal.meta_auditoria.saldo_comprometido)}</strong>.
+                        </p>
+                        {withdrawal.meta_auditoria.canibaliza && (
+                          <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-600 dark:text-amber-500 bg-amber-500/10 p-2 rounded-lg mt-0.5">
+                            <span>⚠️</span>
+                            <span>Este retiro supera el saldo libre disponible (Saldo libre: {formatCurrency(withdrawal.meta_auditoria.saldo_libre)}) e impactará los fondos de la meta.</span>
+                          </div>
+                        )}
+                        {withdrawal.meta_auditoria.plazo_incumplido && withdrawal.meta_auditoria.fecha_limite && (
+                          <div className="flex items-center gap-1.5 text-[11px] text-gray-600 dark:text-gray-400 bg-black/[0.02] dark:bg-white/[0.02] p-2 rounded-lg">
+                            <span>⏳</span>
+                            <span>Plazo pendiente: Fecha límite hasta el {new Date(withdrawal.meta_auditoria.fecha_limite).toLocaleDateString('es-CO', { year: 'numeric', month: 'short', day: 'numeric' })}.</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {withdrawal.cancelacion_auditoria && (
+                      <div className="mb-3 p-3 bg-red-500/[0.04] dark:bg-red-500/[0.06] border border-red-500/20 text-red-700 dark:text-red-400 rounded-xl text-xs flex flex-col gap-1.5 shadow-sm">
+                        <div className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-[10px]">
+                          <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                          <span>Alerta de Evasión Financiera</span>
+                        </div>
+                        <p className="text-gray-700 dark:text-gray-300 font-medium">
+                          La modelo canceló recientemente la meta <strong>"{withdrawal.cancelacion_auditoria.nombre_meta}"</strong> (de {formatCurrency(withdrawal.cancelacion_auditoria.monto_meta)}) el {new Date(withdrawal.cancelacion_auditoria.cancelada_el).toLocaleDateString('es-CO', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}.
+                        </p>
+                        <div className="flex items-center gap-1.5 text-xs font-semibold bg-red-500/10 p-2 rounded-lg mt-0.5">
+                          <span>🛑</span>
+                          <span>Posible intento de evadir la retención o plazos de permanencia de la meta.</span>
+                        </div>
+                      </div>
+                    )}
 
                     {withdrawal.comentarios_rechazo && (
                       <div className="mb-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">

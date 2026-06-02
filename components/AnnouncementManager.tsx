@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { supabase } from '@/lib/supabase';
 import RichTextEditor from './RichTextEditor';
 import AppleDropdown from '@/components/ui/AppleDropdown';
+import AppleDatePicker from '@/components/ui/AppleDatePicker';
 
 interface Announcement {
   id: string;
@@ -55,6 +56,29 @@ interface AnnouncementManagerProps {
   userGroups: string[];
 }
 
+const getCategoryStyle = (name: string) => {
+  const lower = name.toLowerCase();
+  if (lower.includes('noticia')) {
+    return {
+      bg: 'bg-teal-500/10 dark:bg-teal-500/15',
+      border: 'border-teal-500/20 dark:border-teal-500/25',
+      text: 'text-teal-600 dark:text-teal-300'
+    };
+  }
+  if (lower.includes('recorda') || lower.includes('alert')) {
+    return {
+      bg: 'bg-emerald-500/10 dark:bg-emerald-500/15',
+      border: 'border-emerald-500/20 dark:border-emerald-500/25',
+      text: 'text-emerald-600 dark:text-emerald-300'
+    };
+  }
+  return {
+    bg: 'bg-emerald-500/5 dark:bg-emerald-500/10',
+    border: 'border-emerald-500/15 dark:border-emerald-500/20',
+    text: 'text-emerald-600/90 dark:text-emerald-400/95'
+  };
+};
+
 export default function AnnouncementManager({ userId, userRole, userGroups }: AnnouncementManagerProps) {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -64,14 +88,12 @@ export default function AnnouncementManager({ userId, userRole, userGroups }: An
   const [editingAnnouncement, setEditingAnnouncement] = useState<Announcement | null>(null);
   const [filter, setFilter] = useState<'all' | 'published' | 'draft'>('all');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [collapsed, setCollapsed] = useState(true);
 
   useEffect(() => {
     loadData();
 
     // Auto-open editor if hash is #new-announcement
     if (typeof window !== 'undefined' && window.location.hash === '#new-announcement') {
-      setCollapsed(false);
       setShowEditor(true);
       // Remove the hash cleanly without triggering scroll jumps
       const scrollV = document.body.scrollTop;
@@ -188,78 +210,66 @@ export default function AnnouncementManager({ userId, userRole, userGroups }: An
   });
 
   return (
-    <div className="relative bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-3 sm:p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+    <div className="relative w-full text-gray-900 dark:text-zinc-100 flex flex-col gap-1.5 sm:gap-2">
       {/* Header */}
-      <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 ${collapsed ? '' : 'mb-4 sm:mb-6'}`}>
-        <div className="flex items-center space-x-2 sm:space-x-3">
-          <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
-            <svg className="w-3 h-3 sm:w-4 sm:h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+      <div className="flex items-start justify-between px-1 mb-3 sm:mb-4">
+        <div className="flex items-start space-x-1.5 sm:space-x-2 min-w-0">
+          <div className="flex items-center justify-center text-emerald-400 drop-shadow-[0_0_10px_rgba(52,211,153,0.95)] mt-0.5">
+            <svg className="w-4 h-4 sm:w-[1.125rem] sm:h-[1.125rem]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
             </svg>
           </div>
-          <div className="min-w-0 flex-1">
-            <h2 className="text-sm sm:text-lg font-semibold text-gray-900 dark:text-white">What&apos;s News?</h2>
-            <p className="text-[10px] sm:text-sm text-gray-600 dark:text-gray-300 hidden sm:block">Gestiona publicaciones e información para modelos</p>
+          <div className="flex items-baseline min-w-0">
+            <h2 className="text-[14px] sm:text-[15px] font-bold text-gray-900 dark:text-white tracking-tight drop-shadow-sm dark:drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">
+              What&apos;s News?
+            </h2>
+            <span className="ml-2 text-[10px] sm:text-[11px] text-gray-500 dark:text-zinc-400 font-medium tracking-wide hidden sm:inline">
+              Gestiona publicaciones e información para modelos
+            </span>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {!collapsed && (
-            <button
-              onClick={() => {
-                setEditingAnnouncement(null);
-                setShowEditor(true);
-              }}
-              className="w-full sm:w-auto px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 flex items-center justify-center gap-1.5 sm:gap-2 active:scale-95 touch-manipulation"
-            >
-              <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              <span className="hidden sm:inline">Nueva Publicación</span>
-              <span className="sm:hidden">Nueva</span>
-            </button>
-          )}
           <button
-            onClick={() => setCollapsed(c => !c)}
-            className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 bg-gray-100 hover:bg-gray-200 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-500 dark:text-gray-300 rounded-lg transition-colors duration-200 active:scale-95 touch-manipulation flex-shrink-0"
-            title={collapsed ? 'Expandir' : 'Contraer'}
+            onClick={() => {
+              setEditingAnnouncement(null);
+              setShowEditor(true);
+            }}
+            className="btn-apple-primary w-full sm:w-auto flex items-center justify-center touch-manipulation"
           >
-            <svg className={`w-4 h-4 transition-transform duration-200 ${collapsed ? '' : 'rotate-180'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
+            <span className="hidden sm:inline">Nueva Publicación</span>
+            <span className="sm:hidden">Nueva</span>
           </button>
         </div>
       </div>
-
-      {!collapsed && <>
       {/* Filtros */}
-      <div className="flex flex-wrap gap-2 sm:gap-3 mb-4 sm:mb-6">
-        <div className="flex gap-1.5 sm:gap-2">
+      <div className="flex flex-wrap gap-2.5 sm:gap-3.5 mb-4 sm:mb-6 items-center">
+        <div className="flex p-0.5 bg-black/[0.03] dark:bg-white/[0.04] backdrop-blur-md rounded-full border border-black/[0.05] dark:border-white/[0.06] gap-0.5 shadow-sm">
           <button
             onClick={() => setFilter('all')}
-            className={`px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-medium rounded-lg transition-colors active:scale-95 touch-manipulation ${
+            className={`px-3 py-1.5 text-[10px] sm:text-xs font-semibold rounded-full transition-all duration-300 active:scale-95 touch-manipulation border ${
               filter === 'all'
-                ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
-                : 'bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-500'
+                ? 'bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/25 shadow-sm shadow-emerald-500/5'
+                : 'bg-transparent text-gray-500 dark:text-zinc-400 border-transparent hover:text-gray-800 dark:hover:text-zinc-200'
             }`}
           >
             Todas
           </button>
           <button
             onClick={() => setFilter('published')}
-            className={`px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-medium rounded-lg transition-colors active:scale-95 touch-manipulation ${
+            className={`px-3 py-1.5 text-[10px] sm:text-xs font-semibold rounded-full transition-all duration-300 active:scale-95 touch-manipulation border ${
               filter === 'published'
-                ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
-                : 'bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-500'
+                ? 'bg-teal-500/10 dark:bg-teal-500/20 text-teal-700 dark:text-teal-300 border-teal-500/25 shadow-sm shadow-teal-500/5'
+                : 'bg-transparent text-gray-500 dark:text-zinc-400 border-transparent hover:text-gray-800 dark:hover:text-zinc-200'
             }`}
           >
             Publicadas
           </button>
           <button
             onClick={() => setFilter('draft')}
-            className={`px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-medium rounded-lg transition-colors active:scale-95 touch-manipulation ${
+            className={`px-3 py-1.5 text-[10px] sm:text-xs font-semibold rounded-full transition-all duration-300 active:scale-95 touch-manipulation border ${
               filter === 'draft'
-                ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300'
-                : 'bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-500'
+                ? 'bg-yellow-500/10 dark:bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 border-yellow-500/25 shadow-sm shadow-yellow-500/5'
+                : 'bg-transparent text-gray-500 dark:text-zinc-400 border-transparent hover:text-gray-800 dark:hover:text-zinc-200'
             }`}
           >
             Borradores
@@ -277,13 +287,15 @@ export default function AnnouncementManager({ userId, userRole, userGroups }: An
           onChange={(value) => setSelectedCategory(value)}
           placeholder="Todas las categorías"
           className="text-xs"
+          theme="emerald"
+          pill={true}
         />
       </div>
 
       {/* Lista de publicaciones */}
       {loading ? (
         <div className="flex items-center justify-center py-8 sm:py-12">
-          <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-purple-600"></div>
+          <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-emerald-500"></div>
         </div>
       ) : filteredAnnouncements.length === 0 ? (
         <div className="text-center py-8 sm:py-12 text-gray-500 dark:text-gray-400">
@@ -291,109 +303,116 @@ export default function AnnouncementManager({ userId, userRole, userGroups }: An
         </div>
       ) : (
         <div className="space-y-3 sm:space-y-4">
-          {filteredAnnouncements.map(announcement => (
-            <div
-              key={announcement.id}
-              className="bg-gray-50/50 dark:bg-gray-600/30 rounded-lg p-3 sm:p-4 border border-gray-200/50 dark:border-gray-500/30 hover:border-purple-300 dark:hover:border-purple-500/50 transition-all"
-            >
-              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center flex-wrap gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
-                    {announcement.is_pinned && (
-                      <span className="text-[10px] sm:text-xs text-purple-600 dark:text-purple-400">📌</span>
-                    )}
-                    {announcement.priority > 0 && (
-                      <span className={`text-[10px] sm:text-xs px-1 sm:px-1.5 py-0.5 rounded ${
-                        announcement.priority === 2
-                          ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
-                          : 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300'
-                      }`}>
-                        {announcement.priority === 2 ? 'Urgente' : 'Alta'}
-                      </span>
-                    )}
-                    {announcement.category && (
-                      <span
-                        className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 rounded font-medium"
-                        style={{
-                          backgroundColor: `${announcement.category.color}20`,
-                          color: announcement.category.color
-                        }}
-                      >
-                        {announcement.category.name}
-                      </span>
-                    )}
-                    {!announcement.is_published && (
-                      <span className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 rounded bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300">
-                        Borrador
-                      </span>
-                    )}
-                  </div>
-                  <h3 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white mb-1">
-                    {announcement.title}
-                  </h3>
-                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 line-clamp-2 mb-2">
-                    {announcement.excerpt}
-                  </p>
-                  <div className="flex items-center flex-wrap gap-2 sm:gap-4 text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
-                    <span>Por: {announcement.author?.name || 'Desconocido'}</span>
-                    <span className="hidden sm:inline">•</span>
-                    <span>{new Date(announcement.created_at).toLocaleDateString('es-CO')}</span>
-                    {announcement.is_published && (
-                      <>
-                        <span className="hidden sm:inline">•</span>
-                        <span>{announcement.views_count} vistas</span>
-                      </>
-                    )}
-                    {announcement.is_general ? (
-                      <span className="text-purple-600 dark:text-purple-400">General</span>
-                    ) : (
-                      <span>{announcement.group_targets.length} grupo(s)</span>
-                    )}
-                  </div>
-                </div>
-                <div className="flex items-center justify-end sm:justify-start gap-1.5 sm:gap-2 flex-shrink-0">
-                  <button
-                    onClick={() => {
-                      setEditingAnnouncement(announcement);
-                      setShowEditor(true);
-                    }}
-                    className="p-1.5 sm:p-2 text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors active:scale-95 touch-manipulation"
-                    title="Editar"
-                  >
-                    <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                  </button>
-                  <button
-                    onClick={() => handleTogglePublish(announcement)}
-                    className={`p-1.5 sm:p-2 rounded-lg transition-colors active:scale-95 touch-manipulation ${
-                      announcement.is_published
-                        ? 'text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20'
-                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-600'
-                    }`}
-                    title={announcement.is_published ? 'Despublicar' : 'Publicar'}
-                  >
-                    <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      {announcement.is_published ? (
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      ) : (
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          {filteredAnnouncements.map(announcement => {
+            const isExcerptRedundant = !announcement.excerpt || announcement.excerpt.trim() === announcement.title.trim();
+            const catStyle = announcement.category ? getCategoryStyle(announcement.category.name) : null;
+            return (
+              <div
+                key={announcement.id}
+                className="bg-white/45 dark:bg-[#1a1a1c]/45 backdrop-blur-md rounded-[1.75rem] sm:rounded-[2rem] p-4 sm:p-5.5 border border-black/[0.04] dark:border-white/[0.06] shadow-sm hover:shadow-md hover:border-emerald-400/30 dark:hover:border-emerald-500/40 hover:bg-white/55 dark:hover:bg-[#1c1c1e]/55 transition-all duration-300"
+              >
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3.5 sm:gap-4">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-[15px] sm:text-[17px] font-bold text-gray-900 dark:text-white tracking-tight drop-shadow-sm mb-2 leading-snug flex items-start gap-1.5">
+                      {announcement.is_pinned && (
+                        <span className="inline-flex items-center justify-center text-emerald-400 drop-shadow-[0_0_6px_rgba(52,211,153,0.9)] transform -rotate-[15deg] mt-[3px] sm:mt-[4px] flex-shrink-0" title="Fijado">
+                          <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z" />
+                          </svg>
+                        </span>
                       )}
-                    </svg>
-                  </button>
-                  <button
-                    onClick={() => handleDelete(announcement.id)}
-                    className="p-1.5 sm:p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors active:scale-95 touch-manipulation"
-                    title="Eliminar"
-                  >
-                    <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
+                      <span>{announcement.title}</span>
+                    </h3>
+                    <div className="flex items-center flex-wrap gap-1.5 sm:gap-2 mb-2.5">
+                      {announcement.priority > 0 && (
+                        <span className={`text-[10px] sm:text-xs px-2.5 py-0.5 rounded-full font-semibold border ${
+                          announcement.priority === 2
+                            ? 'bg-emerald-500/15 dark:bg-emerald-500/25 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30 dark:border-emerald-500/35 shadow-[0_0_8px_rgba(16,185,129,0.2)]'
+                            : 'bg-teal-500/10 dark:bg-teal-500/20 text-teal-600 dark:text-teal-300 border border-teal-500/20 dark:border-teal-500/25'
+                        }`}>
+                          {announcement.priority === 2 ? 'Urgente' : 'Alta'}
+                        </span>
+                      )}
+                      {announcement.category && catStyle && (
+                        <span className={`text-[10px] sm:text-xs px-2.5 py-0.5 rounded-full font-semibold border ${catStyle.bg} ${catStyle.border} ${catStyle.text}`}>
+                          {announcement.category.name}
+                        </span>
+                      )}
+                      {!announcement.is_published && (
+                        <span className="text-[10px] sm:text-xs px-2.5 py-0.5 rounded-full bg-zinc-500/10 dark:bg-zinc-500/20 text-zinc-500 dark:text-zinc-400 border border-zinc-500/20 dark:border-zinc-500/25 font-semibold">
+                          Borrador
+                        </span>
+                      )}
+                    </div>
+                    {!isExcerptRedundant && (
+                      <p className="text-xs sm:text-[13.5px] text-gray-600 dark:text-zinc-400 line-clamp-2 mt-1 mb-2.5 leading-relaxed font-medium">
+                        {announcement.excerpt}
+                      </p>
+                    )}
+                    <div className="flex items-center flex-wrap gap-2 sm:gap-3 text-[10px] sm:text-xs text-gray-400 dark:text-zinc-500 font-medium tracking-wide">
+                      <span>Por: {announcement.author?.name || 'Desconocido'}</span>
+                      <span className="text-gray-300 dark:text-zinc-700 select-none">•</span>
+                      <span>{new Date(announcement.created_at).toLocaleDateString('es-CO')}</span>
+                      {announcement.is_published && (
+                        <>
+                          <span className="text-gray-300 dark:text-zinc-700 select-none">•</span>
+                          <span>{announcement.views_count} vistas</span>
+                        </>
+                      )}
+                      <span className="text-gray-300 dark:text-zinc-700 select-none">•</span>
+                      {announcement.is_general ? (
+                        <span className="text-emerald-500/90 dark:text-emerald-400/95 font-semibold">General</span>
+                      ) : (
+                        <span>{announcement.group_targets.length} grupo(s)</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-end sm:justify-start flex-shrink-0 self-center sm:self-start mt-1 sm:mt-0">
+                    <div className="bg-black/[0.03] dark:bg-white/[0.04] backdrop-blur-md rounded-full border border-black/[0.05] dark:border-white/[0.06] p-0.5 sm:p-1 flex items-center gap-0.5 sm:gap-1 shadow-sm">
+                      <button
+                        onClick={() => {
+                          setEditingAnnouncement(announcement);
+                          setShowEditor(true);
+                        }}
+                        className="w-7.5 h-7.5 sm:w-8.5 sm:h-8.5 flex items-center justify-center text-gray-400 dark:text-zinc-500 hover:text-emerald-500 dark:hover:text-emerald-400 transition-all duration-200 hover:scale-115 active:scale-90 hover:drop-shadow-[0_0_8px_rgba(52,211,153,0.7)]"
+                        title="Editar"
+                      >
+                        <svg className="w-[16px] h-[16px] sm:w-[18px] sm:h-[18px]" fill="none" stroke="currentColor" strokeWidth={2.2} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => handleTogglePublish(announcement)}
+                        className={`w-7.5 h-7.5 sm:w-8.5 sm:h-8.5 flex items-center justify-center transition-all duration-200 hover:scale-115 active:scale-90 ${
+                          announcement.is_published
+                            ? 'text-emerald-500 dark:text-emerald-400 hover:text-amber-500 dark:hover:text-amber-400 hover:drop-shadow-[0_0_8px_rgba(245,158,11,0.7)]'
+                            : 'text-gray-400 dark:text-zinc-500 hover:text-emerald-500 dark:hover:text-emerald-400 hover:drop-shadow-[0_0_8px_rgba(52,211,153,0.7)]'
+                        }`}
+                        title={announcement.is_published ? 'Despublicar (Mover a Borradores)' : 'Publicar'}
+                      >
+                        <svg className="w-[16px] h-[16px] sm:w-[18px] sm:h-[18px]" fill="none" stroke="currentColor" strokeWidth={2.2} viewBox="0 0 24 24">
+                          {announcement.is_published ? (
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          ) : (
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v12m0 0l-3-3m3 3l3-3m2-9a7 7 0 11-14 0 7 7 0 0114 0z" />
+                          )}
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => handleDelete(announcement.id)}
+                        className="w-7.5 h-7.5 sm:w-8.5 sm:h-8.5 flex items-center justify-center text-gray-400 dark:text-zinc-500 hover:text-red-500 dark:hover:text-red-400 transition-all duration-200 hover:scale-115 active:scale-90 hover:drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]"
+                        title="Eliminar"
+                      >
+                        <svg className="w-[16px] h-[16px] sm:w-[18px] sm:h-[18px]" fill="none" stroke="currentColor" strokeWidth={2.2} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -416,7 +435,6 @@ export default function AnnouncementManager({ userId, userRole, userGroups }: An
           }}
         />
       )}
-      </>}
     </div>
   );
 }
@@ -560,7 +578,7 @@ function AnnouncementEditor({
         content: formData.content,
         excerpt: formData.excerpt || formData.title.substring(0, 150),
         category_id: formData.category_id || null,
-        featured_image_url: formData.featured_image_url || null,
+        featured_image_url: formData.featured_image_url || '/images/os-aim-logo.png',
         is_general: formData.is_general,
         group_ids: formData.is_general ? [] : formData.group_ids,
         target_roles: userRole === 'super_admin' ? formData.target_roles : [],
@@ -619,7 +637,7 @@ function AnnouncementEditor({
 
   const modalContent = (
     <div 
-      className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity duration-200 p-4" 
+      className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-50 transition-opacity duration-300 p-4" 
       onClick={onClose}
       style={{ 
         position: 'fixed',
@@ -631,7 +649,7 @@ function AnnouncementEditor({
       } as React.CSSProperties}
     >
       <div 
-        className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-2xl shadow-xl w-full max-w-3xl max-h-[calc(100vh-2rem)] flex flex-col transform transition-all duration-200 ease-out" 
+        className="bg-white/85 dark:bg-[#1a1a1c]/85 backdrop-blur-3xl border border-white/50 dark:border-white/10 rounded-[2rem] shadow-[0_8px_40px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.5)] w-full max-w-3xl max-h-[calc(100vh-2.5rem)] flex flex-col transform transition-all duration-300 ease-out animate-scale-up" 
         style={{ 
           zIndex: 2,
           position: 'relative',
@@ -639,21 +657,24 @@ function AnnouncementEditor({
         onClick={(e) => e.stopPropagation()}
       >
         <div 
-          className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-600 px-7 py-5 flex items-center justify-between z-10 rounded-t-2xl"
+          className="sticky top-0 bg-white/40 dark:bg-[#1a1a1c]/40 backdrop-blur-md px-7 py-5 flex items-center justify-between z-10 rounded-t-[2rem]"
         >
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.7)]" />
             {announcement ? 'Editar Publicación' : 'Nueva Publicación'}
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+            className="w-8 h-8 rounded-full bg-black/5 dark:bg-white/5 flex items-center justify-center text-gray-400 dark:text-zinc-400 hover:bg-black/10 dark:hover:bg-white/10 hover:text-gray-600 dark:hover:text-white transition-all active:scale-90"
             aria-label="Cerrar"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
+        {/* Glowing Neon Line Separator (Delineado del Header Boreal) */}
+        <div className="h-[1.5px] w-full bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.75),0_0_3px_rgba(16,185,129,0.85)] pointer-events-none opacity-80 relative z-20" />
 
         <div className="overflow-y-auto flex-1">
         <form onSubmit={handleSubmit} className="p-7 space-y-5">
@@ -666,7 +687,7 @@ function AnnouncementEditor({
               type="text"
               value={formData.title}
               onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-              className="apple-input"
+              className="apple-input rounded-full px-5 py-2.5"
               required
             />
           </div>
@@ -695,7 +716,7 @@ function AnnouncementEditor({
               value={formData.excerpt}
               onChange={(e) => setFormData(prev => ({ ...prev, excerpt: e.target.value }))}
               rows={2}
-              className="apple-input"
+              className="apple-input rounded-[1.5rem] px-5 py-3"
               placeholder="Se generará automáticamente si se deja vacío"
             />
           </div>
@@ -717,6 +738,8 @@ function AnnouncementEditor({
                 value={formData.category_id || ''}
                 onChange={(value) => setFormData(prev => ({ ...prev, category_id: value || '' }))}
                 placeholder="Sin categoría"
+                theme="emerald"
+                pill={true}
               />
             </div>
 
@@ -734,6 +757,8 @@ function AnnouncementEditor({
                 value={formData.priority.toString()}
                 onChange={(value) => setFormData(prev => ({ ...prev, priority: parseInt(value) }))}
                 placeholder="Normal"
+                theme="emerald"
+                pill={true}
               />
             </div>
           </div>
@@ -755,225 +780,236 @@ function AnnouncementEditor({
               accept="image/*"
               onChange={handleImageUpload}
               disabled={uploadingImage}
-              className="apple-input file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100 dark:file:bg-purple-900/30 dark:file:text-purple-300 cursor-pointer"
+              className="apple-input rounded-full px-5 py-1.5 file:mr-4 file:py-1 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-emerald-500/10 file:text-emerald-700 dark:file:text-emerald-300 hover:file:bg-emerald-500/20 cursor-pointer transition-all duration-200"
             />
-            {uploadingImage && <p className="text-xs text-gray-500 mt-1">Subiendo...</p>}
+            {uploadingImage && <p className="text-xs text-emerald-500 mt-1 animate-pulse">Subiendo...</p>}
           </div>
 
-          {/* Distribución */}
-          <div>
-            <label className="flex items-center space-x-2 mb-2 cursor-pointer group">
-              <div className="relative">
-                <input
-                  type="checkbox"
-                  checked={formData.is_general}
-                  onChange={(e) => setFormData(prev => ({ ...prev, is_general: e.target.checked, group_ids: e.target.checked ? [] : prev.group_ids }))}
-                  className="sr-only"
-                />
-                <div className={`w-7 h-4 rounded-full transition-all duration-200 ease-in-out ${
-                  formData.is_general 
-                    ? 'bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700 shadow-inner' 
-                    : 'bg-gray-300 dark:bg-gray-600'
-                } group-hover:shadow-md`}>
-                  <div className={`w-3.5 h-3.5 bg-white rounded-full shadow-sm transform transition-all duration-200 ease-in-out ${
-                    formData.is_general ? 'translate-x-3' : 'translate-x-0.5'
-                  } ${formData.is_general ? 'shadow-blue-200/50' : ''}`} style={{ marginTop: '2px' }}></div>
+          {/* Centro de Control Boreal (Ajustes de Publicación) */}
+          <div className="bg-black/[0.02] dark:bg-white/[0.02] border border-black/[0.04] dark:border-white/[0.06] rounded-[2rem] p-4 sm:p-5 space-y-4">
+            <h4 className="text-[13px] font-bold text-gray-600 dark:text-zinc-400 mb-1.5 select-none">
+              Ajustes de distribución y visibilidad
+            </h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {/* Publicación general */}
+              <label className="flex items-center justify-between p-3.5 rounded-2xl bg-black/[0.03] dark:bg-white/[0.03] border border-black/[0.04] dark:border-white/[0.05] hover:bg-black/[0.05] dark:hover:bg-white/[0.05] transition-all cursor-pointer group">
+                <div className="flex flex-col min-w-0 pr-2">
+                  <span className="text-[13px] font-bold text-gray-800 dark:text-gray-200">Publicación General</span>
+                  <span className="text-[10px] text-gray-500 dark:text-zinc-400 truncate">A todos los grupos</span>
                 </div>
-              </div>
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Publicación general (todos los grupos)
-              </span>
-            </label>
-            {(!formData.is_general || userRole === 'super_admin') && (
-              <div className="mt-1 grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-                {/* Grupos objetivo */}
-                {!formData.is_general && (
-                  <div className="flex flex-col">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 h-6 flex items-center">
-                      Grupos objetivo
-                    </label>
-                    <div className="max-h-32 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-lg p-2">
-                      {groups.map(group => {
-                        const isChecked = formData.group_ids.includes(group.id);
-                        return (
-                          <label key={group.id} className="flex items-center space-x-2 py-1 cursor-pointer group">
-                            <div className="relative">
-                              <input
-                                type="checkbox"
-                                checked={isChecked}
-                                onChange={(e) => {
-                                  if (e.target.checked) {
-                                    setFormData(prev => ({ ...prev, group_ids: [...prev.group_ids, group.id] }));
-                                  } else {
-                                    setFormData(prev => ({ ...prev, group_ids: prev.group_ids.filter(id => id !== group.id) }));
-                                  }
-                                }}
-                                className="sr-only"
-                              />
-                              <div className={`w-7 h-4 rounded-full transition-all duration-200 ease-in-out ${
-                                isChecked 
-                                  ? 'bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700 shadow-inner' 
-                                  : 'bg-gray-300 dark:bg-gray-600'
-                              } group-hover:shadow-md`}>
-                                <div className={`w-3.5 h-3.5 bg-white rounded-full shadow-sm transform transition-all duration-200 ease-in-out ${
-                                  isChecked ? 'translate-x-3' : 'translate-x-0.5'
-                                } ${isChecked ? 'shadow-blue-200/50' : ''}`} style={{ marginTop: '2px' }}></div>
-                              </div>
-                            </div>
-                            <span className="text-sm text-gray-700 dark:text-gray-300">{group.name}</span>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* Selección por rol (solo para super_admin) */}
-                {userRole === 'super_admin' && (
-                  <div className="flex flex-col">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 h-6 flex items-center">
-                      Roles objetivo (opcional)
-                    </label>
-                    <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-2">
-                      <label className="flex items-center space-x-2 py-1 cursor-pointer group">
-                        <div className="relative">
-                          <input
-                            type="checkbox"
-                            checked={formData.target_roles.includes('admin')}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setFormData(prev => ({ ...prev, target_roles: [...prev.target_roles, 'admin'] }));
-                              } else {
-                                setFormData(prev => ({ ...prev, target_roles: prev.target_roles.filter(role => role !== 'admin') }));
-                              }
-                            }}
-                            className="sr-only"
-                          />
-                          <div className={`w-7 h-4 rounded-full transition-all duration-200 ease-in-out ${
-                            formData.target_roles.includes('admin')
-                              ? 'bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700 shadow-inner' 
-                              : 'bg-gray-300 dark:bg-gray-600'
-                          } group-hover:shadow-md`}>
-                            <div className={`w-3.5 h-3.5 bg-white rounded-full shadow-sm transform transition-all duration-200 ease-in-out ${
-                              formData.target_roles.includes('admin') ? 'translate-x-3' : 'translate-x-0.5'
-                            } ${formData.target_roles.includes('admin') ? 'shadow-blue-200/50' : ''}`} style={{ marginTop: '2px' }}></div>
-                          </div>
-                        </div>
-                        <span className="text-sm text-gray-700 dark:text-gray-300">Admin</span>
-                      </label>
-                      <label className="flex items-center space-x-2 py-1 cursor-pointer group">
-                        <div className="relative">
-                          <input
-                            type="checkbox"
-                            checked={formData.target_roles.includes('super_admin')}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setFormData(prev => ({ ...prev, target_roles: [...prev.target_roles, 'super_admin'] }));
-                              } else {
-                                setFormData(prev => ({ ...prev, target_roles: prev.target_roles.filter(role => role !== 'super_admin') }));
-                              }
-                            }}
-                            className="sr-only"
-                          />
-                          <div className={`w-7 h-4 rounded-full transition-all duration-200 ease-in-out ${
-                            formData.target_roles.includes('super_admin')
-                              ? 'bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700 shadow-inner' 
-                              : 'bg-gray-300 dark:bg-gray-600'
-                          } group-hover:shadow-md`}>
-                            <div className={`w-3.5 h-3.5 bg-white rounded-full shadow-sm transform transition-all duration-200 ease-in-out ${
-                              formData.target_roles.includes('super_admin') ? 'translate-x-3' : 'translate-x-0.5'
-                            } ${formData.target_roles.includes('super_admin') ? 'shadow-blue-200/50' : ''}`} style={{ marginTop: '2px' }}></div>
-                          </div>
-                        </div>
-                        <span className="text-sm text-gray-700 dark:text-gray-300">Super Admin</span>
-                      </label>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Opciones */}
-          <div className="flex flex-wrap gap-4">
-            <label className="flex items-center space-x-2 cursor-pointer group">
-              <div className="relative">
-                <input
-                  type="checkbox"
-                  checked={formData.is_pinned}
-                  onChange={(e) => setFormData(prev => ({ ...prev, is_pinned: e.target.checked }))}
-                  className="sr-only"
-                />
-                <div className={`w-7 h-4 rounded-full transition-all duration-200 ease-in-out ${
-                  formData.is_pinned 
-                    ? 'bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700 shadow-inner' 
-                    : 'bg-gray-300 dark:bg-gray-600'
-                } group-hover:shadow-md`}>
-                  <div className={`w-3.5 h-3.5 bg-white rounded-full shadow-sm transform transition-all duration-200 ease-in-out ${
-                    formData.is_pinned ? 'translate-x-3' : 'translate-x-0.5'
-                  } ${formData.is_pinned ? 'shadow-blue-200/50' : ''}`} style={{ marginTop: '2px' }}></div>
-                </div>
-              </div>
-              <span className="text-sm text-gray-700 dark:text-gray-300">Fijar en la parte superior</span>
-            </label>
-            
-            {/* Checkbox para compartir con afiliados - Solo para super_admin */}
-            {userRole === 'super_admin' && (
-              <label className="flex items-center space-x-2 cursor-pointer group">
-                <div className="relative">
+                <div className="relative flex-shrink-0 cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={formData.share_with_affiliates}
-                    onChange={(e) => setFormData(prev => ({ ...prev, share_with_affiliates: e.target.checked }))}
+                    checked={formData.is_general}
+                    onChange={(e) => setFormData(prev => ({ ...prev, is_general: e.target.checked, group_ids: e.target.checked ? [] : prev.group_ids }))}
                     className="sr-only"
                   />
-                  <div className={`w-7 h-4 rounded-full transition-all duration-200 ease-in-out ${
-                    formData.share_with_affiliates 
-                      ? 'bg-gradient-to-r from-green-500 to-emerald-600 dark:from-green-600 dark:to-emerald-700 shadow-inner' 
-                      : 'bg-gray-300 dark:bg-gray-600'
-                  } group-hover:shadow-md`}>
-                    <div className={`w-3.5 h-3.5 bg-white rounded-full shadow-sm transform transition-all duration-200 ease-in-out ${
-                      formData.share_with_affiliates ? 'translate-x-3' : 'translate-x-0.5'
-                    } ${formData.share_with_affiliates ? 'shadow-green-200/50' : ''}`} style={{ marginTop: '2px' }}></div>
+                  <div className={`w-9 h-5 rounded-full transition-all duration-200 ease-in-out ${
+                    formData.is_general 
+                      ? 'bg-emerald-500 dark:bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.75)]' 
+                      : 'bg-zinc-300 dark:bg-zinc-700'
+                  }`}>
+                    <div className={`absolute top-[2px] left-[2px] w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform duration-200 ease-in-out ${
+                      formData.is_general ? 'translate-x-4' : 'translate-x-0'
+                    }`}></div>
                   </div>
                 </div>
-                <span className="text-sm text-gray-700 dark:text-gray-300">
-                  Compartir con estudios afiliados
-                </span>
               </label>
-            )}
+
+              {/* Fijar en la parte superior */}
+              <label className="flex items-center justify-between p-3.5 rounded-2xl bg-black/[0.03] dark:bg-white/[0.03] border border-black/[0.04] dark:border-white/[0.05] hover:bg-black/[0.05] dark:hover:bg-white/[0.05] transition-all cursor-pointer group">
+                <div className="flex flex-col min-w-0 pr-2">
+                  <span className="text-[13px] font-bold text-gray-800 dark:text-gray-200">Fijar al Inicio</span>
+                  <span className="text-[10px] text-gray-500 dark:text-zinc-400 truncate">Fijar en cabecera</span>
+                </div>
+                <div className="relative flex-shrink-0 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.is_pinned}
+                    onChange={(e) => setFormData(prev => ({ ...prev, is_pinned: e.target.checked }))}
+                    className="sr-only"
+                  />
+                  <div className={`w-9 h-5 rounded-full transition-all duration-200 ease-in-out ${
+                    formData.is_pinned 
+                      ? 'bg-emerald-500 dark:bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.75)]' 
+                      : 'bg-zinc-300 dark:bg-zinc-700'
+                  }`}>
+                    <div className={`absolute top-[2px] left-[2px] w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform duration-200 ease-in-out ${
+                      formData.is_pinned ? 'translate-x-4' : 'translate-x-0'
+                    }`}></div>
+                  </div>
+                </div>
+              </label>
+
+              {/* Compartir con afiliados (super_admin) */}
+              {userRole === 'super_admin' ? (
+                <label className="flex items-center justify-between p-3.5 rounded-2xl bg-black/[0.03] dark:bg-white/[0.03] border border-black/[0.04] dark:border-white/[0.05] hover:bg-black/[0.05] dark:hover:bg-white/[0.05] transition-all cursor-pointer group">
+                  <div className="flex flex-col min-w-0 pr-2">
+                    <span className="text-[13px] font-bold text-gray-800 dark:text-gray-200">Compartir Afiliados</span>
+                    <span className="text-[10px] text-gray-500 dark:text-zinc-400 truncate">Estudios externos</span>
+                  </div>
+                  <div className="relative flex-shrink-0 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.share_with_affiliates}
+                      onChange={(e) => setFormData(prev => ({ ...prev, share_with_affiliates: e.target.checked }))}
+                      className="sr-only"
+                    />
+                    <div className={`w-9 h-5 rounded-full transition-all duration-200 ease-in-out ${
+                      formData.share_with_affiliates 
+                        ? 'bg-emerald-500 dark:bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.75)]' 
+                        : 'bg-zinc-300 dark:bg-zinc-700'
+                    }`}>
+                      <div className={`absolute top-[2px] left-[2px] w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform duration-200 ease-in-out ${
+                        formData.share_with_affiliates ? 'translate-x-4' : 'translate-x-0'
+                      }`}></div>
+                    </div>
+                  </div>
+                </label>
+              ) : (
+                /* Espacio reservado para balancear el grid si no es super_admin */
+                <div className="hidden sm:block" />
+              )}
+            </div>
           </div>
+
+          {/* Segmentación por Grupo y Rol con Revelación Dinámica (Opción 1: Chips interactivos en píldoras) */}
+          {(!formData.is_general || userRole === 'super_admin') && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-1 animate-in fade-in slide-in-from-top-2 duration-300">
+              {/* Grupos objetivo */}
+              {!formData.is_general && (
+                <div className="flex flex-col">
+                  <label className="block text-[13px] font-bold text-gray-600 dark:text-zinc-400 mb-2 select-none">
+                    Grupos objetivo
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {groups.map(group => {
+                      const isChecked = formData.group_ids.includes(group.id);
+                      return (
+                        <button
+                          key={group.id}
+                          type="button"
+                          onClick={() => {
+                            if (isChecked) {
+                              setFormData(prev => ({ ...prev, group_ids: prev.group_ids.filter(id => id !== group.id) }));
+                            } else {
+                              setFormData(prev => ({ ...prev, group_ids: [...prev.group_ids, group.id] }));
+                            }
+                          }}
+                          className={`px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-all duration-200 active:scale-95 flex items-center gap-1.5 ${
+                            isChecked
+                              ? 'bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/25 dark:border-emerald-500/30 font-bold shadow-[0_2px_8px_rgba(16,185,129,0.1)]'
+                              : 'bg-emerald-500/[0.03] dark:bg-emerald-500/[0.05] border-black/[0.06] dark:border-emerald-500/[0.1] text-gray-500 dark:text-emerald-400/70 hover:bg-emerald-500/[0.08] dark:hover:bg-emerald-500/[0.1] hover:text-emerald-600 dark:hover:text-emerald-300'
+                          }`}
+                        >
+                          {isChecked && (
+                            <span className="text-[10px] text-emerald-500 dark:text-emerald-400 font-extrabold animate-scale-up">✓</span>
+                          )}
+                          {group.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Selección por rol (solo para super_admin) */}
+              {userRole === 'super_admin' && (
+                <div className="flex flex-col">
+                  <label className="block text-[13px] font-bold text-gray-600 dark:text-zinc-400 mb-2 select-none">
+                    Roles objetivo (opcional)
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {/* Admin Chip */}
+                    {(() => {
+                      const isChecked = formData.target_roles.includes('admin');
+                      return (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (isChecked) {
+                              setFormData(prev => ({ ...prev, target_roles: prev.target_roles.filter(role => role !== 'admin') }));
+                            } else {
+                              setFormData(prev => ({ ...prev, target_roles: [...prev.target_roles, 'admin'] }));
+                            }
+                          }}
+                          className={`px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-all duration-200 active:scale-95 flex items-center gap-1.5 ${
+                            isChecked
+                              ? 'bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/25 dark:border-emerald-500/30 font-bold shadow-[0_2px_8px_rgba(16,185,129,0.1)]'
+                              : 'bg-emerald-500/[0.03] dark:bg-emerald-500/[0.05] border-black/[0.06] dark:border-emerald-500/[0.1] text-gray-500 dark:text-emerald-400/70 hover:bg-emerald-500/[0.08] dark:hover:bg-emerald-500/[0.1] hover:text-emerald-600 dark:hover:text-emerald-300'
+                          }`}
+                        >
+                          {isChecked && (
+                            <span className="text-[10px] text-emerald-500 dark:text-emerald-400 font-extrabold animate-scale-up">✓</span>
+                          )}
+                          Admin
+                        </button>
+                      );
+                    })()}
+
+                    {/* Super Admin Chip */}
+                    {(() => {
+                      const isChecked = formData.target_roles.includes('super_admin');
+                      return (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (isChecked) {
+                              setFormData(prev => ({ ...prev, target_roles: prev.target_roles.filter(role => role !== 'super_admin') }));
+                            } else {
+                              setFormData(prev => ({ ...prev, target_roles: [...prev.target_roles, 'super_admin'] }));
+                            }
+                          }}
+                          className={`px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-all duration-200 active:scale-95 flex items-center gap-1.5 ${
+                            isChecked
+                              ? 'bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/25 dark:border-emerald-500/30 font-bold shadow-[0_2px_8px_rgba(16,185,129,0.1)]'
+                              : 'bg-emerald-500/[0.03] dark:bg-emerald-500/[0.05] border-black/[0.06] dark:border-emerald-500/[0.1] text-gray-500 dark:text-emerald-400/70 hover:bg-emerald-500/[0.08] dark:hover:bg-emerald-500/[0.1] hover:text-emerald-600 dark:hover:text-emerald-300'
+                          }`}
+                        >
+                          {isChecked && (
+                            <span className="text-[10px] text-emerald-500 dark:text-emerald-400 font-extrabold animate-scale-up">✓</span>
+                          )}
+                          Super Admin
+                        </button>
+                      );
+                    })()}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Fecha de expiración */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Fecha de expiración (opcional)
             </label>
-            <input
-              type="date"
+            <AppleDatePicker
               value={formData.expires_at}
-              onChange={(e) => setFormData(prev => ({ ...prev, expires_at: e.target.value }))}
-              className="apple-input"
+              onChange={(date) => setFormData(prev => ({ ...prev, expires_at: date }))}
+              placeholder="dd/mm/aaaa"
+              theme="emerald"
+              pill={true}
             />
           </div>
 
           {/* Botones */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-end gap-3 pt-5 border-t border-black/5 dark:border-white/10">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-all duration-200"
+              className="px-5 py-2 text-sm font-semibold text-gray-700 dark:text-gray-300 bg-black/5 hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10 border border-transparent rounded-full transition-all duration-200 active:scale-95"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="px-4 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg hover:from-purple-600 hover:to-purple-700 focus:ring-2 focus:ring-purple-500/20 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2 shadow-md hover:shadow-lg"
+              className="btn-apple-primary flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {saving ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
                   <span>Guardando...</span>
                 </>
               ) : (

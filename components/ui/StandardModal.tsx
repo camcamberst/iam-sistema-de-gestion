@@ -7,7 +7,7 @@ interface StandardModalProps {
   isOpen: boolean;
   onClose: () => void;
   children: ReactNode;
-  title?: string;
+  title?: ReactNode;
   maxWidthClass?: string; // ej: max-w-md, max-w-lg, max-w-2xl
   paddingClass?: string; // ej: p-8, p-7
   headerMarginClass?: string; // ej: mb-6, mb-5
@@ -32,8 +32,8 @@ export default function StandardModal({
   className = '',
   showCloseButton = true,
   closeOnBackdrop = true,
-  bgClass = 'bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl',
-  borderClass = 'border border-white/80 dark:border-white/10',
+  bgClass = 'bg-white/95 dark:bg-[#1a1a1c]/95 backdrop-blur-2xl',
+  borderClass = 'border border-black/[0.08] dark:border-white/[0.08]',
   overflowClass = 'overflow-y-auto'
 }: StandardModalProps) {
   const [mounted, setMounted] = useState(false);

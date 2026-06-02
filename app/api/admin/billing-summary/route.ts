@@ -71,7 +71,8 @@ export async function GET(request: NextRequest) {
         id, 
         email, 
         name,
-        affiliate_studio_id
+        affiliate_studio_id,
+        avatar_url
       `)
       .eq('role', 'modelo')
       .eq('is_active', true);
@@ -845,6 +846,7 @@ export async function GET(request: NextRequest) {
         modelId: model.id,
         email: model.email.split('@')[0],
         name: model.name,
+        avatarUrl: model.avatar_url || null,
         groupId: modelGroup?.id,
         groupName: modelGroup?.name,
         affiliate_studio_id: model.affiliate_studio_id, // Incluir affiliate_studio_id para filtrar
@@ -996,8 +998,14 @@ export async function GET(request: NextRequest) {
           agenciaInnova.totalCopSede += model.copSede;
         });
 
-        // Agregar todos los grupos a Agencia Innova
-        agenciaInnova.groups = Array.from(groupMap.values());
+        // Agregar todos los grupos a Agencia Innova, ordenados por facturación (totalUsdBruto) de mayor a menor,
+        // y ordenar las modelos dentro de cada grupo también por facturación (usdBruto) de mayor a menor.
+        agenciaInnova.groups = Array.from(groupMap.values())
+          .map((g: any) => ({
+            ...g,
+            models: [...g.models].sort((a, b) => b.usdBruto - a.usdBruto)
+          }))
+          .sort((a: any, b: any) => b.totalUsdBruto - a.totalUsdBruto);
 
         // Calcular facturación de afiliados (solo para super_admin)
         const affiliateBillingData: any[] = [];
@@ -1028,7 +1036,7 @@ export async function GET(request: NextRequest) {
             // Obtener modelos del afiliado
             const { data: affiliateModels, error: modelsError } = await supabase
               .from('users')
-              .select('id, email, name')
+              .select('id, email, name, avatar_url')
               .eq('affiliate_studio_id', studio.id)
               .eq('role', 'modelo')
               .eq('is_active', true);
@@ -1118,6 +1126,7 @@ export async function GET(request: NextRequest) {
                   modelId: model.id,
                   email: model.email.split('@')[0],
                   name: model.name,
+                  avatarUrl: model.avatar_url || null,
                   groupId: modelGroup?.id,
                   groupName: modelGroup?.name,
                   usdBruto,
@@ -1190,6 +1199,7 @@ export async function GET(request: NextRequest) {
                   modelId: model.id,
                   email: model.email.split('@')[0],
                   name: model.name,
+                  avatarUrl: model.avatar_url || null,
                   groupId: modelGroup?.id,
                   groupName: modelGroup?.name,
                   usdBruto,
@@ -1273,7 +1283,12 @@ export async function GET(request: NextRequest) {
               sedeName: `${studio.name} - Afiliado`,
               isAffiliate: true,
               affiliate_studio_id: studio.id,
-              groups: Array.from(affiliateGroupMap.values()),
+              groups: Array.from(affiliateGroupMap.values())
+                .map((g: any) => ({
+                  ...g,
+                  models: [...g.models].sort((a, b) => b.usdBruto - a.usdBruto)
+                }))
+                .sort((a: any, b: any) => b.totalUsdBruto - a.totalUsdBruto),
               models: affiliateModelsBillingData,
               totalModels: affiliateModelsBillingData.length,
               totalUsdBruto: affiliateTotalUsdBruto,

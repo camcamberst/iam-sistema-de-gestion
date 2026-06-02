@@ -168,6 +168,30 @@ export default function SolicitarAnticipoPage() {
       }
 
       setUser(userData);
+
+      // 🔒 Verificar si la modelo ya tiene un anticipo activo (pendiente o aprobado)
+      const { data: activeAnticipos, error: activeError } = await supabase
+        .from('anticipos')
+        .select('id, estado')
+        .eq('model_id', userData.id)
+        .in('estado', ['pendiente', 'aprobado'])
+        .limit(1);
+
+      if (activeError) {
+        console.error('Error al consultar anticipos activos:', activeError);
+      } else if (activeAnticipos && activeAnticipos.length > 0) {
+        const active = activeAnticipos[0];
+        const activeReason = active.estado === 'pendiente'
+          ? 'Ya tienes una solicitud de anticipo pendiente de revisión por tu admin'
+          : 'Ya tienes una solicitud de anticipo aprobada en proceso de desembolso.';
+        
+        setRestrictionInfo({
+          allowed: false,
+          reason: activeReason
+        });
+        return;
+      }
+
       await loadProductivityData(userData.id);
     } catch (error) {
       console.error('Error loading user:', error);
@@ -474,19 +498,21 @@ export default function SolicitarAnticipoPage() {
             <p className="text-[13.5px] sm:text-base text-gray-600 dark:text-gray-300 mb-4 sm:mb-5 leading-snug">
               {restrictionInfo.reason}
             </p>
-            <div className="bg-blue-50/80 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700/50 rounded-[12px] p-3 sm:p-4">
-              <p className="text-[12.5px] sm:text-sm text-blue-800 dark:text-blue-300">
-                <strong className="block mb-0.5">Próxima fecha disponible:</strong>
-                <span className="capitalize">
-                  {restrictionInfo.nextAvailable?.toLocaleDateString('es-CO', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })}
-                </span>
-              </p>
-            </div>
+            {restrictionInfo.nextAvailable && (
+              <div className="bg-blue-50/80 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700/50 rounded-[12px] p-3 sm:p-4">
+                <p className="text-[12.5px] sm:text-sm text-blue-800 dark:text-blue-300">
+                  <strong className="block mb-0.5">Próxima fecha disponible:</strong>
+                  <span className="capitalize">
+                    {restrictionInfo.nextAvailable.toLocaleDateString('es-CO', {
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </span>
+                </p>
+              </div>
+            )}
           </div>
           <button
             onClick={() => router.push('/admin/model/dashboard')}
@@ -600,9 +626,9 @@ export default function SolicitarAnticipoPage() {
             <span className="hidden sm:inline">Resumen de&nbsp;</span>Productividad
           </h2>
         </div>
-        <div className="flex-1 relative glass-card bg-black/[0.08] dark:bg-white/[0.06] backdrop-blur-3xl border border-white/40 dark:border-white/[0.08] max-sm:p-1.5 sm:p-2.5 rounded-[1.25rem] sm:rounded-2xl shadow-sm shadow-black/5 dark:shadow-[0_1px_0_0_rgba(255,255,255,0.02)_inset,0_4px_20px_rgba(0,0,0,0.4)] flex flex-col overflow-hidden mb-4 sm:mb-6 hover:shadow-md transition-all duration-300">
-          <div className="relative z-10 flex flex-col flex-1">
             <InfoCardGrid
+              compactContainer={true}
+              className="mb-4 sm:mb-6"
               columns={3}
               cards={[
                 {
@@ -627,8 +653,6 @@ export default function SolicitarAnticipoPage() {
                 }
               ]}
             />
-          </div>
-        </div>
           
         {productivityData.copModelo === 0 && !loadingProductivity && (
           <div className="mb-4 sm:mb-6 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700/50 rounded-[1.25rem] sm:rounded-2xl">

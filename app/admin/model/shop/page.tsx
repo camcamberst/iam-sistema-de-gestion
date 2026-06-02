@@ -1,13 +1,21 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { supabase } from "@/lib/supabase";
 import PageHeader from "@/components/ui/PageHeader";
 import GlassCard from "@/components/ui/GlassCard";
 import PillTabs from "@/components/ui/PillTabs";
 import ModelAuroraBackground from "@/components/ui/ModelAuroraBackground";
 
-interface Category { id: string; name: string; }
+interface Category {
+  id: string;
+  name: string;
+  shop_aisles?: {
+    id: string;
+    name: string;
+  } | null;
+}
 interface Variant { id: string; name: string; price_delta: number; is_active: boolean; }
 interface Product {
   id: string;
@@ -378,7 +386,7 @@ export default function ShopStorefront() {
                     onClick={() => setFilterCategory(c.id)}
                     className={`flex-shrink-0 px-4 py-2 text-sm rounded-xl border transition-all ${filterCategory === c.id ? "bg-pink-600 text-white border-pink-600" : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-pink-400"}`}
                   >
-                    {c.name}
+                    {c.shop_aisles?.name ? `[${c.shop_aisles.name}] ${c.name}` : c.name}
                   </button>
                 ))}
               </div>
@@ -909,6 +917,11 @@ function ModelOrders({ token, onOrderCancelled }: { token: string; onOrderCancel
   const [hiddenOrders, setHiddenOrders] = useState<string[]>([]);
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
   const [zoomedProduct, setZoomedProduct] = useState<{name: string, description?: string} | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   type Order = {
     id: string;
@@ -1218,10 +1231,11 @@ function ModelOrders({ token, onOrderCancelled }: { token: string; onOrderCancel
   </div>
 
     {/* Modal de Zoom de Imagen */}
-    {zoomedImage && (
+    {zoomedImage && isMounted && typeof document !== 'undefined' && createPortal(
       <div 
-        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm transition-opacity cursor-pointer p-4"
+        className="fixed inset-0 flex items-center justify-center bg-black/75 backdrop-blur-md transition-opacity cursor-pointer p-4"
         onClick={() => setZoomedImage(null)}
+        style={{ zIndex: 100000 }}
       >
         <div 
           className="relative w-[260px] h-[340px] sm:w-[320px] sm:h-[420px] rounded-[1.5rem] overflow-hidden shadow-2xl border border-white/20 transform scale-100 animate-in zoom-in duration-200"
@@ -1230,19 +1244,21 @@ function ModelOrders({ token, onOrderCancelled }: { token: string; onOrderCancel
           <img src={zoomedImage} alt="Producto ampliado" className="w-full h-full object-cover" />
           <button 
             onClick={() => setZoomedImage(null)}
-            className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center bg-black/50 backdrop-blur-md rounded-full text-white shadow-lg border border-white/10"
+            className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center bg-black/50 backdrop-blur-md rounded-full text-white shadow-lg border border-white/10 cursor-pointer"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
           </button>
         </div>
-      </div>
+      </div>,
+      document.body
     )}
 
     {/* Modal de Descripción de Producto */}
-    {zoomedProduct && (
+    {zoomedProduct && isMounted && typeof document !== 'undefined' && createPortal(
       <div 
-        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm transition-opacity cursor-pointer p-4"
+        className="fixed inset-0 flex items-center justify-center bg-black/75 backdrop-blur-md transition-opacity cursor-pointer p-4"
         onClick={() => setZoomedProduct(null)}
+        style={{ zIndex: 100000 }}
       >
         <div 
           className="relative w-full max-w-[320px] bg-white/90 dark:bg-[#13131A]/95 backdrop-blur-xl rounded-[1.5rem] p-6 shadow-2xl border border-white/20 transform scale-100 animate-in zoom-in duration-200 flex flex-col"
@@ -1250,7 +1266,7 @@ function ModelOrders({ token, onOrderCancelled }: { token: string; onOrderCancel
         >
           <button 
             onClick={() => setZoomedProduct(null)}
-            className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full text-gray-500 dark:text-gray-300 hover:bg-black/10 dark:hover:bg-white/20 transition-colors"
+            className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full text-gray-500 dark:text-gray-300 hover:bg-black/10 dark:hover:bg-white/20 transition-colors cursor-pointer"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
           </button>
@@ -1267,7 +1283,8 @@ function ModelOrders({ token, onOrderCancelled }: { token: string; onOrderCancel
             )}
           </div>
         </div>
-      </div>
+      </div>,
+      document.body
     )}
 
     {/* Custom Confirmation Modal */}

@@ -34,6 +34,16 @@ const ThemeToggle = () => {
     localStorage.setItem('theme', newTheme);
     document.documentElement.classList.toggle('dark', newTheme === 'dark');
     
+    // Notificar a todos los iframes sobre el cambio de tema en tiempo real
+    if (typeof window !== 'undefined') {
+      const frames = document.getElementsByTagName('iframe');
+      for (let i = 0; i < frames.length; i++) {
+        try {
+          frames[i].contentWindow?.postMessage({ type: 'THEME_CHANGE', theme: newTheme }, '*');
+        } catch (e) {}
+      }
+    }
+    
     // Efecto de ripple en el botón
     const button = document.querySelector('[data-theme-toggle]') as HTMLElement;
     if (button) {

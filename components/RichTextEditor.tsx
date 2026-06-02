@@ -27,12 +27,12 @@ export default function RichTextEditor({
 
   // Función para subir imagen
   const uploadImage = async (file: File) => {
-        // Validar tamaño (4MB máximo para evitar problemas con límites de Vercel)
-        const maxSize = 4 * 1024 * 1024; // 4MB
-        if (file.size > maxSize) {
-          alert('El archivo es demasiado grande. El límite máximo es 4MB. Por favor, comprime la imagen o usa una imagen más pequeña.');
-          return null;
-        }
+    // Validar tamaño (4MB máximo para evitar problemas con límites de Vercel)
+    const maxSize = 4 * 1024 * 1024; // 4MB
+    if (file.size > maxSize) {
+      alert('El archivo es demasiado grande. El límite máximo es 4MB. Por favor, comprime la imagen o usa una imagen más pequeña.');
+      return null;
+    }
 
     // Validar tipo
     const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
@@ -77,7 +77,7 @@ export default function RichTextEditor({
         try {
           const errorData = await response.json();
           errorMessage = errorData.error || errorMessage;
-        } catch {
+        } catch (error) {
           // Si no es JSON, usar el status text
           errorMessage = `Error ${response.status}: ${response.statusText || 'Error desconocido'}`;
         }
@@ -107,6 +107,7 @@ export default function RichTextEditor({
       alert('Error al subir la imagen. Por favor, verifica tu conexión e intenta de nuevo.');
       return null;
     } finally {
+      document.body.style.overflow = '';
       setUploading(false);
     }
   };
@@ -192,14 +193,12 @@ export default function RichTextEditor({
   ];
 
   return (
-    <div className={`rich-text-editor relative ${className}`} ref={editorRef}>
+    <div className={`rich-text-editor relative border border-black/[0.08] dark:border-white/[0.08] rounded-2xl overflow-hidden bg-white dark:bg-[#141416] shadow-sm focus-within:ring-2 focus-within:ring-emerald-500/20 dark:focus-within:ring-emerald-400/20 focus-within:border-emerald-500/40 dark:focus-within:border-emerald-400/40 transition-all duration-300 ${className}`} ref={editorRef}>
       {uploading && (
-        <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-50 rounded-lg" style={{ zIndex: 9999 }}>
-          <div className="bg-white dark:bg-gray-800 px-4 py-2 rounded-lg shadow-lg">
-            <div className="flex items-center gap-2">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-600"></div>
-              <span className="text-sm text-gray-700 dark:text-gray-300">Subiendo imagen...</span>
-            </div>
+        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 rounded-2xl" style={{ zIndex: 9999 }}>
+          <div className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md border border-black/5 dark:border-white/10 px-5 py-3 rounded-2xl shadow-xl flex items-center gap-3 animate-scale-up">
+            <div className="animate-spin rounded-full h-5 w-5 border-2 border-emerald-500 border-t-transparent"></div>
+            <span className="text-sm font-semibold text-gray-800 dark:text-zinc-200">Subiendo imagen...</span>
           </div>
         </div>
       )}
@@ -210,90 +209,11 @@ export default function RichTextEditor({
         placeholder={placeholder}
         modules={modules}
         formats={formats}
-        className="bg-white dark:bg-gray-800"
+        className="bg-transparent"
         style={{
           height: '400px',
         }}
       />
-      <style jsx global>{`
-        .rich-text-editor .ql-container {
-          min-height: 300px;
-          font-size: 14px;
-          color: #1f2937;
-        }
-        
-        .dark .rich-text-editor .ql-container {
-          color: #f3f4f6;
-        }
-        
-        .rich-text-editor .ql-editor {
-          min-height: 300px;
-        }
-        
-        .rich-text-editor .ql-stroke {
-          stroke: #6b7280;
-        }
-        
-        .dark .rich-text-editor .ql-stroke {
-          stroke: #9ca3af;
-        }
-        
-        .rich-text-editor .ql-fill {
-          fill: #6b7280;
-        }
-        
-        .dark .rich-text-editor .ql-fill {
-          fill: #9ca3af;
-        }
-        
-        .rich-text-editor .ql-picker-label {
-          color: #6b7280;
-        }
-        
-        .dark .rich-text-editor .ql-picker-label {
-          color: #9ca3af;
-        }
-        
-        .rich-text-editor .ql-toolbar {
-          border-top-left-radius: 0.5rem;
-          border-top-right-radius: 0.5rem;
-          border-bottom: 1px solid #e5e7eb;
-          background-color: #f9fafb;
-        }
-        
-        .dark .rich-text-editor .ql-toolbar {
-          border-bottom-color: #4b5563;
-          background-color: #374151;
-        }
-        
-        .rich-text-editor .ql-container {
-          border-bottom-left-radius: 0.5rem;
-          border-bottom-right-radius: 0.5rem;
-          border: 1px solid #e5e7eb;
-          background-color: #ffffff;
-        }
-        
-        .dark .rich-text-editor .ql-container {
-          border-color: #4b5563;
-          background-color: #1f2937;
-        }
-        
-        .rich-text-editor .ql-editor.ql-blank::before {
-          color: #9ca3af;
-          font-style: normal;
-        }
-        
-        .dark .rich-text-editor .ql-editor.ql-blank::before {
-          color: #6b7280;
-        }
-        
-        .rich-text-editor .ql-editor img {
-          max-width: 100%;
-          height: auto;
-          border-radius: 0.5rem;
-          margin: 1rem 0;
-        }
-      `}</style>
     </div>
   );
 }

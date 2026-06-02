@@ -31,7 +31,7 @@ export default function PageHeader({
 
   return (
     <div className={`max-sm:mb-12 sm:mb-4 relative group ${className}`}>
-      <div className="relative bg-black/[0.08] dark:bg-white/[0.08] backdrop-blur-3xl border border-white/40 dark:border-white/[0.08] rounded-xl sm:rounded-2xl md:rounded-3xl p-3 sm:p-4 shadow-sm shadow-black/5 dark:shadow-[0_1px_0_0_rgba(255,255,255,0.03)_inset,0_4px_20px_rgba(0,0,0,0.4)]">
+      <div className="relative glass-header p-3 sm:p-4">
         <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-5 md:gap-4">
           
           <div className="flex items-center space-x-4 sm:space-x-5 min-w-0 flex-1">
@@ -62,7 +62,7 @@ export default function PageHeader({
           </div>
 
           {actions && (
-            <div className={`flex flex-wrap gap-2 md:pl-4 transition-all ${actionClassName}`}>
+            <div className={`flex flex-wrap justify-center md:justify-start gap-2 md:pl-4 transition-all w-full md:w-auto ${actionClassName}`}>
               {actions}
             </div>
           )}

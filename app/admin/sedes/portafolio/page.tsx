@@ -1,12 +1,17 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { User, Building2, Grid3X3, Filter, Eye, AlertCircle, CheckCircle, Clock, XCircle, Minus, AlertTriangle, Upload, Lock, Unlock } from 'lucide-react';
+import { User, Building2, Grid3X3, Filter, Eye, AlertCircle, CheckCircle, Clock, XCircle, Minus, AlertTriangle, Upload, Lock, Unlock, ExternalLink } from 'lucide-react';
 import AppleSelect from '@/components/AppleSelect';
+import AppleSearchBar from '@/components/AppleSearchBar';
 import StandardModal from '@/components/ui/StandardModal';
 import { getModelDisplayName } from '@/utils/model-display';
 import BoostPagesModal from '@/components/BoostPagesModal';
+import PageHeader from '@/components/ui/PageHeader';
+import GlassCard from '@/components/ui/GlassCard';
+import ModelAuroraBackground from '@/components/ui/ModelAuroraBackground';
 
 interface ModeloPlatform {
   id: string | null;
@@ -80,12 +85,14 @@ export default function PortafolioModelos() {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [allPlatforms, setAllPlatforms] = useState<Platform[]>([]);
   const [allowedModelIds, setAllowedModelIds] = useState<string[]>([]);
+  const [allModelsInfo, setAllModelsInfo] = useState<Record<string, { name: string; email: string; avatar_url: string | null }>>({});
   
   // Estados de filtros
   const [selectedModel, setSelectedModel] = useState('');
   const [selectedGroup, setSelectedGroup] = useState('');
   const [selectedJornada, setSelectedJornada] = useState('');
   const [selectedPlatform, setSelectedPlatform] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   
   // Estados de UI
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -96,6 +103,9 @@ export default function PortafolioModelos() {
   const [actionNotes, setActionNotes] = useState('');
   const [processingAction, setProcessingAction] = useState(false);
   const [modalStatus, setModalStatus] = useState<'disponible' | 'solicitada' | 'pendiente' | 'entregada' | 'desactivada' | 'inviable'>('disponible');
+  const [zoomedImage, setZoomedImage] = useState<string | null>(null);
+  const [modalActiveTab, setModalActiveTab] = useState<'estado' | 'credenciales'>('estado');
+  const [isMounted, setIsMounted] = useState(false);
   
   // Estados para credenciales de plataforma
   const [loginUrl, setLoginUrl] = useState(''); // URL de la plataforma (obtenido desde calculator_platforms)
@@ -126,6 +136,7 @@ export default function PortafolioModelos() {
 
   // Cargar información del usuario
   useEffect(() => {
+    setIsMounted(true);
     const loadUserInfo = () => {
       const userData = localStorage.getItem('user');
       if (userData) {
@@ -221,6 +232,76 @@ export default function PortafolioModelos() {
     }
   }, [selectedModel, selectedGroup, selectedJornada, selectedPlatform]);
 
+  // Cerrar zoom de foto con la tecla ESC
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setZoomedImage(null);
+      }
+    };
+
+    if (zoomedImage) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [zoomedImage]);
+
+  // Configuración de filtros para AppleSearchBar
+  const searchFiltersConfig = [
+    {
+      id: 'group',
+      label: 'Grupo',
+      value: selectedGroup,
+      options: groups.map(g => ({ label: g.name, value: g.id }))
+    },
+    {
+      id: 'model',
+      label: 'Modelo',
+      value: selectedModel,
+      options: (selectedGroup 
+        ? models.filter(m => allowedModelIds.includes(m.id))
+        : Object.entries(allModelsInfo).map(([id, info]) => ({ id, name: info.name, email: info.email }))
+      )
+      .map(m => ({ label: getModelDisplayName(m.email), value: m.id }))
+      .sort((a, b) => a.label.localeCompare(b.label))
+    },
+    {
+      id: 'jornada',
+      label: 'Jornada',
+      value: selectedJornada,
+      options: jornadas.map(j => ({ label: j, value: j }))
+    },
+    {
+      id: 'platform',
+      label: 'Plataforma',
+      value: selectedPlatform,
+      options: allPlatforms.map(p => ({ label: p.name, value: p.id }))
+    }
+  ];
+
+  const handleSearch = (query: string, filters: Record<string, string>) => {
+    setSearchQuery(query);
+    
+    // Si cambia el grupo en los filtros, debemos actualizar las modelos asociadas
+    const newGroup = filters.group || '';
+    if (newGroup !== selectedGroup) {
+      setSelectedGroup(newGroup);
+      setSelectedModel(''); // Limpiar modelo al cambiar de grupo
+      setModels([]);
+      if (newGroup) {
+        loadModelsForGroup(newGroup);
+      }
+    } else {
+      setSelectedModel(filters.model || '');
+    }
+
+    setSelectedJornada(filters.jornada || '');
+    setSelectedPlatform(filters.platform || '');
+  };
+
   const loadInitialData = async () => {
     try {
       setLoading(true);
@@ -265,12 +346,25 @@ export default function PortafolioModelos() {
       }
 
       // Cargar IDs de usuarios con rol 'modelo' para filtrar panel
-      const usersRes = await fetch('/api/users?role=modelo');
+      const usersRes = await fetch('/api/users?role=modelo', {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
       if (usersRes.ok) {
         const raw = await usersRes.json();
         const list = Array.isArray(raw) ? raw : (Array.isArray(raw?.users) ? raw.users : []);
-        const onlyModels = list.filter((u: any) => (u.role === 'modelo'));
+        const onlyModels = list.filter((u: any) => (u.role === 'modelo' && u.is_active));
         setAllowedModelIds(onlyModels.map((u: any) => u.id));
+        
+        // Mapear información de modelos incluyendo avatar
+        const modelsMap: Record<string, { name: string; email: string; avatar_url: string | null }> = {};
+        onlyModels.forEach((u: any) => {
+          modelsMap[u.id] = {
+            name: u.name,
+            email: u.email,
+            avatar_url: u.avatar_url || null
+          };
+        });
+        setAllModelsInfo(modelsMap);
       }
 
       // No cargar plataformas inicialmente; esperar a que se apliquen filtros
@@ -382,6 +476,18 @@ export default function PortafolioModelos() {
     setSelectedModel(modelId);
   };
 
+  const getStatusDotColor = (status: string) => {
+    switch (status) {
+      case 'disponible': return 'bg-slate-400 dark:bg-slate-500';
+      case 'solicitada': return 'bg-blue-500';
+      case 'pendiente': return 'bg-amber-500';
+      case 'entregada': return 'bg-emerald-500';
+      case 'desactivada': return 'bg-slate-600 dark:bg-slate-700';
+      case 'inviable': return 'bg-rose-500';
+      default: return 'bg-slate-400';
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'disponible': return 'bg-white border-gray-200 text-gray-700';
@@ -453,17 +559,18 @@ export default function PortafolioModelos() {
       ? 'entregada'
       : platform.status;
     setModalStatus((visualStatus as any) || 'disponible');
+    setModalActiveTab('estado');
     setShowActionModal(true);
     console.log('🟢 showActionModal establecido a true');
     
     // Si el estado visual es "entregada", cargar credenciales existentes
     if (visualStatus === 'entregada' && (userRole === 'admin' || userRole === 'super_admin')) {
-      await loadPlatformCredentials(platform.model_id, platform.platform_id);
+      await loadPlatformCredentials(platform.model_id, platform.platform_id, platform.model_email);
       // Cargar credenciales de 3CX si es Superfoon
       const isSuperfoon = platform.platform_id?.toLowerCase() === 'superfoon' || 
                           platform.platform_name?.toLowerCase().includes('superfoon');
       if (isSuperfoon) {
-        await loadCredentials3CX(platform.model_id, platform.platform_id);
+        await loadCredentials3CX(platform.model_id, platform.platform_id, platform.model_email);
       } else {
         setApp3CXUsername('');
         setApp3CXPassword('');
@@ -515,7 +622,7 @@ export default function PortafolioModelos() {
   };
 
   // Cargar credenciales de plataforma
-  const loadPlatformCredentials = async (modelId: string, platformId: string) => {
+  const loadPlatformCredentials = async (modelId: string, platformId: string, modelEmail?: string) => {
     if (!userId) return;
     
     try {
@@ -523,7 +630,7 @@ export default function PortafolioModelos() {
       const token = await getValidToken();
       if (!token) {
         setLoginUrl('');
-        setLoginUsername('');
+        setLoginUsername(modelEmail || '');
         setLoginPassword('');
         setHasCredentials(false);
         return;
@@ -557,19 +664,19 @@ export default function PortafolioModelos() {
           setLoginPassword(data.data.login_password || '');
           setHasCredentials(true);
         } else {
-          setLoginUsername('');
+          setLoginUsername(modelEmail || '');
           setLoginPassword('');
           setHasCredentials(false);
         }
       } else {
-        setLoginUsername('');
+        setLoginUsername(modelEmail || '');
         setLoginPassword('');
         setHasCredentials(false);
       }
     } catch (error) {
       console.error('Error cargando credenciales:', error);
       setLoginUrl('');
-      setLoginUsername('');
+      setLoginUsername(modelEmail || '');
       setLoginPassword('');
       setHasCredentials(false);
     } finally {
@@ -578,14 +685,14 @@ export default function PortafolioModelos() {
   };
 
   // Cargar credenciales de 3CX
-  const loadCredentials3CX = async (modelId: string, platformId: string) => {
+  const loadCredentials3CX = async (modelId: string, platformId: string, modelEmail?: string) => {
     if (!userId) return;
     
     try {
       setLoading3CX(true);
       const token = await getValidToken();
       if (!token) {
-        setApp3CXUsername('');
+        setApp3CXUsername(modelEmail || '');
         setApp3CXPassword('');
         setHasCredentials3CX(false);
         return;
@@ -604,18 +711,18 @@ export default function PortafolioModelos() {
           setApp3CXPassword(data.data.app_3cx_password || '');
           setHasCredentials3CX(true);
         } else {
-          setApp3CXUsername('');
+          setApp3CXUsername(modelEmail || '');
           setApp3CXPassword('');
           setHasCredentials3CX(false);
         }
       } else {
-        setApp3CXUsername('');
+        setApp3CXUsername(modelEmail || '');
         setApp3CXPassword('');
         setHasCredentials3CX(false);
       }
     } catch (error) {
       console.error('Error cargando credenciales 3CX:', error);
-      setApp3CXUsername('');
+      setApp3CXUsername(modelEmail || '');
       setApp3CXPassword('');
       setHasCredentials3CX(false);
     } finally {
@@ -824,10 +931,24 @@ export default function PortafolioModelos() {
     }
   };
 
-  // Filtrar para mostrar únicamente usuarios con rol 'modelo'
-  const filteredPlatforms = platforms.filter(p =>
-    allowedModelIds.length === 0 ? true : allowedModelIds.includes(p.model_id)
-  );
+  // Filtrar para mostrar únicamente usuarios activos con rol 'modelo' que coincidan con la búsqueda
+  const filteredPlatforms = platforms.filter(p => {
+    if (!allowedModelIds.includes(p.model_id)) return false;
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      const info = allModelsInfo[p.model_id];
+      if (!info) return false;
+
+      const nameMatch = info.name?.toLowerCase().includes(q);
+      const emailMatch = info.email?.toLowerCase().includes(q);
+      const userMatch = info.email?.split('@')[0]?.toLowerCase().includes(q);
+
+      return nameMatch || emailMatch || userMatch;
+    }
+
+    return true;
+  });
 
   // Agrupar plataformas por modelo
   const modelGroups = filteredPlatforms.reduce((acc, platform) => {
@@ -867,13 +988,14 @@ export default function PortafolioModelos() {
   }
 
   return (
-    <>
-      <div className="max-w-screen-2xl mx-auto px-0 sm:px-4 md:px-6 lg:px-8 py-8 pt-16">
+    <div className="min-h-screen relative w-full overflow-hidden">
+      <ModelAuroraBackground />
+      <div className="max-w-7xl mx-auto px-0 sm:px-4 md:px-6 lg:px-8 py-8 pt-16 relative z-10">
         
         {/* Mensaje de alerta para admins sin sedes asignadas */}
         {userRole === 'admin' && groups.length === 0 && (
           <div className="mb-8">
-            <div className="bg-gradient-to-r from-yellow-50/80 to-orange-50/80 dark:bg-yellow-900/20 dark:border-yellow-700/50 backdrop-blur-sm rounded-xl p-6 border border-yellow-200/30 dark:border-yellow-700/50">
+            <GlassCard padding="md">
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-lg flex items-center justify-center">
                   <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -887,29 +1009,16 @@ export default function PortafolioModelos() {
                   </p>
                 </div>
               </div>
-            </div>
+            </GlassCard>
           </div>
         )}
-        {/* Header */}
-        <div className="mb-8 sm:mb-12">
-          <div className="glass-header p-4 sm:p-6 relative">
-            <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-3">
-              <div className="flex items-center space-x-3 min-w-0 flex-1">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
-                  <Grid3X3 className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <h1 className="text-base sm:text-lg md:text-2xl font-bold text-gray-900 dark:text-gray-100 leading-tight whitespace-nowrap overflow-hidden text-ellipsis">
-                    Portafolio Modelos
-                  </h1>
-                  <p className="mt-1 text-xs sm:text-sm text-gray-600 dark:text-gray-300 hidden sm:block">
-                    Gestión de plataformas por modelo y sede
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* Header — Migrado a PageHeader */}
+        <PageHeader
+          title="Portafolio Modelos"
+          subtitle="Gestión de plataformas por modelo y sede"
+          glow="admin"
+          icon={<Grid3X3 className="w-5 h-5 sm:w-6 sm:h-6 text-white" />}
+        />
 
         {/* Messages */}
         {error && (
@@ -923,93 +1032,98 @@ export default function PortafolioModelos() {
           </div>
         )}
 
-        {/* Filters */}
-        <div className="mb-4 sm:mb-8 z-40 relative">
-          <div className="glass-header p-4 sm:p-6 relative">
-            <div className="flex items-center justify-between mb-3 sm:mb-4">
-              <h3 className="text-sm sm:text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center">
-                <Filter className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2" />
-                Filtros
-              </h3>
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className="text-xs sm:text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors active:scale-95 touch-manipulation"
-              >
-                {showFilters ? 'Ocultar' : 'Mostrar'}
-              </button>
-            </div>
+        {/* Búsqueda y Filtros Unificados */}
+        <div className="mb-6 z-40 relative">
+          <div className="mb-2 px-1 sm:px-2 flex items-center gap-2">
+            <svg 
+              className="w-[18px] h-[18px] text-blue-500 dark:text-blue-400 drop-shadow-[0_0_8px_rgba(59,130,246,0.8)]" 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <h2 className="text-[14px] sm:text-[15px] font-semibold tracking-wide text-gray-800 dark:text-gray-200">
+              Búsqueda y Filtros
+            </h2>
+          </div>
+          <GlassCard padding="md" className="relative z-[60]">
+            <AppleSearchBar
+              onSearch={handleSearch}
+              placeholder="Buscar por nombre, usuario o correo..."
+              filters={searchFiltersConfig}
+              showResultsInfo={false}
+              onClearSearch={() => {
+                setSearchQuery('');
+                setSelectedGroup('');
+                setSelectedModel('');
+                setSelectedJornada('');
+                setSelectedPlatform('');
+                setModels([]);
+              }}
+            />
+          </GlassCard>
+        </div>
 
-            {showFilters && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
-                <AppleSelect
-                  label="Grupo"
-                  value={selectedGroup}
-                  options={[{ label: 'Todos los grupos', value: '' }, ...groups.map(g => ({ label: g.name, value: g.id }))]}
-                  onChange={(val) => handleGroupChange(val)}
-                  className="text-xs sm:text-sm"
-                />
-                <AppleSelect
-                  label="Modelo"
-                  value={selectedModel}
-                  options={[{ label: 'Todas las modelos', value: '' }, ...models.map(m => ({ label: getModelDisplayName(m.email), value: m.id }))]}
-                  onChange={(val) => setSelectedModel(val)}
-                  className="text-xs sm:text-sm"
-                />
-                <AppleSelect
-                  label="Jornada"
-                  value={selectedJornada}
-                  options={[{ label: 'Todas las jornadas', value: '' }, ...jornadas.map(j => ({ label: j, value: j }))]}
-                  onChange={(val) => setSelectedJornada(val)}
-                  className="text-xs sm:text-sm"
-                />
-                <AppleSelect
-                  label="Plataforma"
-                  value={selectedPlatform}
-                  options={[{ label: 'Todas las plataformas', value: '' }, ...allPlatforms.map(p => ({ label: p.name, value: p.id }))]}
-                  onChange={(val) => setSelectedPlatform(val)}
-                  className="text-xs sm:text-sm"
-                />
-              </div>
-            )}
+        {/* Título de Resultados Fuera de la Caja */}
+        <div className="flex items-center justify-between mb-4 px-1 mt-6">
+          <div className="flex items-center space-x-2 min-w-0">
+            <User className="w-[22px] h-[22px] text-indigo-500 dark:text-indigo-400 drop-shadow-[0_0_6px_rgba(99,102,241,0.4)] shrink-0" />
+            <h2 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">
+              Modelos ({modelsList.length})
+            </h2>
           </div>
         </div>
 
         {/* Results */}
-        <div className="glass-header p-4 sm:p-6 relative">
-          <div className="flex items-center justify-between mb-3 sm:mb-6">
-            <h3 className="text-sm sm:text-lg font-semibold text-gray-900 dark:text-gray-100">
-              Modelos ({modelsList.length})
-            </h3>
-          </div>
-
+        <GlassCard padding="none" className="p-2 sm:p-3">
           {modelsList.length === 0 ? (
             <div className="text-center py-12">
               <User className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
               <p className="text-gray-500 dark:text-gray-400">Aplica un filtro de Grupo, Modelo, Room, Jornada o Plataforma para ver resultados.</p>
             </div>
           ) : (
-            <div className="space-y-3 sm:space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {modelsList.map((model) => (
                 <div
                   key={model.model_id}
-                  className="glass-header p-4 sm:p-6 relative"
+                  className="p-5 sm:p-6 rounded-2xl bg-white/40 dark:bg-black/20 border border-black/5 dark:border-white/5 relative overflow-hidden"
                 >
                   {/* Header del Modelo */}
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-3 sm:mb-6">
-                    <div className="flex items-center space-x-2 sm:space-x-4">
-                      <div className="w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center shadow-md flex-shrink-0">
-                        <User className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
-                      </div>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
+                    <div className="flex items-center space-x-3">
+                      {(() => {
+                        const avatarUrl = allModelsInfo[model.model_id]?.avatar_url || '/favicon.png';
+                        return (
+                          <div 
+                            className="w-10 h-10 rounded-full overflow-hidden shadow-md shrink-0 relative flex-shrink-0 cursor-pointer hover:opacity-90 active:scale-95 transition-all"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setZoomedImage(avatarUrl);
+                            }}
+                            title="Ampliar foto"
+                          >
+                            <img 
+                              src={avatarUrl} 
+                              alt={model.model_name || 'Modelo'}
+                              className="absolute inset-0 w-full h-full object-cover"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = '/favicon.png';
+                              }}
+                            />
+                          </div>
+                        );
+                      })()}
                       <div className="min-w-0 flex-1">
                         <h4 
-                          className="text-sm sm:text-lg font-semibold text-gray-900 dark:text-gray-100 cursor-pointer hover:text-blue-700 dark:hover:text-blue-400 transition-colors truncate"
+                          className="text-[15px] sm:text-base font-semibold text-gray-900 dark:text-gray-100 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors truncate"
                           onClick={() => handleModelNameClick(model.model_id, model.model_email)}
                           title="Ver calculadora de la modelo"
                         >
                           {getModelDisplayName(model.model_email)}
                         </h4>
-                        <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 flex items-center">
-                          <Building2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 flex-shrink-0" />
+                        <p className="text-[12px] sm:text-[13px] text-gray-500 dark:text-gray-400 flex items-center mt-0.5">
+                          <Building2 className="w-3.5 h-3.5 mr-1 flex-shrink-0" />
                           <span className="truncate">{model.group_name}</span>
                         </p>
                       </div>
@@ -1025,78 +1139,108 @@ export default function PortafolioModelos() {
                         });
                         setShowBoostPagesModal(true);
                       }}
-                      className="w-full sm:w-auto px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 flex items-center justify-center gap-2 text-xs sm:text-sm font-medium active:scale-95 touch-manipulation"
+                      className="w-full sm:w-auto h-9 px-5 bg-gradient-to-r from-cyan-600 to-fuchsia-600 hover:from-cyan-500 hover:to-fuchsia-500 text-white rounded-full active:scale-[0.98] transition-all duration-300 shadow-md shadow-cyan-500/30 dark:shadow-[0_0_15px_rgba(34,211,238,0.5)] hover:shadow-lg hover:shadow-fuchsia-500/40 flex items-center justify-center gap-2 text-xs font-semibold touch-manipulation"
                       title="Abrir Boost Pages para subir fotos a las plataformas"
                     >
-                      <Upload className="w-3 h-3 sm:w-4 sm:h-4" />
+                      <Upload className="w-3.5 h-3.5" />
                       Boost Pages
                     </button>
                   </div>
 
-                  {/* Grid de Plataformas como etiquetas (todas las plataformas del catálogo) */}
-                  <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                    {(allPlatforms || []).map((p) => {
-                      const found = model.platforms.find(mp => mp.platform_id === p.id);
-                      const tag = found || {
-                        id: null,
-                        model_id: model.model_id,
-                        model_name: model.model_name,
-                        model_email: model.model_email,
-                        platform_id: p.id,
-                        platform_name: p.name,
-                        platform_code: p.id,
-                        status: 'disponible',
-                        requested_at: null,
-                        delivered_at: null,
-                        confirmed_at: null,
-                        deactivated_at: null,
-                        reverted_at: null,
-                        requested_by_name: null,
-                        delivered_by_name: null,
-                        confirmed_by_name: null,
-                        deactivated_by_name: null,
-                        reverted_by_name: null,
-                        notes: null,
-                        revert_reason: null,
-                        is_initial_config: false,
-                        calculator_sync: false,
-                        calculator_activated_at: null,
-                        group_name: model.group_name,
-                        group_id: model.group_id,
-                        created_at: null,
-                        updated_at: null
-                      } as ModeloPlatform;
+                  {/* Caja contenedora de las burbujas de plataforma */}
+                  <div 
+                    className="bg-black/[0.02] dark:bg-white/[0.015] border border-black/[0.04] dark:border-white/[0.05] rounded-[1.1rem] sm:rounded-[1.25rem] mb-4 relative overflow-hidden"
+                    style={{ padding: '6px' }}
+                  >
+                    <div 
+                      className="flex flex-wrap"
+                      style={{ gap: '6px' }}
+                    >
+                      {(allPlatforms || []).map((p) => {
+                        const found = model.platforms.find(mp => mp.platform_id === p.id);
+                        const tag = found || {
+                          id: null,
+                          model_id: model.model_id,
+                          model_name: model.model_name,
+                          model_email: model.model_email,
+                          platform_id: p.id,
+                          platform_name: p.name,
+                          platform_code: p.id,
+                          status: 'disponible',
+                          requested_at: null,
+                          delivered_at: null,
+                          confirmed_at: null,
+                          deactivated_at: null,
+                          reverted_at: null,
+                          requested_by_name: null,
+                          delivered_by_name: null,
+                          confirmed_by_name: null,
+                          deactivated_by_name: null,
+                          reverted_by_name: null,
+                          notes: null,
+                          revert_reason: null,
+                          is_initial_config: false,
+                          calculator_sync: false,
+                          calculator_activated_at: null,
+                          group_name: model.group_name,
+                          group_id: model.group_id,
+                          created_at: null,
+                          updated_at: null
+                        } as ModeloPlatform;
 
-                      const hasCreds = platformsWithCredentials.has(`${tag.model_id}-${tag.platform_id}`);
-                      const finalStatus = (tag.is_initial_config && tag.status !== 'desactivada') ? 'entregada' : tag.status;
-                      
-                      return (
-                        <button
-                          key={`${model.model_id}-${p.id}`}
-                          type="button"
-                          className={`px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-[11px] leading-4 sm:leading-5 font-medium transition-colors inline-flex items-center relative active:scale-95 touch-manipulation ${getTagClasses(finalStatus)}`}
-                          onClick={() => handlePlatformAction(tag, 'request')}
-                        >
-                          <span className="inline-flex items-center gap-0.5 sm:gap-1 align-middle">
-                            {getStatusIcon(tag.status, tag.is_initial_config)}
-                            {tag.platform_name}
+                        const hasCreds = platformsWithCredentials.has(`${tag.model_id}-${tag.platform_id}`);
+                        const finalStatus = (tag.is_initial_config && tag.status !== 'desactivada') ? 'entregada' : tag.status;
+                        
+                        return (
+                          <button
+                            key={`${model.model_id}-${p.id}`}
+                            type="button"
+                            className={`inline-flex items-center px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full text-xs font-medium tracking-wide active:scale-95 hover:scale-[1.02] transition-all gap-2 border cursor-pointer ${
+                              finalStatus === 'entregada'
+                                ? 'bg-emerald-500/[0.03] dark:bg-emerald-950/[0.15] hover:bg-emerald-500/[0.08] dark:hover:bg-emerald-900/[0.25] border-emerald-500/10 dark:border-emerald-500/20 hover:border-emerald-500/40 dark:hover:border-emerald-500/50 text-emerald-800 dark:text-emerald-200 hover:text-emerald-900 dark:hover:text-emerald-100 shadow-[0_2px_8px_rgba(16,185,129,0.04)] hover:shadow-[0_0_12px_rgba(16,185,129,0.2)]'
+                                : finalStatus === 'solicitada'
+                                ? 'bg-blue-500/[0.03] dark:bg-blue-950/[0.15] hover:bg-blue-500/[0.08] dark:hover:bg-blue-900/[0.25] border-blue-500/10 dark:border-blue-500/20 hover:border-blue-500/40 dark:hover:border-blue-500/50 text-blue-800 dark:text-blue-200 hover:text-blue-900 dark:hover:text-blue-100 shadow-[0_2px_8px_rgba(59,130,246,0.04)] hover:shadow-[0_0_12px_rgba(59,130,246,0.2)]'
+                                : finalStatus === 'pendiente'
+                                ? 'bg-amber-500/[0.03] dark:bg-amber-950/[0.15] hover:bg-amber-500/[0.08] dark:hover:bg-amber-900/[0.25] border-amber-500/10 dark:border-amber-500/20 hover:border-amber-500/40 dark:hover:border-amber-500/50 text-amber-800 dark:text-amber-200 hover:text-amber-900 dark:hover:text-amber-100 shadow-[0_2px_8px_rgba(245,158,11,0.04)] hover:shadow-[0_0_12px_rgba(245,158,11,0.2)]'
+                                : finalStatus === 'inviable'
+                                ? 'bg-rose-500/[0.03] dark:bg-rose-950/[0.15] hover:bg-rose-500/[0.08] dark:hover:bg-rose-900/[0.25] border-rose-500/10 dark:border-rose-500/20 hover:border-rose-500/40 dark:hover:border-rose-500/50 text-rose-800 dark:text-rose-200 hover:text-rose-900 dark:hover:text-rose-100 shadow-[0_2px_8px_rgba(244,63,94,0.04)] hover:shadow-[0_0_12px_rgba(244,63,94,0.2)]'
+                                : finalStatus === 'desactivada'
+                                ? 'bg-slate-500/[0.03] dark:bg-slate-950/[0.15] hover:bg-slate-500/[0.08] dark:hover:bg-slate-900/[0.25] border-slate-500/10 dark:border-slate-500/20 hover:border-slate-500/40 dark:hover:border-slate-500/50 text-slate-700 dark:text-slate-300 hover:text-slate-955 dark:hover:text-slate-100 shadow-[0_2px_8px_rgba(148,163,184,0.04)] hover:shadow-[0_0_12px_rgba(148,163,184,0.2)]'
+                                : 'bg-white/5 dark:bg-white/[0.02] hover:bg-black/[0.02] dark:hover:bg-white/[0.05] border-black/5 dark:border-white/5 hover:border-black/20 dark:hover:border-white/20 text-gray-700 dark:text-gray-300 hover:text-gray-955 dark:hover:text-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.02)] hover:shadow-[0_0_12px_rgba(255,255,255,0.1)]'
+                            }`}
+                            onClick={() => handlePlatformAction(tag, 'request')}
+                          >
+                            <div className={`w-2 h-2 rounded-full shrink-0 ${
+                              finalStatus === 'entregada'
+                                ? 'bg-emerald-400 dark:bg-emerald-300 shadow-[0_0_8px_rgba(16,185,129,0.8)]'
+                                : finalStatus === 'solicitada'
+                                ? 'bg-blue-400 dark:bg-blue-300 shadow-[0_0_8px_rgba(59,130,246,0.8)]'
+                                : finalStatus === 'pendiente'
+                                ? 'bg-amber-400 dark:bg-amber-300 shadow-[0_0_8px_rgba(245,158,11,0.8)]'
+                                : finalStatus === 'inviable'
+                                ? 'bg-rose-400 dark:bg-rose-300 shadow-[0_0_8px_rgba(244,63,94,0.8)]'
+                                : finalStatus === 'desactivada'
+                                ? 'bg-slate-400 dark:bg-slate-300 shadow-[0_0_8px_rgba(148,163,184,0.8)]'
+                                : 'bg-slate-300 dark:bg-slate-500 shadow-[0_0_8px_rgba(203,213,225,0.8)]'
+                            }`} />
+                            <span>{tag.platform_name}</span>
                             {/* Indicador sutil de credenciales guardadas */}
                             {hasCreds && finalStatus === 'entregada' && (userRole === 'admin' || userRole === 'super_admin') && (
                               <span 
-                                className="ml-0.5 sm:ml-1 w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-blue-500 dark:bg-blue-400" 
+                                className="ml-0.5 w-1.5 h-1.5 rounded-full bg-blue-500 dark:bg-blue-400 shadow-[0_0_4px_rgba(59,130,246,0.8)]" 
                                 title="Credenciales guardadas"
                                 aria-label="Credenciales guardadas"
                               />
                             )}
-                          </span>
-                        </button>
-                      );
-                    })}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
 
                   {/* Estadísticas del Modelo */}
-                  <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-200/50 dark:border-gray-600/50">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-0 text-[10px] sm:text-xs text-gray-600 dark:text-gray-400">
+                  <div className="mt-4 pt-4 border-t border-black/5 dark:border-white/5">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-0 text-[11px] text-gray-500 dark:text-gray-400 font-medium">
                       <span>Total: {allPlatforms.length} plataformas</span>
                       <div className="flex flex-wrap gap-x-2 sm:gap-x-4 gap-y-1">
                         <span className="text-green-600 dark:text-green-400">
@@ -1113,7 +1257,7 @@ export default function PortafolioModelos() {
                         <span className="text-blue-600 dark:text-blue-400">
                           Solicitadas: {model.platforms.filter(p => p.status === 'solicitada').length}
                         </span>
-                        <span className="text-gray-500 dark:text-gray-500">
+                        <span className="text-gray-500 dark:text-gray-400">
                           Disponibles: {allPlatforms.length - model.platforms.length}
                         </span>
                       </div>
@@ -1123,49 +1267,92 @@ export default function PortafolioModelos() {
               ))}
             </div>
           )}
-        </div>
+        </GlassCard>
 
         {/* Action Modal */}
-        {showActionModal && selectedPlatformForAction && (
-          <>
-            {console.log('🟡 Renderizando StandardModal', { showActionModal, hasPlatform: !!selectedPlatformForAction })}
+        {showActionModal && selectedPlatformForAction && (() => {
+          const visualStatus = (selectedPlatformForAction.is_initial_config && selectedPlatformForAction.status !== 'desactivada')
+            ? 'entregada'
+            : selectedPlatformForAction.status;
+          const isDeliveredVisual = modalStatus === 'entregada' || visualStatus === 'entregada';
+          const showCredsTab = isDeliveredVisual && (userRole === 'admin' || userRole === 'super_admin');
+          const isSuperfoon = selectedPlatformForAction && 
+            (selectedPlatformForAction.platform_id?.toLowerCase() === 'superfoon' || 
+             selectedPlatformForAction.platform_name?.toLowerCase().includes('superfoon'));
+
+          return (
             <StandardModal 
               isOpen={showActionModal} 
-              onClose={() => {
-                console.log('🔴 Cerrando modal');
-                setShowActionModal(false);
-              }} 
-            title={
-              actionType === 'request' && 'Estado de Plataforma' ||
-              actionType === 'deliver' && 'Entregar Plataforma' ||
-              actionType === 'deactivate' && 'Desactivar Plataforma' ||
-              actionType === 'revert' && 'Revertir Plataforma' ||
-              'Acción'
-            }
-            maxWidthClass={actionType === 'request' ? 'max-w-4xl' : 'max-w-md'}
-          >
-              {actionType === 'request' ? (
-                // Diseño horizontal para "Solicitar Plataforma"
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Columna izquierda: Información */}
-                  <div className="space-y-4">
-                    <div>
-                      <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Información</h3>
-                      <div className="space-y-2">
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          <strong>Plataforma:</strong> {selectedPlatformForAction.platform_name}
-                        </p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          <strong>Modelo:</strong> {getModelDisplayName(selectedPlatformForAction.model_email)}
-                        </p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          <strong>Estado actual:</strong> {getStatusText(selectedPlatformForAction.status)}
-                        </p>
+              onClose={() => setShowActionModal(false)} 
+              title={
+                actionType === 'request' && 'Estado de Plataforma' ||
+                actionType === 'deliver' && 'Entregar Plataforma' ||
+                actionType === 'deactivate' && 'Desactivar Plataforma' ||
+                actionType === 'revert' && 'Revertir Plataforma' ||
+                'Acción'
+              }
+              maxWidthClass={showCredsTab && isSuperfoon ? 'max-w-2xl' : 'max-w-lg'}
+            >
+              {/* Barra de Pestañas Apple-Style */}
+              {showCredsTab && (
+                <div className="flex p-0.5 bg-black/5 dark:bg-white/5 backdrop-blur-sm rounded-xl mb-4 relative border border-black/5 dark:border-white/5">
+                  <button
+                    type="button"
+                    onClick={() => setModalActiveTab('estado')}
+                    className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all duration-200 ${
+                      modalActiveTab === 'estado'
+                        ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
+                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                    }`}
+                  >
+                    Estado de Plataforma
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setModalActiveTab('credenciales')}
+                    className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all duration-200 ${
+                      modalActiveTab === 'credenciales'
+                        ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
+                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                    }`}
+                  >
+                    Credenciales
+                  </button>
+                </div>
+              )}
+
+              {/* Contenido según pestaña activa */}
+              {(!showCredsTab || modalActiveTab === 'estado') ? (
+                /* PESTAÑA 1: Estado de Plataforma */
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  {/* Columna Izquierda: Info y Estado */}
+                  <div className="space-y-4 pb-14">
+                    <div className="bg-black/[0.02] dark:bg-white/[0.02] border border-black/5 dark:border-white/5 rounded-xl p-4 space-y-3">
+                      <h4 className="text-xs font-semibold text-gray-800 dark:text-gray-200">
+                        Información
+                      </h4>
+                      <div className="grid grid-cols-2 gap-y-2 text-xs">
+                        <div className="text-gray-400 dark:text-gray-500 font-medium">Plataforma</div>
+                        <div className="font-semibold text-gray-900 dark:text-gray-100 text-right md:text-left">{selectedPlatformForAction.platform_name}</div>
+                        
+                        <div className="text-gray-400 dark:text-gray-500 font-medium">Modelo</div>
+                        <div className="font-semibold text-gray-900 dark:text-gray-100 text-right md:text-left truncate" title={getModelDisplayName(selectedPlatformForAction.model_email)}>
+                          {getModelDisplayName(selectedPlatformForAction.model_email)}
+                        </div>
+                        
+                        <div className="text-gray-400 dark:text-gray-500 font-medium">Estado actual</div>
+                        <div className="font-semibold text-gray-900 dark:text-gray-100 text-right md:text-left">
+                          <span className="px-2 py-0.5 rounded-full text-[10px] bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5">
+                            {getStatusText(selectedPlatformForAction.status)}
+                          </span>
+                        </div>
                       </div>
                     </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Estado</label>
+                    <div className="space-y-1.5">
+                      <label className="block text-[11px] font-medium text-gray-400 dark:text-gray-500">
+                        Estado
+                      </label>
                       <AppleSelect
                         value={modalStatus}
                         onChange={(v) => setModalStatus(v as any)}
@@ -1182,250 +1369,183 @@ export default function PortafolioModelos() {
                     </div>
                   </div>
 
-                  {/* Columna derecha: Notas */}
-                  <div className="space-y-4">
-                    <div>
-                      <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Detalles</h3>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                          Notas (opcional)
-                        </label>
-                        <textarea
-                          value={actionNotes}
-                          onChange={(e) => setActionNotes(e.target.value)}
-                          rows={8}
-                          className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                          placeholder="Agregar notas sobre esta acción..."
-                        />
-                      </div>
+                  {/* Columna Derecha: Notas */}
+                  <div className="space-y-4 flex flex-col justify-stretch">
+                    <div className="space-y-1.5 flex-1 flex flex-col">
+                      <label className="block text-[11px] font-medium text-gray-400 dark:text-gray-500">
+                        Notas (opcional)
+                      </label>
+                      <textarea
+                        value={actionNotes}
+                        onChange={(e) => setActionNotes(e.target.value)}
+                        rows={4}
+                        className="w-full flex-1 px-3.5 py-2.5 text-xs border border-black/10 dark:border-white/10 rounded-xl bg-white/40 dark:bg-black/20 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500/30 transition-all duration-200 resize-none"
+                        placeholder="Agregar notas sobre esta acción..."
+                      />
                     </div>
                   </div>
                 </div>
               ) : (
-                // Diseño vertical para otros modales
-                <>
-                  <div className="mb-4">
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                      <strong>Plataforma:</strong> {selectedPlatformForAction.platform_name}
-                    </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                      <strong>Modelo:</strong> {getModelDisplayName(selectedPlatformForAction.model_email)}
-                    </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      <strong>Estado actual:</strong> {getStatusText(selectedPlatformForAction.status)}
-                    </p>
-                  </div>
-
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Estado</label>
-                    <AppleSelect
-                      value={modalStatus}
-                      onChange={(v) => setModalStatus(v as any)}
-                      options={[
-                        { label: 'Disponible', value: 'disponible', color: '#e2e8f0' },
-                        { label: 'Solicitada', value: 'solicitada', color: '#93c5fd' },
-                        { label: 'Pendiente', value: 'pendiente', color: '#fde047' },
-                        { label: 'Entregada', value: 'entregada', color: '#86efac' },
-                        { label: 'Desactivada', value: 'desactivada', color: '#1f2937' },
-                        { label: 'Inviable', value: 'inviable', color: '#fca5a5' }
-                      ]}
-                      className="text-sm"
-                    />
-                  </div>
-
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                      Notas (opcional)
-                    </label>
-                    <textarea
-                      value={actionNotes}
-                      onChange={(e) => setActionNotes(e.target.value)}
-                      rows={3}
-                      className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                      placeholder="Agregar notas sobre esta acción..."
-                    />
-                  </div>
-                </>
-              )}
-
-              {/* Sección de Credenciales (solo para plataformas que se ven como entregadas y admin/super_admin) */}
-              {(() => {
-                // Considerar como "entregada" también las configuraciones iniciales activas,
-                // igual que en las etiquetas verdes del portafolio
-                const visualStatus =
-                  (selectedPlatformForAction.is_initial_config && selectedPlatformForAction.status !== 'desactivada')
-                    ? 'entregada'
-                    : selectedPlatformForAction.status;
-                const isDeliveredVisual =
-                  modalStatus === 'entregada' ||
-                  visualStatus === 'entregada';
-
-                return isDeliveredVisual && (userRole === 'admin' || userRole === 'super_admin');
-              })() && (
-                <div className="mb-4 pt-4 border-t border-gray-200 dark:border-gray-600">
-                  <div className="flex items-center justify-between mb-3">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-                      Credenciales de Login
-                    </label>
-                    {hasCredentials && (
-                      <span className="text-xs text-blue-600 dark:text-blue-400 flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-                        Guardadas
-                      </span>
-                    )}
-                  </div>
-                  
+                /* PESTAÑA 2: Credenciales */
+                <div className="space-y-4">
                   {loadingCredentials ? (
-                    <div className="text-sm text-gray-500 dark:text-gray-400 text-center py-2">
+                    <div className="text-sm text-gray-500 dark:text-gray-400 text-center py-6">
                       Cargando credenciales...
                     </div>
                   ) : (
-                    <>
-                      {/* Mostrar URL de la plataforma (solo lectura) */}
-                      <div className="mb-3">
-                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
-                          URL de Login de la Plataforma
-                        </label>
-                        {loginUrl ? (
-                          <div className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
-                            {loginUrl}
+                    <div className={`grid grid-cols-1 ${isSuperfoon ? 'md:grid-cols-2 gap-4' : 'gap-4'}`}>
+                      {/* Credenciales Web */}
+                      <div className="bg-blue-500/[0.015] dark:bg-blue-500/[0.03] border border-blue-500/10 dark:border-blue-500/20 rounded-2xl p-4 space-y-3.5 flex flex-col justify-between">
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between mb-1">
+                            <h4 className="text-xs font-semibold text-blue-600 dark:text-blue-400">
+                              Credenciales Web
+                            </h4>
+                            {hasCredentials && (
+                              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-semibold bg-emerald-500/10 dark:bg-emerald-500/20 px-2 py-0.5 rounded-full">
+                                <span className="w-1 h-1 rounded-full bg-emerald-500"></span>
+                                Guardado
+                              </span>
+                            )}
                           </div>
-                        ) : (
-                          <div className="w-full px-3 py-2 text-sm border border-yellow-300 dark:border-yellow-600 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400">
-                            ⚠️ URL no configurado. Configúralo en &quot;Gestión de Plataformas&quot;
+
+                          {/* URL de Acceso */}
+                          <div className="space-y-1.5">
+                            <label className="block text-[11px] font-medium text-gray-400 dark:text-gray-500">
+                              URL de acceso
+                            </label>
+                            {loginUrl ? (
+                              <a 
+                                href={loginUrl} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center justify-between w-full px-3.5 py-2 text-xs border border-black/5 dark:border-white/5 rounded-xl bg-black/5 dark:bg-black/40 text-blue-500 dark:text-blue-400 hover:underline truncate gap-2"
+                              >
+                                <span className="truncate">{loginUrl}</span>
+                                <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                              </a>
+                            ) : (
+                              <div className="w-full px-3.5 py-2 text-xs border border-yellow-500/10 rounded-xl bg-yellow-500/[0.03] text-yellow-600 dark:text-yellow-400 font-medium">
+                                ⚠️ URL no configurada
+                              </div>
+                            )}
                           </div>
-                        )}
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                          Este URL es común para todas las modelos de esta plataforma
-                        </p>
-                      </div>
 
-                      <div className="mb-3">
-                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
-                          Usuario/Email <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={loginUsername}
-                          onChange={(e) => setLoginUsername(e.target.value)}
-                          className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                          placeholder="usuario@ejemplo.com"
-                        />
-                      </div>
-
-                      <div className="mb-3">
-                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
-                          Contraseña <span className="text-red-500">*</span>
-                        </label>
-                        <div className="relative">
-                          <input
-                            type={showPassword ? 'text' : 'password'}
-                            value={loginPassword}
-                            onChange={(e) => setLoginPassword(e.target.value)}
-                            className="w-full px-3 py-2 pr-10 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                            placeholder="••••••••"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                            title={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                          >
-                            {showPassword ? <Eye className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
-                          </button>
-                        </div>
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={savePlatformCredentials}
-                        disabled={processingAction || !loginUsername.trim() || !loginPassword.trim()}
-                        className="w-full px-3 py-2 text-xs font-medium bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                      >
-                        {hasCredentials ? (
-                          <>
-                            <CheckCircle className="w-4 h-4" />
-                            {processingAction ? 'Guardando...' : 'Actualizar Credenciales'}
-                          </>
-                        ) : (
-                          <>
-                            <Lock className="w-4 h-4" />
-                            {processingAction ? 'Guardando...' : 'Guardar Credenciales'}
-                          </>
-                        )}
-                      </button>
-                    </>
-                  )}
-                </div>
-              )}
-
-              {/* Sección de Credenciales 3CX (solo para Superfoon) */}
-              {(() => {
-                const visualStatus =
-                  (selectedPlatformForAction?.is_initial_config && selectedPlatformForAction.status !== 'desactivada')
-                    ? 'entregada'
-                    : selectedPlatformForAction?.status;
-                const isDeliveredVisual =
-                  modalStatus === 'entregada' ||
-                  visualStatus === 'entregada';
-                const isSuperfoon = selectedPlatformForAction && 
-                  (selectedPlatformForAction.platform_id?.toLowerCase() === 'superfoon' || 
-                   selectedPlatformForAction.platform_name?.toLowerCase().includes('superfoon'));
-                
-                return isDeliveredVisual && (userRole === 'admin' || userRole === 'super_admin') && isSuperfoon;
-              })() && (
-                <div className="mb-4 pt-4 border-t border-gray-200 dark:border-gray-600">
-                      <div className="flex items-center justify-between mb-3">
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-                          Credenciales App 3CX
-                        </label>
-                        {hasCredentials3CX && (
-                          <span className="text-xs text-purple-600 dark:text-purple-400 flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
-                            Guardadas
-                          </span>
-                        )}
-                      </div>
-                      
-                      {loading3CX ? (
-                        <div className="text-sm text-gray-500 dark:text-gray-400 text-center py-2">
-                          Cargando credenciales 3CX...
-                        </div>
-                      ) : (
-                        <>
-                          <div className="mb-3">
-                            <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
-                              Usuario 3CX <span className="text-red-500">*</span>
+                          {/* Usuario/Email */}
+                          <div className="space-y-1.5">
+                            <label className="block text-[11px] font-medium text-gray-400 dark:text-gray-500">
+                              Usuario / Email <span className="text-red-500">*</span>
                             </label>
                             <input
                               type="text"
-                              value={app3CXUsername}
-                              onChange={(e) => setApp3CXUsername(e.target.value)}
-                              className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                              value={loginUsername}
+                              onChange={(e) => setLoginUsername(e.target.value)}
+                              className="w-full px-3.5 py-2 text-xs bg-white/40 dark:bg-black/20 border border-black/10 dark:border-white/10 rounded-xl text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500/30 transition-all duration-200"
                               placeholder="usuario@ejemplo.com"
+                              autoComplete="off"
                             />
                           </div>
 
-                          <div className="mb-3">
-                            <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
-                              Contraseña 3CX <span className="text-red-500">*</span>
+                          {/* Contraseña */}
+                          <div className="space-y-1.5">
+                            <label className="block text-[11px] font-medium text-gray-400 dark:text-gray-500">
+                              Contraseña <span className="text-red-500">*</span>
                             </label>
-                            <div className="relative">
+                            <div className="relative flex items-center">
                               <input
-                                type={showPassword3CX ? 'text' : 'password'}
-                                value={app3CXPassword}
-                                onChange={(e) => setApp3CXPassword(e.target.value)}
-                                className="w-full px-3 py-2 pr-10 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                                type={showPassword ? 'text' : 'password'}
+                                value={loginPassword}
+                                onChange={(e) => setLoginPassword(e.target.value)}
+                                className="w-full px-3.5 py-2 pr-8 text-xs bg-white/40 dark:bg-black/20 border border-black/10 dark:border-white/10 rounded-xl text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500/30 transition-all duration-200 font-mono"
                                 placeholder="••••••••"
+                                autoComplete="new-password"
                               />
                               <button
                                 type="button"
-                                onClick={() => setShowPassword3CX(!showPassword3CX)}
-                                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                                title={showPassword3CX ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-2.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer"
+                                title={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                               >
-                                {showPassword3CX ? <Eye className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+                                {showPassword ? <Eye className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
                               </button>
+                            </div>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={savePlatformCredentials}
+                          disabled={processingAction || !loginUsername.trim() || !loginPassword.trim()}
+                          className="w-40 mx-auto mt-4 h-9 bg-gradient-to-r from-cyan-600 to-fuchsia-600 hover:from-cyan-500 hover:to-fuchsia-500 text-white rounded-full active:scale-[0.98] transition-all duration-300 shadow-[0_2px_8px_rgba(6,182,212,0.2)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-xs font-semibold cursor-pointer"
+                        >
+                          <span>{processingAction ? 'Guardando...' : hasCredentials ? 'Actualizar' : 'Guardar'}</span>
+                        </button>
+                      </div>
+
+                      {/* Credenciales App 3CX (si es Superfoon) */}
+                      {isSuperfoon && (
+                        <div className="bg-purple-500/[0.015] dark:bg-purple-500/[0.03] border border-purple-500/10 dark:border-purple-500/20 rounded-2xl p-4 space-y-3.5 flex flex-col justify-between">
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between mb-1">
+                              <h4 className="text-xs font-semibold text-purple-600 dark:text-purple-400">
+                                Credenciales 3CX
+                              </h4>
+                              {hasCredentials3CX && (
+                                <span className="text-[10px] text-purple-600 dark:text-purple-400 flex items-center gap-1 font-semibold bg-purple-500/10 dark:bg-purple-500/20 px-2 py-0.5 rounded-full">
+                                  <span className="w-1 h-1 rounded-full bg-purple-500"></span>
+                                  Guardado
+                                </span>
+                              )}
+                            </div>
+
+                            {/* App Vinculada */}
+                            <div className="space-y-1.5">
+                              <label className="block text-[11px] font-medium text-gray-400 dark:text-gray-500">
+                                App vinculada
+                              </label>
+                              <div className="w-full px-3.5 py-2 text-xs border border-purple-500/10 rounded-xl bg-black/5 dark:bg-black/40 text-purple-500 dark:text-purple-400 font-semibold truncate">
+                                3CX Softphone Client
+                              </div>
+                            </div>
+
+                            {/* Usuario 3CX */}
+                            <div className="space-y-1.5">
+                              <label className="block text-[11px] font-medium text-gray-400 dark:text-gray-500">
+                                Usuario 3CX <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                type="text"
+                                value={app3CXUsername}
+                                onChange={(e) => setApp3CXUsername(e.target.value)}
+                                className="w-full px-3.5 py-2 text-xs bg-white/40 dark:bg-black/20 border border-black/10 dark:border-white/10 rounded-xl text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500/30 transition-all duration-200"
+                                placeholder="usuario@ejemplo.com"
+                                autoComplete="off"
+                              />
+                            </div>
+
+                            {/* Contraseña 3CX */}
+                            <div className="space-y-1.5">
+                              <label className="block text-[11px] font-medium text-gray-400 dark:text-gray-500">
+                                Contraseña 3CX <span className="text-red-500">*</span>
+                              </label>
+                              <div className="relative flex items-center">
+                                <input
+                                  type={showPassword3CX ? 'text' : 'password'}
+                                  value={app3CXPassword}
+                                  onChange={(e) => setApp3CXPassword(e.target.value)}
+                                  className="w-full px-3.5 py-2 pr-8 text-xs bg-white/40 dark:bg-black/20 border border-black/10 dark:border-white/10 rounded-xl text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500/30 transition-all duration-200 font-mono"
+                                  placeholder="••••••••"
+                                  autoComplete="new-password"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => setShowPassword3CX(!showPassword3CX)}
+                                  className="absolute right-2.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer"
+                                  title={showPassword3CX ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                                >
+                                  {showPassword3CX ? <Eye className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
+                                </button>
+                              </div>
                             </div>
                           </div>
 
@@ -1433,44 +1553,39 @@ export default function PortafolioModelos() {
                             type="button"
                             onClick={saveCredentials3CX}
                             disabled={processingAction || !app3CXUsername.trim() || !app3CXPassword.trim()}
-                            className="w-full px-3 py-2 text-xs font-medium bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-lg hover:from-purple-600 hover:to-pink-700 transition-all duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            className="w-40 mx-auto mt-4 h-9 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white rounded-full active:scale-[0.98] transition-all duration-300 shadow-[0_2px_8px_rgba(168,85,247,0.2)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-xs font-semibold cursor-pointer"
                           >
-                            {hasCredentials3CX ? (
-                              <>
-                                <CheckCircle className="w-4 h-4" />
-                                {processingAction ? 'Guardando...' : 'Actualizar Credenciales 3CX'}
-                              </>
-                            ) : (
-                              <>
-                                <Lock className="w-4 h-4" />
-                                {processingAction ? 'Guardando...' : 'Guardar Credenciales 3CX'}
-                              </>
-                            )}
+                            <span>{processingAction ? 'Guardando...' : hasCredentials3CX ? 'Actualizar 3CX' : 'Guardar 3CX'}</span>
                           </button>
-                        </>
+                        </div>
                       )}
                     </div>
+                  )}
+                </div>
               )}
 
-              <div className="flex space-x-3">
+              {/* Botones de pie del modal */}
+              <div className="flex space-x-3 mt-5 pt-3.5 border-t border-black/5 dark:border-white/5">
                 <button
+                  type="button"
+                  onClick={executeAction}
+                  disabled={processingAction}
+                  className="flex-1 disabled:opacity-50 btn-apple-primary cursor-pointer h-9 rounded-full flex items-center justify-center text-xs font-semibold"
+                >
+                  {processingAction ? 'Procesando...' : 'Confirmar'}
+                </button>
+                <button
+                  type="button"
                   onClick={() => setShowActionModal(false)}
-                  className="flex-1 px-3 py-1.5 text-xs font-medium border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+                  className="flex-1 h-9 rounded-full border border-black/10 dark:border-white/10 text-gray-700 dark:text-gray-300 bg-transparent hover:bg-black/5 dark:hover:bg-white/5 active:scale-[0.98] transition-all flex items-center justify-center text-xs font-semibold cursor-pointer"
                   disabled={processingAction}
                 >
                   Cancelar
                 </button>
-                <button
-                  onClick={executeAction}
-                  disabled={processingAction}
-                  className="flex-1 disabled:opacity-50 btn-apple-primary"
-                >
-                  {processingAction ? 'Procesando...' : 'Confirmar'}
-                </button>
               </div>
-          </StandardModal>
-          </>
-        )}
+            </StandardModal>
+          );
+        })()}
 
         {/* Modal Boost Pages */}
         {showBoostPagesModal && selectedModelForBoost && userId && (
@@ -1486,7 +1601,31 @@ export default function PortafolioModelos() {
             userId={userId}
           />
         )}
+
+        {zoomedImage && isMounted && typeof document !== 'undefined' && createPortal(
+          <div 
+            className="fixed inset-0 flex items-center justify-center bg-black/75 backdrop-blur-md p-4 cursor-pointer animate-in fade-in duration-200"
+            onClick={() => setZoomedImage(null)}
+            style={{ zIndex: 100000 }}
+          >
+            <img 
+              src={zoomedImage} 
+              alt="Avatar Ampliado" 
+              className="w-full max-w-[360px] h-auto max-h-[360px] rounded-2xl shadow-2xl object-cover border border-white/10 cursor-default animate-in zoom-in-95 duration-200"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <button 
+              className="absolute top-6 right-6 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 backdrop-blur-md transition-colors cursor-pointer"
+              onClick={() => setZoomedImage(null)}
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>,
+          document.body
+        )}
       </div>
-    </>
+    </div>
   );
 }

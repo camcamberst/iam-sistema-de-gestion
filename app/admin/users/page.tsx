@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { getUsers, getGroups, createUser, updateUser, deleteUser } from '../../../lib/api-client';
 import { 
@@ -56,9 +57,11 @@ export default function UsersListPage() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
   const [visibleIds, setVisibleIds] = useState<Record<string, boolean>>({});
+  const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
+    setIsMounted(true);
     loadData();
   }, []);
 
@@ -868,26 +871,28 @@ export default function UsersListPage() {
           />
         )}
         {/* Zoomed Image Modal */}
-        {zoomedImage && (
+        {zoomedImage && isMounted && typeof document !== 'undefined' && createPortal(
           <div 
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md p-4 cursor-zoom-out"
+            className="fixed inset-0 flex items-center justify-center bg-black/75 backdrop-blur-md p-4 cursor-pointer animate-in fade-in duration-200"
             onClick={() => setZoomedImage(null)}
+            style={{ zIndex: 100000 }}
           >
             <img 
               src={zoomedImage} 
               alt="Avatar Ampliado" 
-              className="w-full max-w-[360px] h-auto max-h-[360px] rounded-2xl shadow-2xl object-cover border border-white/10 cursor-default"
+              className="w-full max-w-[360px] h-auto max-h-[360px] rounded-2xl shadow-2xl object-cover border border-white/10 cursor-default animate-in zoom-in-95 duration-200"
               onClick={(e) => e.stopPropagation()}
             />
             <button 
-              className="absolute top-6 right-6 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 backdrop-blur-md transition-colors"
+              className="absolute top-6 right-6 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 backdrop-blur-md transition-colors cursor-pointer"
               onClick={() => setZoomedImage(null)}
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
-          </div>
+          </div>,
+          document.body
         )}
       </div>
     </>
@@ -911,7 +916,8 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
     email: user?.email || '',
     role: user?.role || 'modelo',
     is_active: user?.is_active ?? true,
-    group_ids: user?.groups?.map(g => g.id) || []
+    group_ids: user?.groups?.map(g => g.id) || [],
+    liquidar: false
   });
 
   // Estados para la pestaña de contraseña
@@ -942,7 +948,8 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
       email: user.email,
       role: user.role,
       is_active: user.is_active,
-      group_ids: user.groups?.map(g => g.id) || []
+      group_ids: user.groups?.map(g => g.id) || [],
+      liquidar: false
     });
   }, [user]);
 
@@ -1066,16 +1073,52 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
   }, []);
 
   return (
-    <StandardModal isOpen={true} onClose={onClose} title="Editar Usuario" maxWidthClass="max-w-4xl">
-      {/* Pestañas */}
-      <div className="flex space-x-1 mb-6 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+    <StandardModal 
+      isOpen={true} 
+      onClose={onClose} 
+      showCloseButton={false}
+      maxWidthClass="max-w-3xl"
+      bgClass="bg-white/90 dark:bg-[#131316]/90 backdrop-blur-3xl"
+      borderClass="border border-white/40 dark:border-white/10"
+      overflowClass="overflow-hidden"
+      className="!rounded-[2.2rem] shadow-[0_25px_60px_rgba(0,0,0,0.18)] dark:shadow-[0_25px_60px_rgba(0,0,0,0.65)] relative"
+    >
+      {/* Resplandores Ambientales Boreales Aurora */}
+      <div className="absolute top-[-100px] right-[-100px] w-80 h-80 rounded-full bg-gradient-to-br from-purple-500/10 to-indigo-500/10 blur-3xl pointer-events-none mix-blend-screen opacity-70 dark:opacity-40" />
+      <div className="absolute bottom-[-150px] left-[-150px] w-96 h-96 rounded-full bg-gradient-to-tr from-pink-500/5 to-purple-500/5 blur-3xl pointer-events-none mix-blend-screen opacity-50 dark:opacity-30" />
+
+      {/* Header Premium Aurora */}
+      <div className="relative flex items-center justify-between mb-6 pb-2 border-b border-black/[0.04] dark:border-white/[0.04]">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-purple-500/15">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+          </div>
+          <div>
+            <h2 className="text-base font-bold text-gray-950 dark:text-white tracking-tight">Editar Usuario</h2>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="w-8 h-8 rounded-full bg-black/5 dark:bg-white/5 flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 transition-all hover:scale-105 active:scale-95 cursor-pointer border border-black/5 dark:border-white/5 shadow-sm"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Tabs / Selector de Pestañas estilo Cápsula Aurora */}
+      <div className="relative flex p-1 bg-black/[0.03] dark:bg-white/[0.03] border border-black/5 dark:border-white/5 shadow-sm rounded-full mb-6 max-w-xs mx-auto">
         <button
           type="button"
           onClick={() => setActiveTab('profile')}
-          className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+          className={`flex-1 py-1.5 text-xs font-semibold rounded-full transition-all duration-300 ${
             activeTab === 'profile'
-              ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm'
-              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
+              ? 'bg-gradient-to-r from-cyan-600 to-fuchsia-600 text-white shadow-md shadow-cyan-500/25 dark:shadow-[0_0_10px_rgba(34,211,238,0.25)] hover:from-cyan-500 hover:to-fuchsia-500'
+              : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-black/5 dark:hover:bg-white/5'
           }`}
         >
           Perfil
@@ -1083,149 +1126,212 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
         <button
           type="button"
           onClick={() => setActiveTab('password')}
-          className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+          className={`flex-1 py-1.5 text-xs font-semibold rounded-full transition-all duration-300 ${
             activeTab === 'password'
-              ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm'
-              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
+              ? 'bg-gradient-to-r from-cyan-600 to-fuchsia-600 text-white shadow-md shadow-cyan-500/25 dark:shadow-[0_0_10px_rgba(34,211,238,0.25)] hover:from-cyan-500 hover:to-fuchsia-500'
+              : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-black/5 dark:hover:bg-white/5'
           }`}
         >
           Contraseña
         </button>
       </div>
 
-        {/* Mensaje de error del modal */}
-        {modalError && (
-          <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700/50 rounded-lg">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-red-800 dark:text-red-300">{modalError}</p>
-              </div>
+      {/* Mensajes de Error del Modal */}
+      {modalError && (
+        <div className="relative mb-5 p-3.5 bg-red-500/10 border border-red-500/20 rounded-2xl animate-in slide-in-from-top-2 duration-300">
+          <div className="flex gap-2.5 items-start">
+            <div className="w-5 h-5 rounded-full bg-red-500/20 flex items-center justify-center text-red-600 dark:text-red-400 shrink-0">
+              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-red-800 dark:text-red-300 leading-tight">Error de Operación</p>
+              <p className="text-[10.5px] text-red-700/80 dark:text-red-300/80 mt-0.5 leading-normal">{modalError}</p>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-      {/* Contenido de pestañas */}
+      {/* Pestaña Perfil */}
       {activeTab === 'profile' && (
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Diseño horizontal con dos columnas */}
+        <form onSubmit={handleSubmit} className="relative space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Columna izquierda */}
+            {/* Columna Izquierda: Datos del Usuario */}
             <div className="space-y-4">
-          <div>
-            <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">Nombre</label>
-            <input
-              type="text"
-              value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: titleCaseWords(e.target.value) })}
-              className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
-              autoComplete="name"
-                  autoCapitalize="words"
-                  spellCheck={true}
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">Email</label>
-            <input
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
-              autoComplete="email"
-              required
-            />
-          </div>
-            </div>
-
-            {/* Columna derecha */}
-            <div className="space-y-4">
-          <div>
-            <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">Rol</label>
-            <AppleDropdown
-              options={[
-                { value: 'modelo', label: 'Modelo' },
-                { value: 'fotografia', label: 'Fotografía' },
-                { value: 'gestor', label: 'Gestor' },
-                { value: 'admin', label: 'Admin' },
-                { value: 'super_admin', label: 'Super Admin' }
-              ]}
-              value={formData.role}
-                  onChange={(value) => handleRoleChange(value)}
-              placeholder="Selecciona un rol"
-              className="text-sm"
-            />
-          </div>
-
-          <div>
-            <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">Usuario Activo</label>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setFormData({ ...formData, is_active: !formData.is_active })}
-                className="relative w-10 h-6 rounded-full transition-colors"
-                style={{ background: formData.is_active ? '#111827' : '#e5e7eb' }}
-                aria-pressed={formData.is_active}
-              >
-                <span
-                  className="absolute top-[3px] rounded-full bg-white dark:bg-gray-200 shadow transition-all"
-                  style={{ left: formData.is_active ? 20 : 3, width: 18, height: 18 }}
-                />
-              </button>
-              <span className={`text-xs font-medium ${formData.is_active ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}>
-                {formData.is_active ? 'Activo' : 'Inactivo'}
-              </span>
-            </div>
-          </div>
-            </div>
-          </div>
-
-          {/* Grupos - ancho completo (oculto para gestor y fotografia) */}
-          {formData.role !== 'gestor' && formData.role !== 'fotografia' && (
-          <div>
-            <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">Grupos</label>
-            <AppleDropdown
-              options={groups.map(group => ({
-                value: group.id,
-                label: group.name
-              }))}
-              value={formData.group_ids.length > 0 ? formData.group_ids[0] : ''}
-              onChange={handleGroupChange}
-              placeholder={formData.role === 'modelo' ? 'Selecciona un grupo' : 'Selecciona un grupo'}
-              className="text-sm"
-            />
-            {restrictionMessage && (
-              <div className="mt-3 text-sm text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-700/50">
-                {restrictionMessage}
+              <div>
+                <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-1.5 ml-1">Nombre completo</label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: titleCaseWords(e.target.value) })}
+                    className="w-full bg-black/[0.02] dark:bg-white/[0.02] border border-black/[0.08] dark:border-white/[0.08] rounded-2xl px-4 py-2.5 text-xs text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 dark:focus:ring-purple-400/20 focus:border-purple-500 dark:focus:border-purple-400 transition-all duration-300 shadow-inner"
+                    autoComplete="name"
+                    autoCapitalize="words"
+                    spellCheck={true}
+                    required
+                  />
+                  <div className="absolute right-3.5 top-3 text-gray-300 dark:text-gray-600">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </div>
+                </div>
               </div>
-            )}
+
+              <div>
+                <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-1.5 ml-1">Correo electrónico</label>
+                <div className="relative">
+                  <input
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    className="w-full bg-black/[0.02] dark:bg-white/[0.02] border border-black/[0.08] dark:border-white/[0.08] rounded-2xl px-4 py-2.5 text-xs text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 dark:focus:ring-purple-400/20 focus:border-purple-500 dark:focus:border-purple-400 transition-all duration-300 shadow-inner"
+                    autoComplete="email"
+                    required
+                  />
+                  <div className="absolute right-3.5 top-3 text-gray-300 dark:text-gray-600">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Columna Derecha: Roles y Estado */}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-1.5 ml-1">Rol del sistema</label>
+                <AppleDropdown
+                  options={[
+                    { value: 'modelo', label: 'Modelo' },
+                    { value: 'fotografia', label: 'Fotografía' },
+                    { value: 'gestor', label: 'Gestor' },
+                    { value: 'admin', label: 'Admin' },
+                    { value: 'super_admin', label: 'Super Admin' }
+                  ]}
+                  value={formData.role}
+                  onChange={(value) => handleRoleChange(value)}
+                  placeholder="Selecciona un rol"
+                  className="text-xs"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-1.5 ml-1">Estado de acceso</label>
+                <div className="flex flex-col gap-3 bg-black/[0.02] dark:bg-white/[0.02] border border-black/[0.08] dark:border-white/[0.08] rounded-2xl px-4 py-2.5 shadow-inner">
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const nextActive = !formData.is_active;
+                        setFormData({ 
+                          ...formData, 
+                          is_active: nextActive,
+                          liquidar: nextActive ? false : formData.liquidar
+                        });
+                      }}
+                      className={`relative w-11 h-6 rounded-full transition-all duration-300 ease-in-out outline-none shrink-0 cursor-pointer ${
+                        formData.is_active 
+                          ? 'bg-gradient-to-r from-emerald-400 to-teal-500 shadow-[0_2px_8px_rgba(16,185,129,0.3)]' 
+                          : 'bg-black/10 dark:bg-white/10'
+                      }`}
+                      aria-pressed={formData.is_active}
+                    >
+                      <span
+                        className={`absolute top-[3px] w-[18px] h-[18px] rounded-full bg-white shadow-md transition-all duration-300 ease-in-out ${
+                          formData.is_active ? 'left-[23px] scale-100' : 'left-[3px] scale-95'
+                        }`}
+                      />
+                    </button>
+                    <div className="flex flex-col">
+                      <span className={`text-[11px] font-bold leading-none ${formData.is_active ? 'text-emerald-500' : 'text-gray-400 dark:text-gray-500'}`}>
+                        {formData.is_active ? 'Usuario Activo' : 'Usuario Inactivo'}
+                      </span>
+                      <span className="text-[9px] text-gray-400 dark:text-gray-500 mt-1 leading-none">
+                        {formData.is_active ? 'Acceso al sistema permitido' : 'Acceso denegado o suspendido'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {formData.role === 'modelo' && !formData.is_active && (
+                    <div className="mt-1 pt-2 border-t border-black/5 dark:border-white/5 flex items-center gap-3 animate-in slide-in-from-top-2 duration-300">
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, liquidar: !formData.liquidar })}
+                        className={`relative w-11 h-6 rounded-full transition-all duration-300 ease-in-out outline-none shrink-0 cursor-pointer ${
+                          formData.liquidar 
+                            ? 'bg-gradient-to-r from-fuchsia-500 to-pink-600 shadow-[0_2px_8px_rgba(217,70,239,0.3)]' 
+                            : 'bg-black/10 dark:bg-white/10'
+                        }`}
+                        aria-pressed={formData.liquidar}
+                      >
+                        <span
+                          className={`absolute top-[3px] w-[18px] h-[18px] rounded-full bg-white shadow-md transition-all duration-300 ease-in-out ${
+                            formData.liquidar ? 'left-[23px] scale-100' : 'left-[3px] scale-95'
+                          }`}
+                        />
+                      </button>
+                      <div className="flex flex-col">
+                        <span className={`text-[11px] font-bold leading-none ${formData.liquidar ? 'text-fuchsia-500' : 'text-gray-400 dark:text-gray-500'}`}>
+                          ¿Liquidar Cuentas y Archivar?
+                        </span>
+                        <span className="text-[9px] text-gray-400 dark:text-gray-500 mt-1 leading-none">
+                          Genera histórico contable y reembolsa ahorros
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
+
+          {/* Grupos - Ancho Completo */}
+          {formData.role !== 'gestor' && formData.role !== 'fotografia' && (
+            <div className="space-y-1.5 animate-in fade-in duration-300">
+              <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-1 ml-1">Grupos asignados</label>
+              <AppleDropdown
+                options={groups.map(group => ({
+                  value: group.id,
+                  label: group.name
+                }))}
+                value={formData.group_ids.length > 0 ? formData.group_ids[0] : ''}
+                onChange={handleGroupChange}
+                placeholder="Selecciona un grupo asignado"
+                className="text-xs"
+              />
+              {restrictionMessage && (
+                <div className="mt-3 text-[10.5px] text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-indigo-950/10 p-3 rounded-2xl border border-indigo-100/50 dark:border-indigo-950/20 flex items-start gap-2 shadow-inner">
+                  <span className="shrink-0 mt-0.5">ℹ️</span>
+                  <span>{restrictionMessage}</span>
+                </div>
+              )}
+            </div>
           )}
           
           {/* Mostrar mensaje de restricción para gestor y fotografia */}
           {(formData.role === 'gestor' || formData.role === 'fotografia') && restrictionMessage && (
-            <div className="text-sm text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-700/50">
-              {restrictionMessage}
+            <div className="text-[10.5px] text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-indigo-950/10 p-3 rounded-2xl border border-indigo-100/50 dark:border-indigo-950/20 flex items-start gap-2 shadow-inner animate-in fade-in duration-300">
+              <span className="shrink-0 mt-0.5">ℹ️</span>
+              <span>{restrictionMessage}</span>
             </div>
           )}
 
-          {/* Botones - centrados */}
-          <div className="flex justify-center space-x-4 pt-4">
+          {/* Fila de Botones Premium */}
+          <div className="flex justify-end gap-2.5 pt-4 border-t border-black/[0.04] dark:border-white/[0.04]">
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
+              className="px-5 py-2.5 text-xs font-semibold text-gray-500 dark:text-gray-400 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-all duration-200 active:scale-95 touch-manipulation cursor-pointer border border-transparent"
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="btn-apple-primary"
+              className="px-6 py-2.5 text-xs font-bold rounded-full transition-all duration-300 shadow-md active:scale-95 bg-gradient-to-r from-cyan-600 to-fuchsia-600 hover:from-cyan-500 hover:to-fuchsia-500 text-white shadow-cyan-500/25 dark:shadow-[0_0_12px_rgba(34,211,238,0.3)] hover:shadow-fuchsia-500/30 active:scale-95 hover:scale-[1.02] transform cursor-pointer flex items-center justify-center"
             >
               Actualizar Usuario
             </button>
@@ -1233,66 +1339,81 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
         </form>
       )}
 
+      {/* Pestaña Contraseña */}
       {activeTab === 'password' && (
-        <div className="space-y-4">
-          {/* Mensaje de éxito */}
+        <div className="relative space-y-5 animate-in fade-in duration-300">
+          {/* Mensaje de Éxito */}
           {passwordSuccess && (
-            <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700/50 rounded-lg">
-              <div className="flex">
-                <div className="flex-shrink-0">
-                  <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            <div className="p-3.5 bg-green-500/10 border border-green-500/20 rounded-2xl animate-in slide-in-from-top-2 duration-300">
+              <div className="flex gap-2.5 items-center">
+                <div className="w-5 h-5 rounded-full bg-green-500/20 flex items-center justify-center text-green-600 dark:text-green-400 shrink-0">
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-      </div>
-                <div className="ml-3">
-                  <p className="text-sm text-green-800 dark:text-green-300">Contraseña actualizada exitosamente</p>
-    </div>
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-green-800 dark:text-green-300">¡Contraseña Cambiada!</p>
+                  <p className="text-[10px] text-green-700/80 dark:text-green-400/80 mt-0.5">La contraseña se ha actualizado exitosamente en el sistema</p>
+                </div>
               </div>
             </div>
           )}
 
-          {/* Mensaje de error de contraseña */}
+          {/* Mensaje de Error de Contraseña */}
           {passwordError && (
-            <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700/50 rounded-lg">
-              <div className="flex">
-                <div className="flex-shrink-0">
-                  <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+            <div className="p-3.5 bg-red-500/10 border border-red-500/20 rounded-2xl animate-in slide-in-from-top-2 duration-300">
+              <div className="flex gap-2.5 items-start">
+                <div className="w-5 h-5 rounded-full bg-red-500/20 flex items-center justify-center text-red-600 dark:text-red-400 shrink-0">
+                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                   </svg>
                 </div>
-                <div className="ml-3">
-                  <p className="text-sm text-red-800 dark:text-red-300">{passwordError}</p>
+                <div>
+                  <p className="text-xs font-semibold text-red-800 dark:text-red-300 leading-tight">Error al Cambiar Contraseña</p>
+                  <p className="text-[10.5px] text-red-700/80 dark:text-red-300/80 mt-0.5 leading-normal">{passwordError}</p>
                 </div>
               </div>
             </div>
           )}
 
           <div>
-            <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">Nueva Contraseña</label>
+            <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-1.5 ml-1">Nueva contraseña</label>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
                 value={passwordData.newPassword}
                 onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                placeholder="Ingresa nueva contraseña"
+                placeholder="Ingresa la nueva contraseña"
                 autoComplete="new-password"
-                className="w-full px-3 py-2 pr-12 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
+                className="w-full bg-black/[0.02] dark:bg-white/[0.02] border border-black/[0.08] dark:border-white/[0.08] rounded-2xl px-4 py-2.5 pr-11 text-xs text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 dark:focus:ring-purple-400/20 focus:border-purple-500 dark:focus:border-purple-400 transition-all duration-300 shadow-inner"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-2 top-2 px-2 py-1 rounded-md text-xs text-white bg-gray-900 dark:bg-gray-700 hover:bg-gray-800 dark:hover:bg-gray-600"
+                className="absolute right-3.5 top-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors cursor-pointer"
+                title={showPassword ? 'Ocultar Contraseña' : 'Ver Contraseña'}
               >
-                {showPassword ? 'Ocultar' : 'Ver'}
+                {showPassword ? (
+                  <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                  </svg>
+                ) : (
+                  <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                )}
               </button>
             </div>
             {passwordData.newPassword && passwordData.newPassword.length < 6 && (
-              <p className="text-red-500 dark:text-red-400 text-xs mt-1">La contraseña debe tener al menos 6 caracteres</p>
+              <p className="text-red-500 dark:text-red-400 text-[10px] font-medium mt-1.5 ml-1 flex items-center gap-1">
+                <span>⚠️</span> La contraseña debe tener al menos 6 caracteres
+              </p>
             )}
           </div>
 
           <div>
-            <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">Confirmar Contraseña</label>
+            <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-1.5 ml-1">Confirmar nueva contraseña</label>
             <div className="relative">
               <input
                 type={showConfirmPassword ? "text" : "password"}
@@ -1300,26 +1421,39 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
                 onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
                 placeholder="Confirma la nueva contraseña"
                 autoComplete="new-password"
-                className="w-full px-3 py-2 pr-12 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
+                className="w-full bg-black/[0.02] dark:bg-white/[0.02] border border-black/[0.08] dark:border-white/[0.08] rounded-2xl px-4 py-2.5 pr-11 text-xs text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 dark:focus:ring-purple-400/20 focus:border-purple-500 dark:focus:border-purple-400 transition-all duration-300 shadow-inner"
               />
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-2 top-2 px-2 py-1 rounded-md text-xs text-white bg-gray-900 dark:bg-gray-700 hover:bg-gray-800 dark:hover:bg-gray-600"
+                className="absolute right-3.5 top-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors cursor-pointer"
+                title={showConfirmPassword ? 'Ocultar Contraseña' : 'Ver Contraseña'}
               >
-                {showConfirmPassword ? 'Ocultar' : 'Ver'}
+                {showConfirmPassword ? (
+                  <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                  </svg>
+                ) : (
+                  <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                )}
               </button>
             </div>
             {passwordData.confirmPassword && passwordData.newPassword !== passwordData.confirmPassword && (
-              <p className="text-red-500 dark:text-red-400 text-xs mt-1">Las contraseñas no coinciden</p>
+              <p className="text-red-500 dark:text-red-400 text-[10px] font-medium mt-1.5 ml-1 flex items-center gap-1">
+                <span>⚠️</span> Las contraseñas no coinciden
+              </p>
             )}
           </div>
 
-          <div className="flex justify-center space-x-4 pt-4">
+          {/* Fila de Botones Premium para Cambiar Contraseña */}
+          <div className="flex justify-end gap-2.5 pt-4 border-t border-black/[0.04] dark:border-white/[0.04]">
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
+              className="px-5 py-2.5 text-xs font-semibold text-gray-500 dark:text-gray-400 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-all duration-200 active:scale-95 touch-manipulation cursor-pointer border border-transparent"
             >
               Cancelar
             </button>
@@ -1327,23 +1461,18 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
               type="button"
               onClick={handleChangePassword}
               disabled={savingPassword || !passwordData.newPassword || !passwordData.confirmPassword || passwordData.newPassword !== passwordData.confirmPassword || passwordData.newPassword.length < 6}
-              className="disabled:opacity-50 disabled:cursor-not-allowed btn-apple-primary"
+              className="px-6 py-2.5 text-xs font-bold rounded-full transition-all duration-300 shadow-md active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-r from-cyan-600 to-fuchsia-600 hover:from-cyan-500 hover:to-fuchsia-500 text-white shadow-cyan-500/25 dark:shadow-[0_0_12px_rgba(34,211,238,0.3)] hover:shadow-fuchsia-500/30 active:scale-95 hover:scale-[1.02] transform cursor-pointer flex items-center justify-center gap-2"
             >
               {savingPassword ? (
                 <>
-                  <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                  <svg className="animate-spin h-3.5 w-3.5" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  Cambiando...
+                  <span>Cambiando...</span>
                 </>
               ) : (
-                <>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                  </svg>
-                  Cambiar Contraseña
-                </>
+                <span>Cambiar Contraseña</span>
               )}
             </button>
           </div>
