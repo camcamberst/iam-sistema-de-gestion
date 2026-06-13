@@ -191,4 +191,4 @@ CREATE POLICY "Admins manage announcement targets" ON public.announcement_admin_
 
 -- Usuarios: Ver únicamente sus metas asignadas de anuncios
 CREATE POLICY "Models select announcement targets" ON public.announcement_admin_targets
-  FOR SELECT USING (user_id = auth.uid());
+  FOR SELECT USING (admin_id = auth.uid());
