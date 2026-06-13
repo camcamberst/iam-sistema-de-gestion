@@ -52,14 +52,9 @@ CREATE POLICY "Admins can manage sales" ON public.sales
     )
   );
 
--- Modelos: Solo lectura de sus propias ventas asociadas a su perfil
+-- Modelos: Solo lectura de sus propias ventas asociadas a su perfil (se simplifica a model_id directo ya que model_profiles no existe en producción)
 CREATE POLICY "Models can view their own sales" ON public.sales
-  FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM public.model_profiles mp
-      WHERE mp.id = public.sales.model_id AND mp.user_id = auth.uid()
-    )
-  );
+  FOR SELECT USING (auth.uid() = model_id);
 
 -- -------------------------------------------------------------
 -- TABLA: operating_costs (Costos Operativos)
