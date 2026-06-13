@@ -1240,7 +1240,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       await loadMessages(selectedConversation);
       // El marcado como leído se maneja automáticamente en loadMessages
       // No necesitamos marcado adicional aquí para evitar duplicados
-    }, 15000); // Cada 15 segundos (Respaldo del Realtime)
+    }, 90000); // Cada 90 segundos (Respaldo del Realtime)
 
     // Cleanup
     return () => {
@@ -1359,7 +1359,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       } catch (error) {
         console.error('Error en polling:', error);
       }
-    }, 20000); // 20s (antes 4s) — reducido para ahorrar API calls
+    }, 120000); // 120s (antes 20s) — reducido para ahorrar API calls
 
     return () => clearInterval(conversationsPollingInterval);
   }, [session, userId]);
@@ -1716,14 +1716,17 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         async (payload) => {
           console.log('👥 [ChatWidget] Estado de usuario actualizado:', payload);
           
-          // Recargar lista de usuarios para reflejar cambios inmediatamente
-          // Esto detecta cuando un usuario se marca como offline
-          await loadAvailableUsers();
-          
-          // Log adicional para debugging
-          if (payload.new) {
+          if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
             const newStatus = payload.new as any;
             console.log(`📊 [ChatWidget] Usuario ${newStatus.user_id} ahora está ${newStatus.is_online ? 'EN LÍNEA' : 'OFFLINE'}`);
+            
+            // 🔧 FIX: Actualización local SIN llamada a la API
+            // Evita un N-Squared API storm: cuando el estado de alguien cambia, no recargamos todos los usuarios.
+            setAvailableUsers(prev => prev.map(user => 
+              user.id === newStatus.user_id 
+                ? { ...user, is_online: newStatus.is_online, last_seen: newStatus.last_seen || newStatus.updated_at }
+                : user
+            ));
           }
         }
       )

@@ -12,7 +12,7 @@ export function useBillingPolling(
   dependencies: any[],
   options: UseBillingPollingOptions = {}
 ) {
-  const { refreshInterval = 30000, enabled = true, onRefresh, silentUpdate = true } = options;
+  const { refreshInterval = 180000, enabled = true, onRefresh, silentUpdate = true } = options;
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const isMounted = useRef(true);
   const [isPolling, setIsPolling] = useState(false);
@@ -55,6 +55,10 @@ export function useBillingPolling(
     if (enabled && isMounted.current) {
       setIsPolling(true);
       intervalRef.current = setInterval(() => {
+        if (typeof document !== 'undefined' && document.visibilityState !== 'visible') {
+          console.log('💤 [BILLING-POLLING] Pestaña oculta: Saltando actualización.');
+          return;
+        }
         if (isMounted.current) {
           console.log('🔄 [BILLING-POLLING] Actualización silenciosa iniciada');
           if (silentUpdate) {
