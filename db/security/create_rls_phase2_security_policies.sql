@@ -29,4 +29,3 @@ ALTER VIEW IF EXISTS public.modelo_plataformas_detailed SET (security_invoker = 
 ALTER VIEW IF EXISTS public.modelo_portfolio_view SET (security_invoker = true);
 ALTER VIEW IF EXISTS public.dangerous_deletions SET (security_invoker = true);
 ALTER VIEW IF EXISTS public.period_closure_status SET (security_invoker = true);
-ALTER VIEW IF EXISTS public.calculator_period_closure_status SET (security_invoker = true);
